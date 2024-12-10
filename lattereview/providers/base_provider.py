@@ -26,14 +26,6 @@ class BaseProvider(pydantic.BaseModel):
     ) -> Any:
         """
         Get a response from the provider based on input messages.
-
-        Args:
-            messages: The main input message as a string.
-            message_list: A list of additional messages for context.
-            system_message: An optional system message for context.
-
-        Returns:
-            The provider's response.
         """
         raise NotImplementedError("Subclasses must implement `get_response`")
 
@@ -45,14 +37,6 @@ class BaseProvider(pydantic.BaseModel):
     ) -> Any:
         """
         Get a JSON-formatted response from the provider.
-
-        Args:
-            messages: The main input message as a string.
-            message_list: A list of additional messages for context.
-            system_message: An optional system message for context.
-
-        Returns:
-            A JSON-formatted response.
         """
         raise NotImplementedError("Subclasses must implement `get_json_response`")
 
@@ -64,14 +48,6 @@ class BaseProvider(pydantic.BaseModel):
     ) -> List[str]:
         """
         Prepare the list of messages to be sent to the provider.
-
-        Args:
-            message: The main input message.
-            message_list: A list of additional messages for context.
-            system_message: An optional system message for context.
-
-        Returns:
-            A complete list of messages.
         """
         raise NotImplementedError("Subclasses must implement `_prepare_message_list`")
 
@@ -82,13 +58,6 @@ class BaseProvider(pydantic.BaseModel):
     ) -> Any:
         """
         Fetch the raw response from the provider.
-
-        Args:
-            message_list: A list of prepared messages.
-            kwargs: Additional arguments for the request.
-
-        Returns:
-            The raw response.
         """
         raise NotImplementedError("Subclasses must implement `_fetch_response`")
 
@@ -99,24 +68,11 @@ class BaseProvider(pydantic.BaseModel):
     ) -> Any:
         """
         Fetch the JSON-formatted response from the provider.
-
-        Args:
-            message_list: A list of prepared messages.
-            kwargs: Additional arguments for the request.
-
-        Returns:
-            The JSON-formatted response.
         """
         raise NotImplementedError("Subclasses must implement `_fetch_json_response`")
 
     def _extract_content(self, response: Any) -> Any:
         """
         Extract content from the provider's response.
-
-        Args:
-            response: The provider's raw response.
-
-        Returns:
-            Extracted content.
         """
         raise NotImplementedError("Subclasses must implement `_extract_content`")

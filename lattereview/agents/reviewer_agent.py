@@ -13,14 +13,13 @@ class ReviewerAgent(BaseAgent):
     response_format: Any = ReviewerResponseFormat
 
     def __init__(self, **data):
-        super().__init__(**data)  # Initialize the BaseAgent
+        """Initialize the ReviewerAgent."""
+        super().__init__(**data) 
         self.review_prompt = open('../lattereview/prompts/review_prompt.txt', 'r').read()
         self.build_identity()
 
     def build_identity(self) -> None:
-        """
-        Build the agent's identity based on its attributes.
-        """
+        """Build the agent's identity based on its attributes. """
         self.identity = {
             'name': self.name,
             'backstory': self.backstory,
@@ -34,16 +33,12 @@ class ReviewerAgent(BaseAgent):
         }
 
     def reset_memory(self) -> None:
-        """
-        Reset the memory of the agent.
-        """
+        """Reset the memory of the agent."""
         self.memory = []
         self.build_identity()
 
     async def review_items(self, items: List[str]) -> List[Dict]:
-        """
-        Review a list of items asynchronously.
-        """
+        """Review a list of items asynchronously."""
         self.build_identity()
         semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
@@ -63,9 +58,7 @@ class ReviewerAgent(BaseAgent):
         return responses
 
     async def review_item(self, item: str) -> Dict:
-        """
-        Review a single item asynchronously.
-        """
+        """Review a single item asynchronously."""
         input_text = self.review_prompt
         for var in ['review_type', 'review_criteria', 'scoring_schema', 'scoring_rules', 'help_criteria']:
             input_text = input_text.replace('${' + var + '}$', self.identity[var])
