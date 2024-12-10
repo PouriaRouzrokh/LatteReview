@@ -8,8 +8,6 @@ class BaseProvider(pydantic.BaseModel):
     model: str = "default-model" 
     system_message: str = "You are a helpful assistant."
     output_json_format: Optional[Any] = None  
-    temperature: float = 0.5 
-    max_tokens: int = 150 
     last_response: Optional[Any] = None 
 
     class Config:

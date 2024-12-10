@@ -12,18 +12,16 @@ class OpenAIProvider(BaseProvider):
         self.model = data.get('model', "gpt-4o-mini")
         self.system_message = data.get('system_message', "You are a helpful assistant.")
         self.output_json_format = data.get('output_json_format', None)
-        self.temperature = data.get('temperature', 0.5)
-        self.max_tokens = data.get('max_tokens', 150)
 
     def create_client(self):
         return openai.AsyncOpenAI(api_key=self.api_key)
 
-    async def get_response(self, message: str, message_list: list = None, kwargs: dict=dict()):
+    async def get_response(self, message: str, message_list: list = None, **kwargs):
         message_list = self._prepare_message_list(message, message_list)
         response = await self._fetch_response(message_list, kwargs)
         return self._extract_content(response)
 
-    async def get_json_response(self, message: str, message_list: list = None, kwargs: dict=dict()):
+    async def get_json_response(self, message: str, message_list: list = None, **kwargs):
         if not self.output_json_format:
             raise ValueError("Output JSON format is not set")
         message_list = self._prepare_message_list(message, message_list)
@@ -45,8 +43,6 @@ class OpenAIProvider(BaseProvider):
             return await self.client.chat.completions.create(
                 model=self.model,
                 messages=message_list,
-                max_tokens=self.max_tokens,
-                temperature=self.temperature,
                 **kwargs
             )
         except Exception as e:
@@ -58,8 +54,6 @@ class OpenAIProvider(BaseProvider):
             return await self.client.beta.chat.completions.parse(
                 model=self.model,
                 messages=message_list,
-                max_tokens=self.max_tokens,
-                temperature=self.temperature,
                 response_format=self.output_json_format,
                 **kwargs
             )
