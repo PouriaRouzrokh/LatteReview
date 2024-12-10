@@ -10,30 +10,33 @@ class OpenAIProvider(BaseProvider):
         self.api_key = data.get('api_key', os.getenv("OPENAI_API_KEY"))
         self.client = self.create_client()
         self.model = data.get('model', "gpt-4o-mini")
-        self.system_message = data.get('system_message', "You are a helpful assistant.")
         self.output_json_format = data.get('output_json_format', None)
 
     def create_client(self):
         return openai.AsyncOpenAI(api_key=self.api_key)
 
-    async def get_response(self, message: str, message_list: list = None, **kwargs):
-        message_list = self._prepare_message_list(message, message_list)
+    async def get_response(self, message: str, message_list: list = None, system_message: str = None, **kwargs):
+        message_list = self._prepare_message_list(message, message_list, system_message)
         response = await self._fetch_response(message_list, kwargs)
         return self._extract_content(response)
 
-    async def get_json_response(self, message: str, message_list: list = None, **kwargs):
+    async def get_json_response(self, message: str, message_list: list = None, system_message: str = None, **kwargs):
         if not self.output_json_format:
             raise ValueError("Output JSON format is not set")
-        message_list = self._prepare_message_list(message, message_list)
+        message_list = self._prepare_message_list(message, message_list, system_message)
         response = await self._fetch_json_response(message_list, kwargs)
         return self._extract_content(response)
 
-    def _prepare_message_list(self, message: str, message_list: list = None) -> list:
+    def _prepare_message_list(self, message: str, message_list: list = None, system_message: str = None) -> list:
         if message_list:
             message_list.append({"role": "user", "content": message})
+            if system_message:
+                message_list.insert(0, {"role": "system", "content": system_message})
         else:
+            if not system_message:
+                system_message = "You are a helpful assistant."
             message_list = [
-                {"role": "system", "content": self.system_message},
+                {"role": "system", "content": system_message},
                 {"role": "user", "content": message}
             ]
         return message_list
