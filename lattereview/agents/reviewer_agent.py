@@ -14,7 +14,7 @@ class ReviewerAgent(BaseAgent):
 
     def __init__(self, **data):
         super().__init__(**data)  # Initialize the BaseAgent
-        self.review_prompt = open('../lattereviewers/prompts/review_prompt.txt', 'r').read()
+        self.review_prompt = open('../lattereview/prompts/review_prompt.txt', 'r').read()
         self.build_identity()
 
     def build_identity(self) -> None:
