@@ -6,6 +6,6 @@ Review criteria: ${review_criteria}$
 
 Now return a summary of your reasoning, and score the article using one of the following numbers: ${scoring_schema}$. Your scoring should be based on the following rules: ${scoring_rules}$
 
-You can also ask for help ONLY AND IF ONLY the following criteria is met: ${help_critera}$
+You can also ask a question ONLY AND IF ONLY the following criteria is met: ${question_critera}$
 
-Your final output should have three keys: reasoning (string), scoring (a single integer following the above schema), and help_needed (0 if not needed and 1 if needed).
+Your final output should have three keys: reasoning (string), scoring (a single integer following the above schema), and question (string; leave empty if no question).

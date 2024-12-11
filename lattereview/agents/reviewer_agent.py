@@ -7,7 +7,7 @@ from .base_agent import BaseAgent
 class ReviewerResponseFormat(BaseModel):
     reasoning: str
     score: int
-    need_help: bool
+    question: str
 
 class ReviewerAgent(BaseAgent):
     response_format: Any = ReviewerResponseFormat
@@ -15,7 +15,7 @@ class ReviewerAgent(BaseAgent):
     review_criteria: Optional[str] = None
     scoring_schema: str = "[0, 1]"
     scoring_rules: str = "Your scores should follow the defined schema."
-    help_criteria: str = "Seek help when uncertain."
+    question_criteria: str = "When highly uncertain about a review."
     review_prompt: str = "Default review prompt."
 
     def __init__(self, **data):
@@ -34,14 +34,9 @@ class ReviewerAgent(BaseAgent):
             'review_criteria': self.review_criteria,
             'scoring_schema': self.scoring_schema,
             'scoring_rules': self.scoring_rules,
-            'help_criteria': self.help_criteria,
+            'question_criteria': self.question_criteria,
             'system_prompt': f"Your name is {self.name} and you are {self.backstory}"
         }
-
-    def reset_memory(self) -> None:
-        """Reset the memory of the agent."""
-        self.memory = []
-        self.build_identity()
 
     async def review_items(self, items: List[str]) -> List[Dict]:
         """Review a list of items asynchronously."""
@@ -67,9 +62,8 @@ class ReviewerAgent(BaseAgent):
 
     async def review_item(self, item: str) -> Dict:
         """Review a single item asynchronously."""
-        input_text = self.review_prompt
-        for var in ['review_type', 'review_criteria', 'scoring_schema', 'scoring_rules', 'help_criteria']:
-            input_text = input_text.replace('${' + var + '}$', self.identity[var])
-        input_text = input_text.replace('${item}$', item)
-        response, cost = await self.provider.get_json_response(input_text, temperature=self.temperature)
+        keys_to_replace = ['review_type', 'review_criteria', 'scoring_schema', 'scoring_rules', 'question_criteria']
+        input_prompt = self.complete_prompt(self.review_prompt, {key: self.identity[key] for key in keys_to_replace})
+        input_prompt = self.complete_prompt(input_prompt, {'item': item})
+        response, cost = await self.provider.get_json_response(input_prompt, temperature=self.temperature)
         return response, cost

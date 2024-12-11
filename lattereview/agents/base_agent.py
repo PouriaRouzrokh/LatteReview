@@ -18,12 +18,11 @@ class BaseAgent(BaseModel):
         Build the agent's identity based on its attributes.
         """
         raise NotImplementedError("This method must be implemented by subclasses.")
-
+    
     def reset_memory(self) -> None:
-        """
-        Reset the memory of the agent.
-        """
-        raise NotImplementedError("This method must be implemented by subclasses.")
+        """Reset the memory of the agent."""
+        self.memory = []
+        self.build_identity()
 
     async def review_items(self, items: List[str]) -> List[Dict]:
         """
@@ -36,3 +35,9 @@ class BaseAgent(BaseModel):
         Review a single item asynchronously.
         """
         raise NotImplementedError("This method must be implemented by subclasses.")
+    
+    def complete_prompt(self, base_prompt:str, item_dict: Dict) -> str:
+        prompt = base_prompt
+        for item in item_dict:
+            prompt = prompt.replace('${' + item + '}$', item_dict[item])
+        return prompt
