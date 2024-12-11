@@ -1,4 +1,5 @@
 from typing import Optional, Any, List, Dict
+from tokencost import calculate_prompt_cost, calculate_completion_cost
 import pydantic
 
 class BaseProvider(pydantic.BaseModel):
@@ -76,3 +77,11 @@ class BaseProvider(pydantic.BaseModel):
         Extract content from the provider's response.
         """
         raise NotImplementedError("Subclasses must implement `_extract_content`")
+    
+    def _get_cost(self, input_messages: list, completion_text: str):
+        """
+        Calculate the cost of a prompt completion.
+        """
+        input_cost = calculate_prompt_cost(input_messages, self.model)
+        output_cost = calculate_completion_cost(completion_text, self.model)
+        return {"input_cost": float(input_cost), "output_cost": float(output_cost), "total_cost": float(input_cost + output_cost)}   

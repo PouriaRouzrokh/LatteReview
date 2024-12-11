@@ -34,7 +34,9 @@ class OpenAIProvider(BaseProvider):
         """
         message_list = self._prepare_message_list(messages, message_list, system_message)
         response = await self._fetch_response(message_list, kwargs)
-        return self._extract_content(response)
+        txt_response = self._extract_content(response)
+        cost = self._get_cost(input_messages=messages, completion_text=txt_response)
+        return txt_response, cost
 
     async def get_json_response(
         self,
@@ -50,7 +52,9 @@ class OpenAIProvider(BaseProvider):
             raise ValueError("Output JSON format is not set")
         message_list = self._prepare_message_list(messages, message_list, system_message)
         response = await self._fetch_json_response(message_list, kwargs)
-        return self._extract_content(response)
+        txt_response = self._extract_content(response)
+        cost = self._get_cost(input_messages=messages, completion_text=txt_response)
+        return txt_response, cost
 
     def _prepare_message_list(
         self,
