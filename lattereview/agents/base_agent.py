@@ -9,13 +9,8 @@ class BaseAgent(BaseModel):
     backstory: str = "a generic base agent"
     temperature: float = 0.2
     max_tokens: int = 150
-    review_type: str = "title/abstract"
-    review_criteria: Optional[str] = None
-    scoring_schema: str = "[0, 1]"
-    scoring_rules: str = "Your scores should follow the defined schema."
-    help_criteria: str = "Seek help when uncertain."
+    cost_so_far: float = 0
     memory: List[Dict] = []
-    review_prompt: str = "Default review prompt."
     identity: dict = dict()
 
     def build_identity(self) -> None:

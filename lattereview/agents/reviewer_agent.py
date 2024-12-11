@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import asyncio
 from pydantic import BaseModel
 
@@ -11,6 +11,12 @@ class ReviewerResponseFormat(BaseModel):
 
 class ReviewerAgent(BaseAgent):
     response_format: Any = ReviewerResponseFormat
+    review_type: str = "title/abstract"
+    review_criteria: Optional[str] = None
+    scoring_schema: str = "[0, 1]"
+    scoring_rules: str = "Your scores should follow the defined schema."
+    help_criteria: str = "Seek help when uncertain."
+    review_prompt: str = "Default review prompt."
 
     def __init__(self, **data):
         """Initialize the ReviewerAgent."""
@@ -46,13 +52,15 @@ class ReviewerAgent(BaseAgent):
             async with semaphore:  # Limit concurrency
                 return await self.review_item(item)
 
-        responses = await asyncio.gather(*(limited_review_item(item) for item in items))
-        for item, response in zip(items, responses):
+        responses_costs = await asyncio.gather(*(limited_review_item(item) for item in items))
+        responses, costs = zip(*responses_costs)
+        for item, response, cost in zip(items, responses, costs):
             self.memory.append(
                 {
                     'identity': self.identity,
                     'item': item,
-                    'response': response
+                    'response': response,
+                    'cost': cost
                 }
             )
         return responses
@@ -63,5 +71,5 @@ class ReviewerAgent(BaseAgent):
         for var in ['review_type', 'review_criteria', 'scoring_schema', 'scoring_rules', 'help_criteria']:
             input_text = input_text.replace('${' + var + '}$', self.identity[var])
         input_text = input_text.replace('${item}$', item)
-        response = await self.provider.get_json_response(input_text, temperature=self.temperature)
-        return response
+        response, cost = await self.provider.get_json_response(input_text, temperature=self.temperature)
+        return response, cost
