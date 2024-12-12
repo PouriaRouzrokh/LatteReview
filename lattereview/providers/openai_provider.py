@@ -1,119 +1,135 @@
+"""OpenAI API provider implementation with comprehensive error handling and type safety."""
+from typing import Optional, List, Dict, Any, Union, Tuple
+from pathlib import Path
 import os
-from typing import Optional, List, Dict, Any
-from .base_provider import BaseProvider
+from pydantic import BaseModel, create_model
 import openai
-
+from .base_provider import BaseProvider, ProviderError, ClientCreationError, ResponseError
 
 class OpenAIProvider(BaseProvider):
-    def __init__(self, **data):
-        """
-        Initialize the OpenAIProvider.
-        """
+    provider: str = "OpenAI"
+    api_key: str = os.getenv("OPENAI_API_KEY", "")
+    client: Optional[openai.AsyncOpenAI] = None
+    model: str = "gpt-4o-mini"
+    response_format_class: Optional[BaseModel] = None
+
+    def __init__(self, **data: Any) -> None:
+        """Initialize the OpenAI provider with error handling."""
         super().__init__(**data)
-        self.provider = "OpenAI"
-        self.api_key = data.get("api_key", os.getenv("OPENAI_API_KEY"))
-        self.client = self.create_client()
-        self.model = data.get("model", "gpt-4o-mini")
-        self.output_json_format = data.get("output_json_format", None)
+        try:
+            self.client = self.create_client()
+        except Exception as e:
+            raise ClientCreationError(f"Failed to create OpenAI client: {str(e)}")
+
+    def set_response_format(self, response_format: Dict[str, Any]) -> None:
+        """Set the response format for JSON responses."""
+        try:
+            if not isinstance(response_format, dict):
+                raise ValueError("Response format must be a dictionary")
+            self.response_format = response_format
+            fields = {key: (value, ...) for key, value in response_format.items()}
+            self.response_format_class = create_model('ResponseFormat', **fields)
+        except Exception as e:
+            raise ProviderError(f"Error setting response format: {str(e)}")
 
     def create_client(self) -> openai.AsyncOpenAI:
-        """
-        Create and return the OpenAI client.
-        """
-        return openai.AsyncOpenAI(api_key=self.api_key)
+        """Create and return the OpenAI client."""
+        if not self.api_key:
+            raise ClientCreationError("OPENAI_API_KEY environment variable is not set")
+        try:
+            return openai.AsyncOpenAI(api_key=self.api_key)
+        except Exception as e:
+            raise ClientCreationError(f"Failed to create OpenAI client: {str(e)}")
 
     async def get_response(
         self,
         messages: str,
         message_list: Optional[List[Dict[str, str]]] = None,
-        system_message: Optional[str] = None,
-        **kwargs
-    ) -> Any:
-        """
-        Get a response from OpenAI.
-        """
-        message_list = self._prepare_message_list(messages, message_list, system_message)
-        response = await self._fetch_response(message_list, kwargs)
-        txt_response = self._extract_content(response)
-        cost = self._get_cost(input_messages=messages, completion_text=txt_response)
-        return txt_response, cost
+        **kwargs: Any
+    ) -> Tuple[Any, Dict[str, float]]:
+        """Get a response from OpenAI."""
+        try:
+            message_list = self._prepare_message_list(messages, message_list)
+            response = await self._fetch_response(message_list, kwargs)
+            txt_response = self._extract_content(response)
+            cost = self._get_cost(input_messages=messages, completion_text=txt_response)
+            return txt_response, cost
+        except Exception as e:
+            raise ResponseError(f"Error getting response: {str(e)}")
 
     async def get_json_response(
         self,
         messages: str,
         message_list: Optional[List[Dict[str, str]]] = None,
-        system_message: Optional[str] = None,
-        **kwargs
-    ) -> Any:
-        """
-        Get a JSON response from OpenAI.
-        """
-        if not self.output_json_format:
-            raise ValueError("Output JSON format is not set")
-        message_list = self._prepare_message_list(messages, message_list, system_message)
-        response = await self._fetch_json_response(message_list, kwargs)
-        txt_response = self._extract_content(response)
-        cost = self._get_cost(input_messages=messages, completion_text=txt_response)
-        return txt_response, cost
+        **kwargs: Any
+    ) -> Tuple[Any, Dict[str, float]]:
+        """Get a JSON response from OpenAI."""
+        try:
+            if not self.response_format_class:
+                raise ValueError("Response format is not set")
+            message_list = self._prepare_message_list(messages, message_list)
+            response = await self._fetch_json_response(message_list, kwargs)
+            txt_response = self._extract_content(response)
+            cost = self._get_cost(input_messages=messages, completion_text=txt_response)
+            return txt_response, cost
+        except Exception as e:
+            raise ResponseError(f"Error getting JSON response: {str(e)}")
 
     def _prepare_message_list(
         self,
         message: str,
         message_list: Optional[List[Dict[str, str]]] = None,
-        system_message: Optional[str] = None
     ) -> List[Dict[str, str]]:
-        """
-        Prepare the list of messages to send.
-        """
-        if message_list:
-            message_list.append({"role": "user", "content": message})
-            if system_message:
-                message_list.insert(0, {"role": "system", "content": system_message})
-        else:
-            if not system_message:
-                system_message = "You are a helpful assistant."
-            message_list = [
-                {"role": "system", "content": system_message},
-                {"role": "user", "content": message},
-            ]
-        return message_list
+        """Prepare the message list for the API call."""
+        try:
+            if message_list:
+                message_list.append({"role": "user", "content": message})
+            else:
+                message_list = [
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": message},
+                ]
+            return message_list
+        except Exception as e:
+            raise ProviderError(f"Error preparing message list: {str(e)}")
 
     async def _fetch_response(
-        self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None
+        self,
+        message_list: List[Dict[str, str]],
+        kwargs: Optional[Dict[str, Any]] = None
     ) -> Any:
-        """
-        Fetch the raw response from OpenAI.
-        """
+        """Fetch the raw response from OpenAI."""
         try:
             return await self.client.chat.completions.create(
-                model=self.model, messages=message_list, **(kwargs or {})
+                model=self.model,
+                messages=message_list,
+                **(kwargs or {})
             )
         except Exception as e:
-            print(f"Error fetching response: {e}")
-            return None
+            raise ResponseError(f"Error fetching response: {str(e)}")
 
     async def _fetch_json_response(
-        self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None
+        self,
+        message_list: List[Dict[str, str]],
+        kwargs: Optional[Dict[str, Any]] = None
     ) -> Any:
-        """
-        Fetch the JSON response from OpenAI.
-        """
+        """Fetch the JSON response from OpenAI."""
         try:
             return await self.client.beta.chat.completions.parse(
                 model=self.model,
                 messages=message_list,
-                response_format=self.output_json_format,
-                **(kwargs or {}),
+                response_format=self.response_format_class,
+                **(kwargs or {})
             )
         except Exception as e:
-            print(f"Error fetching JSON response: {e}")
-            return None
+            raise ResponseError(f"Error fetching JSON response: {str(e)}")
 
-    def _extract_content(self, response: Any) -> Any:
-        """
-        Extract content from the response.
-        """
-        if response:
+    def _extract_content(self, response: Any) -> str:
+        """Extract content from the response."""
+        try:
+            if not response:
+                raise ValueError("Empty response received")
             self.last_response = response
             return response.choices[0].message.content
-        return None
+        except Exception as e:
+            raise ResponseError(f"Error extracting content: {str(e)}")

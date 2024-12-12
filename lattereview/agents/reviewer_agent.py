@@ -1,69 +1,107 @@
-from typing import List, Dict, Any, Optional
+"""Reviewer agent implementation with consistent error handling and type safety."""
+from typing import List, Dict, Any, Optional, Union
 import asyncio
-from pydantic import BaseModel
-
-from .base_agent import BaseAgent
-
-class ReviewerResponseFormat(BaseModel):
-    reasoning: str
-    score: int
-    question: str
+from pathlib import Path
+from pydantic import Field
+from .base_agent import BaseAgent, AgentError, ReasoningType
 
 class ReviewerAgent(BaseAgent):
-    response_format: Any = ReviewerResponseFormat
+    response_format: Dict[str, Any] = {
+        "reasoning": str,
+        "score": int,
+        "question": str
+    }
     review_type: str = "title/abstract"
     review_criteria: Optional[str] = None
-    scoring_schema: str = "[0, 1]"
+    score_set: str = "[0, 1]"
     scoring_rules: str = "Your scores should follow the defined schema."
-    question_criteria: str = "When highly uncertain about a review."
-    review_prompt: str = "Default review prompt."
+    generic_item_prompt: Optional[str] = Field(default=None)
 
-    def __init__(self, **data):
-        """Initialize the ReviewerAgent."""
-        super().__init__(**data) 
-        self.review_prompt = open('../lattereview/prompts/review_prompt.txt', 'r').read()
-        self.build_identity()
+    class Config:
+        arbitrary_types_allowed = True
 
-    def build_identity(self) -> None:
-        """Build the agent's identity based on its attributes. """
-        self.identity = {
-            'name': self.name,
-            'backstory': self.backstory,
-            'temperature': self.temperature,
-            'review_type': self.review_type,
-            'review_criteria': self.review_criteria,
-            'scoring_schema': self.scoring_schema,
-            'scoring_rules': self.scoring_rules,
-            'question_criteria': self.question_criteria,
-            'system_prompt': f"Your name is {self.name} and you are {self.backstory}"
-        }
+    def model_post_init(self, __context: Any) -> None:
+        """Initialize after Pydantic model initialization."""
+        try:
+            prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
+            if not prompt_path.exists():
+                raise FileNotFoundError(f"Review prompt template not found at {prompt_path}")
+            self.generic_item_prompt = prompt_path.read_text(encoding='utf-8')
+            self.setup()
+        except Exception as e:
+            raise AgentError(f"Error in post-initialization: {str(e)}")
 
-    async def review_items(self, items: List[str]) -> List[Dict]:
-        """Review a list of items asynchronously."""
-        self.build_identity()
-        semaphore = asyncio.Semaphore(self.max_concurrent_requests)
+    def setup(self) -> None:
+        """Build the agent's identity and configure the provider."""
+        try:
+            self.system_prompt = self.build_system_prompt()
+            keys_to_replace = ['review_type', 'review_criteria', 'score_set', 
+                             'scoring_rules', 'reasoning', 'examples']
+            
+            self.item_prompt = self.build_item_prompt(
+                self.generic_item_prompt,
+                {key: getattr(self, key) for key in keys_to_replace}
+            )
+            
+            self.identity = {
+                "system_prompt": self.system_prompt,
+                "item_prompt": self.item_prompt,
+                'temperature': self.temperature,
+                "max_tokens": self.max_tokens,
+            }
+            
+            if not self.provider:
+                raise AgentError("Provider not initialized")
+            
+            self.provider.set_response_format(self.response_format)
+            self.provider.system_prompt = self.system_prompt
+        except Exception as e:
+            raise AgentError(f"Error in setup: {str(e)}")
 
-        async def limited_review_item(item):
-            async with semaphore:  # Limit concurrency
-                return await self.review_item(item)
+    async def review_items(self, items: List[str]) -> List[Dict[str, Any]]:
+        """Review a list of items asynchronously with concurrency control."""
+        try:
+            self.setup()
+            semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
-        responses_costs = await asyncio.gather(*(limited_review_item(item) for item in items))
-        responses, costs = zip(*responses_costs)
-        for item, response, cost in zip(items, responses, costs):
-            self.memory.append(
-                {
+            async def limited_review_item(item: str) -> tuple[Dict[str, Any], Dict[str, float]]:
+                async with semaphore:
+                    return await self.review_item(item)
+
+            responses_costs = await asyncio.gather(
+                *(limited_review_item(item) for item in items),
+                return_exceptions=True
+            )
+
+            # Handle any exceptions from the gathered tasks
+            results = []
+            for item, response_cost in zip(items, responses_costs):
+                if isinstance(response_cost, Exception):
+                    print(f"Error processing item: {item}, Error: {str(response_cost)}")
+                    continue
+                
+                response, cost = response_cost
+                self.cost_so_far += cost["total_cost"]
+                self.memory.append({
                     'identity': self.identity,
                     'item': item,
                     'response': response,
                     'cost': cost
-                }
-            )
-        return responses
+                })
+                results.append(response)
 
-    async def review_item(self, item: str) -> Dict:
-        """Review a single item asynchronously."""
-        keys_to_replace = ['review_type', 'review_criteria', 'scoring_schema', 'scoring_rules', 'question_criteria']
-        input_prompt = self.complete_prompt(self.review_prompt, {key: self.identity[key] for key in keys_to_replace})
-        input_prompt = self.complete_prompt(input_prompt, {'item': item})
-        response, cost = await self.provider.get_json_response(input_prompt, temperature=self.temperature)
-        return response, cost
+            return results
+        except Exception as e:
+            raise AgentError(f"Error reviewing items: {str(e)}")
+
+    async def review_item(self, item: str) -> tuple[Dict[str, Any], Dict[str, float]]:
+        """Review a single item asynchronously with error handling."""
+        try:
+            item_prompt = self.build_item_prompt(self.item_prompt, {'item': item})
+            response, cost = await self.provider.get_json_response(
+                item_prompt,
+                temperature=self.temperature
+            )
+            return response, cost
+        except Exception as e:
+            raise AgentError(f"Error reviewing item: {str(e)}")
