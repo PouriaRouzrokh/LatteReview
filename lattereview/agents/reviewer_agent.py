@@ -1,9 +1,9 @@
 """Reviewer agent implementation with consistent error handling and type safety."""
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 import asyncio
 from pathlib import Path
 from pydantic import Field
-from .base_agent import BaseAgent, AgentError, ReasoningType
+from .base_agent import BaseAgent, AgentError
 
 class ReviewerAgent(BaseAgent):
     response_format: Dict[str, Any] = {

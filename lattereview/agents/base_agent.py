@@ -1,6 +1,5 @@
 """Base agent class with consistent error handling and type safety."""
 from typing import List, Optional, Dict, Any, Union
-from pathlib import Path
 from enum import Enum
 from pydantic import BaseModel
 

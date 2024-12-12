@@ -1,6 +1,5 @@
 """Base class for all API providers with consistent error handling and type hints."""
 from typing import Optional, Any, List, Dict, Union
-from pathlib import Path
 import pydantic
 from tokencost import calculate_prompt_cost, calculate_completion_cost
 
