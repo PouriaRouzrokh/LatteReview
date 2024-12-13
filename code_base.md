@@ -210,7 +210,6 @@ class BaseProvider(pydantic.BaseModel):
     def _get_cost(self, input_messages: List[str], completion_text: str) -> Dict[str, float]:
         """Calculate the cost of a prompt completion."""
         try:
-            print(input_messages, self.model)
             input_cost = calculate_prompt_cost(input_messages, self.model)
             output_cost = calculate_completion_cost(completion_text, self.model)
             return {
@@ -309,17 +308,17 @@ class OpenAIProvider(BaseProvider):
 
     def _prepare_message_list(
         self,
-        message: str,
+        messages: str,
         message_list: Optional[List[Dict[str, str]]] = None,
     ) -> List[Dict[str, str]]:
         """Prepare the message list for the API call."""
         try:
             if message_list:
-                message_list.append({"role": "user", "content": message})
+                message_list.append({"role": "user", "content": messages})
             else:
                 message_list = [
                     {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": message},
+                    {"role": "user", "content": messages},
                 ]
             return message_list
         except Exception as e:
@@ -526,9 +525,9 @@ class BaseAgent(BaseModel):
 
 ```py
 """Reviewer agent implementation with consistent error handling and type safety."""
-from typing import List, Dict, Any, Optional
 import asyncio
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 from pydantic import Field
 from .base_agent import BaseAgent, AgentError
 
@@ -609,13 +608,13 @@ class ScoringReviewer(BaseAgent):
                 
                 response, cost = response_cost
                 self.cost_so_far += cost["total_cost"]
+                results.append(response)
                 self.memory.append({
                     'identity': self.identity,
                     'item': item,
                     'response': response,
                     'cost': cost
                 })
-                results.append(response)
 
             return results
         except Exception as e:

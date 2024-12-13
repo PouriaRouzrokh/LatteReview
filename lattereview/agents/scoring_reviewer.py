@@ -1,7 +1,7 @@
 """Reviewer agent implementation with consistent error handling and type safety."""
-from typing import List, Dict, Any, Optional
 import asyncio
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 from pydantic import Field
 from .base_agent import BaseAgent, AgentError
 
@@ -102,7 +102,6 @@ class ScoringReviewer(BaseAgent):
                 item_prompt,
                 temperature=self.temperature
             )
-            # print(type(response), response)
             return response, cost
         except Exception as e:
             raise AgentError(f"Error reviewing item: {str(e)}")

@@ -76,17 +76,17 @@ class OpenAIProvider(BaseProvider):
 
     def _prepare_message_list(
         self,
-        message: str,
+        messages: str,
         message_list: Optional[List[Dict[str, str]]] = None,
     ) -> List[Dict[str, str]]:
         """Prepare the message list for the API call."""
         try:
             if message_list:
-                message_list.append({"role": "user", "content": message})
+                message_list.append({"role": "user", "content": messages})
             else:
                 message_list = [
                     {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": message},
+                    {"role": "user", "content": messages},
                 ]
             return message_list
         except Exception as e:
