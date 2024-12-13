@@ -94,19 +94,24 @@ if __name__ == "__main__":
 ## lattereview/generic_prompts/review_prompt.txt
 
 ```txt
-Review the below article ${review_type}$ and evaluate if it meets the following criteria:
+Review the item below and evaluate it against the following criteria:
 
-Article ${review_type}$: ${item}$
+Input item: <<${item}$>>
 
-Review criteria: ${review_criteria}$
+Review criteria: <<${review_criteria}$>>
 
-Now score the article based on your evaluation and by choosing one of the following values: ${score_set}$. Your scoring should be based on the following rules: ${scoring_rules}$
+Now score the article based on your evaluation and by choosing one of the following values: ${score_set}$.
+
+If you are highly in doubt about what to score, score "0". 
+
+Your scoring should be based on the following rules: <<${scoring_rules}$>>
 
 ${reasoning}$
 
-If you are highly in doubt about the score you should give and/or have a question about your task, return your question as well as the best score you could give. DO NOT AVOID SCORING OR RETURNING AN INVALID SCORE.
-
 ${examples}$
+
+
+
 ```
 
 ## lattereview/generic_prompts/__init__.py
@@ -120,7 +125,6 @@ ${examples}$
 ```py
 """Base class for all API providers with consistent error handling and type hints."""
 from typing import Optional, Any, List, Dict, Union
-from pathlib import Path
 import pydantic
 from tokencost import calculate_prompt_cost, calculate_completion_cost
 
@@ -229,7 +233,6 @@ class BaseProvider(pydantic.BaseModel):
 ```py
 """OpenAI API provider implementation with comprehensive error handling and type safety."""
 from typing import Optional, List, Dict, Any, Union, Tuple
-from pathlib import Path
 import os
 from pydantic import BaseModel, create_model
 import openai
@@ -369,7 +372,6 @@ class OpenAIProvider(BaseProvider):
 ```py
 """Base agent class with consistent error handling and type safety."""
 from typing import List, Optional, Dict, Any, Union
-from pathlib import Path
 from enum import Enum
 from pydantic import BaseModel
 
@@ -390,6 +392,7 @@ class BaseAgent(BaseModel):
     max_concurrent_requests: int = 20
     name: str = "BaseAgent"
     backstory: str = "a generic base agent"
+    input_description: str = "article title/abstract"
     examples: Union[str, List[Union[str, Dict[str, Any]]]] = None
     reasoning: ReasoningType = ReasoningType.BRIEF
     system_prompt: Optional[str] = None
@@ -420,7 +423,8 @@ class BaseAgent(BaseModel):
         """Build the system prompt for the agent."""
         try:
             return self._clean_text(f"""
-                Your name is {self.name} and you are {self.backstory}
+                Your name is <<{self.name}>> and you are <<{self.backstory}>>.
+                Your task is to review input itmes with the following description: <<{self.input_description}>>.
                 Your final output should have the following keys: 
                 {", ".join(f"{k} ({v})" for k, v in self.response_format.items())}.
                 """)
@@ -454,9 +458,9 @@ class BaseAgent(BaseModel):
             
             reasoning_map = {
                 ReasoningType.NONE: "",
-                ReasoningType.BRIEF: "Please provide a brief reasoning for your response.",
-                ReasoningType.LONG: "Please provide a detailed reasoning for your response.",
-                ReasoningType.COT: "Please provide a reasoning for your response. Think step by step for the best explanation."
+                ReasoningType.BRIEF: "You must also provide a brief (1 sentence) reasoning for your scoring. First reason then score!",
+                ReasoningType.LONG: "You must also provide a detailed reasoning for your scoring. First reason then score!",
+                ReasoningType.COT: "You must also provide a reasoning for your scoring . Think step by step in your reasoning. First reason then score!"
             }
             
             return self._clean_text(reasoning_map.get(reasoning, ""))
@@ -481,8 +485,8 @@ class BaseAgent(BaseModel):
                 else:
                     raise ValueError(f"Invalid example type: {type(example)}")
             
-            return self._clean_text("Here is one or more examples of the performance you are expected to have: \n" + 
-                                  "".join(examples_str))
+            return self._clean_text("<<Here is one or more examples of the performance you are expected to have: \n" + 
+                                  "".join(examples_str)+">>")
         except Exception as e:
             raise AgentError(f"Error processing examples: {str(e)}")
     
@@ -518,25 +522,23 @@ class BaseAgent(BaseModel):
 
 ```
 
-## lattereview/agents/reviewer_agent.py
+## lattereview/agents/scoring_reviewer.py
 
 ```py
 """Reviewer agent implementation with consistent error handling and type safety."""
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional
 import asyncio
 from pathlib import Path
 from pydantic import Field
-from .base_agent import BaseAgent, AgentError, ReasoningType
+from .base_agent import BaseAgent, AgentError
 
-class ReviewerAgent(BaseAgent):
+class ScoringReviewer(BaseAgent):
     response_format: Dict[str, Any] = {
-        "reasoning": str,
         "score": int,
-        "question": str
+        "reasoning": str,
     }
-    review_type: str = "title/abstract"
     review_criteria: Optional[str] = None
-    score_set: str = "[0, 1]"
+    score_set: List[int] = [1, 2]
     scoring_rules: str = "Your scores should follow the defined schema."
     generic_item_prompt: Optional[str] = Field(default=None)
 
@@ -546,6 +548,7 @@ class ReviewerAgent(BaseAgent):
     def model_post_init(self, __context: Any) -> None:
         """Initialize after Pydantic model initialization."""
         try:
+            assert 0 not in self.score_set, "Score set must not contain 0. This value is reserved for uncertain scorings / errors."
             prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
             if not prompt_path.exists():
                 raise FileNotFoundError(f"Review prompt template not found at {prompt_path}")
@@ -558,7 +561,8 @@ class ReviewerAgent(BaseAgent):
         """Build the agent's identity and configure the provider."""
         try:
             self.system_prompt = self.build_system_prompt()
-            keys_to_replace = ['review_type', 'review_criteria', 'score_set', 
+            self.score_set = str(self.score_set)
+            keys_to_replace = ['review_criteria', 'score_set', 
                              'scoring_rules', 'reasoning', 'examples']
             
             self.item_prompt = self.build_item_prompt(

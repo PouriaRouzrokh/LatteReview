@@ -20,6 +20,7 @@ class BaseAgent(BaseModel):
     max_concurrent_requests: int = 20
     name: str = "BaseAgent"
     backstory: str = "a generic base agent"
+    input_description: str = "article title/abstract"
     examples: Union[str, List[Union[str, Dict[str, Any]]]] = None
     reasoning: ReasoningType = ReasoningType.BRIEF
     system_prompt: Optional[str] = None
@@ -50,7 +51,8 @@ class BaseAgent(BaseModel):
         """Build the system prompt for the agent."""
         try:
             return self._clean_text(f"""
-                Your name is {self.name} and you are {self.backstory}
+                Your name is <<{self.name}>> and you are <<{self.backstory}>>.
+                Your task is to review input itmes with the following description: <<{self.input_description}>>.
                 Your final output should have the following keys: 
                 {", ".join(f"{k} ({v})" for k, v in self.response_format.items())}.
                 """)
@@ -84,9 +86,9 @@ class BaseAgent(BaseModel):
             
             reasoning_map = {
                 ReasoningType.NONE: "",
-                ReasoningType.BRIEF: "Please provide a brief reasoning for your response.",
-                ReasoningType.LONG: "Please provide a detailed reasoning for your response.",
-                ReasoningType.COT: "Please provide a reasoning for your response. Think step by step for the best explanation."
+                ReasoningType.BRIEF: "You must also provide a brief (1 sentence) reasoning for your scoring. First reason then score!",
+                ReasoningType.LONG: "You must also provide a detailed reasoning for your scoring. First reason then score!",
+                ReasoningType.COT: "You must also provide a reasoning for your scoring . Think step by step in your reasoning. First reason then score!"
             }
             
             return self._clean_text(reasoning_map.get(reasoning, ""))
@@ -111,8 +113,8 @@ class BaseAgent(BaseModel):
                 else:
                     raise ValueError(f"Invalid example type: {type(example)}")
             
-            return self._clean_text("Here is one or more examples of the performance you are expected to have: \n" + 
-                                  "".join(examples_str))
+            return self._clean_text("<<Here is one or more examples of the performance you are expected to have: \n" + 
+                                  "".join(examples_str)+">>")
         except Exception as e:
             raise AgentError(f"Error processing examples: {str(e)}")
     

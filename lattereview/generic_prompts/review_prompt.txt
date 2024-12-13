@@ -1,13 +1,17 @@
-Review the below article ${review_type}$ and evaluate if it meets the following criteria:
+Review the item below and evaluate it against the following criteria:
 
-Article ${review_type}$: ${item}$
+Input item: <<${item}$>>
 
-Review criteria: ${review_criteria}$
+Review criteria: <<${review_criteria}$>>
 
-Now score the article based on your evaluation and by choosing one of the following values: ${score_set}$. Your scoring should be based on the following rules: ${scoring_rules}$
+Now score the article based on your evaluation and by choosing one of the following values: ${score_set}$.
+
+If you are highly in doubt about what to score, score "0". 
+
+Your scoring should be based on the following rules: <<${scoring_rules}$>>
 
 ${reasoning}$
 
-If you are highly in doubt about the score you should give and/or have a question about your task, return your question as well as the best score you could give. DO NOT AVOID SCORING OR RETURNING AN INVALID SCORE.
-
 ${examples}$
+
+

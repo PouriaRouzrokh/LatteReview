@@ -5,15 +5,13 @@ from pathlib import Path
 from pydantic import Field
 from .base_agent import BaseAgent, AgentError
 
-class ReviewerAgent(BaseAgent):
+class ScoringReviewer(BaseAgent):
     response_format: Dict[str, Any] = {
-        "reasoning": str,
         "score": int,
-        "question": str
+        "reasoning": str,
     }
-    review_type: str = "title/abstract"
     review_criteria: Optional[str] = None
-    score_set: str = "[0, 1]"
+    score_set: List[int] = [1, 2]
     scoring_rules: str = "Your scores should follow the defined schema."
     generic_item_prompt: Optional[str] = Field(default=None)
 
@@ -23,6 +21,7 @@ class ReviewerAgent(BaseAgent):
     def model_post_init(self, __context: Any) -> None:
         """Initialize after Pydantic model initialization."""
         try:
+            assert 0 not in self.score_set, "Score set must not contain 0. This value is reserved for uncertain scorings / errors."
             prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
             if not prompt_path.exists():
                 raise FileNotFoundError(f"Review prompt template not found at {prompt_path}")
@@ -35,7 +34,8 @@ class ReviewerAgent(BaseAgent):
         """Build the agent's identity and configure the provider."""
         try:
             self.system_prompt = self.build_system_prompt()
-            keys_to_replace = ['review_type', 'review_criteria', 'score_set', 
+            self.score_set = str(self.score_set)
+            keys_to_replace = ['review_criteria', 'score_set', 
                              'scoring_rules', 'reasoning', 'examples']
             
             self.item_prompt = self.build_item_prompt(
