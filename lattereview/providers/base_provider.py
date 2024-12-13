@@ -85,7 +85,6 @@ class BaseProvider(pydantic.BaseModel):
     def _get_cost(self, input_messages: List[str], completion_text: str) -> Dict[str, float]:
         """Calculate the cost of a prompt completion."""
         try:
-            print(input_messages, self.model)
             input_cost = calculate_prompt_cost(input_messages, self.model)
             output_cost = calculate_completion_cost(completion_text, self.model)
             return {

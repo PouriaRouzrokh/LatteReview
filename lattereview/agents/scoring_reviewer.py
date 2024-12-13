@@ -82,13 +82,13 @@ class ScoringReviewer(BaseAgent):
                 
                 response, cost = response_cost
                 self.cost_so_far += cost["total_cost"]
+                results.append(response)
                 self.memory.append({
                     'identity': self.identity,
                     'item': item,
                     'response': response,
                     'cost': cost
                 })
-                results.append(response)
 
             return results
         except Exception as e:
@@ -102,6 +102,7 @@ class ScoringReviewer(BaseAgent):
                 item_prompt,
                 temperature=self.temperature
             )
+            # print(type(response), response)
             return response, cost
         except Exception as e:
             raise AgentError(f"Error reviewing item: {str(e)}")
