@@ -98,14 +98,14 @@ class OllamaProvider(BaseProvider):
             
             response = await self._fetch_response(message_list, cleaned_kwargs)
             txt_response = self._extract_content(response)
-            try:
-                # Validate response against schema
-                validated_response = self.response_format_class.model_validate_json(txt_response)
-            except Exception as e:
-                raise ResponseError(f"Response validation failed: {str(e)}\nResponse: {txt_response}")
-            
+            # try:
+            #     # Validate response against schema
+            #     validated_response = self.response_format_class.model_validate_json(txt_response)
+            # except Exception as e:
+            #     raise ResponseError(f"Response validation failed: {str(e)}\nResponse: {txt_response}")
+            # txt_response = validated_response.model_dump()
             cost = {'input_cost': 0, 'output_cost': 0, 'total_cost': 0}  # Ollama models are local and therefore free.
-            return validated_response.model_dump(), cost
+            return txt_response, cost
         except Exception as e:
             raise ResponseError(f"Error getting JSON response: {str(e)}")
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional
 from pydantic import Field
 from .base_agent import BaseAgent, AgentError
+from tqdm.asyncio import tqdm
 
 class ScoringReviewer(BaseAgent):
     response_format: Dict[str, Any] = {
@@ -59,8 +60,9 @@ class ScoringReviewer(BaseAgent):
             raise AgentError(f"Error in setup: {str(e)}")
 
     async def review_items(self, items: List[str]) -> List[Dict[str, Any]]:
-        """Review a list of items asynchronously with concurrency control."""
+        """Review a list of items asynchronously with concurrency control and progress bar."""
         try:
+
             self.setup()
             semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
@@ -68,10 +70,13 @@ class ScoringReviewer(BaseAgent):
                 async with semaphore:
                     return await self.review_item(item)
 
-            responses_costs = await asyncio.gather(
-                *(limited_review_item(item) for item in items),
-                return_exceptions=True
-            )
+            responses_costs = []
+            async for response_cost in tqdm(
+                asyncio.as_completed([limited_review_item(item) for item in items]),
+                total=len(items),
+                desc="Reviewing items"
+            ):
+                responses_costs.append(await response_cost)
 
             # Handle any exceptions from the gathered tasks
             results = []

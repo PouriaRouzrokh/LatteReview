@@ -15,6 +15,7 @@ class ReviewWorkflow(pydantic.BaseModel):
     memory: List[Dict] = list()
     reviewer_costs: Dict = dict()
     total_cost: float = 0.0
+    verbose: bool = True
 
     def __post_init__(self, __context):
         """Initialize after Pydantic model initialization."""
@@ -58,40 +59,46 @@ class ReviewWorkflow(pydantic.BaseModel):
             for review_round, review_task in enumerate(self.workflow_schema):
                 round_id = review_task["round"]
                 print(f"\nStarting review round {round_id} ({review_round + 1}/{total_rounds})...")
-                print(f"Reviewers: {[reviewer.name for reviewer in review_task['reviewers']]}")
-                print(f"Input data: {review_task['inputs']}")
+                self._log(f"Reviewers: {[reviewer.name for reviewer in review_task['reviewers']]}")
+                self._log(f"Input data: {review_task['inputs']}")
                 
                 reviewers = review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
                 inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
                 filter_func = review_task.get("filter", lambda x: True)
                 
-                # Pre-process data with progress bar
+                # Pre-process data
                 output_cols = [col for col in inputs if "_output_" in col]
                 for col in output_cols:
                     mask = df[col].notna()
                     if mask.any():
-                        df.loc[mask, col] = df.loc[mask, col].apply(lambda x: x if isinstance(x, dict) else json.loads(x))
-                    else:
-                        df[col] = df[col].apply(lambda x: {"reasoning": None, "score": None})
+                        try:
+                            df.loc[mask, col] = df.loc[mask, col].apply(lambda x: x if isinstance(x, dict) else json.loads(x))
+                        except Exception as e:
+                            self._log(ReviewWorkflowError(f"Error parsing output column {col}: {e}"))
+                            df[col] = df[col].apply(lambda x: {"reasoning": None, "score": None})
                 
-                # Create input items with progress bar
+                # Create input items
                 input_text = []
                 for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating inputs", leave=False):
                     text = " ".join(f"{input_col}: {str(row[input_col])}" for input_col in inputs)
                     input_text.append(text)
                 df["input_item"] = input_text
                 
-                # Apply filter with progress bar
+                # Apply filter
                 try:
                     mask = []
                     for _, row in tqdm(df.iterrows(), total=len(df), desc="Filtering", leave=False):
-                        mask.append(filter_func(row))
+                        try:
+                            mask.append(filter_func(row))
+                        except:
+                            # If filter function fails, assume row is eligible
+                            mask.append(True)                    
                     mask = pd.Series(mask, index=df.index)
                     eligible_rows = mask.sum()
-                    print(f"Number of eligible rows for review: {eligible_rows}")
+                    self._log(f"Number of eligible rows for review: {eligible_rows}")
                     
                     if (eligible_rows == 0):
-                        print(f"Skipping review round {round_id} - no eligible rows")
+                        self._log(f"Skipping review round {round_id} - no eligible rows")
                         continue
                         
                 except Exception as e:
@@ -142,6 +149,10 @@ class ReviewWorkflow(pydantic.BaseModel):
             return df
         except Exception as e:
             raise ReviewWorkflowError(f"Error running workflow: {e}")
+        
+    def _log(self, x):
+        if self.verbose:
+            print(x)
         
     def get_total_cost(self) -> int:
         """Return the total cost of the review process."""
