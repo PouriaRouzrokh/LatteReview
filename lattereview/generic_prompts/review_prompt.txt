@@ -1,14 +1,14 @@
-Review the item below and evaluate it against the following criteria:
+Review the input item below and evaluate it against the following criteria:
+
+Scoring task: <<${scoring_task}$>>
 
 Input item: <<${item}$>>
 
-Review criteria: <<${review_criteria}$>>
-
-Now score the article based on your evaluation and by choosing one of the following values: ${score_set}$.
-
-If you are highly in doubt about what to score, score "0". 
+Now choose your score from the following values: ${score_set}$.
 
 Your scoring should be based on the following rules: <<${scoring_rules}$>>
+
+If you are highly in doubt about what to score, score "0". 
 
 ${reasoning}$
 

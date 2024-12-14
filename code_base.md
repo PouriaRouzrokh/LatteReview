@@ -79,13 +79,158 @@ if __name__ == "__main__":
 
 ```
 
-## lattereview/__init__.py
+## lattereview/review_workflow.py
 
 ```py
+import pydantic
+from typing import List, Dict, Any, Union
+import pandas as pd
+from tqdm.auto import tqdm
+import json
+
+from .agents.scoring_reviewer import ScoringReviewer
+
+class ReviewWorkflowError(Exception):
+    """Base exception for workflow-related errors."""
+    pass
+
+class ReviewWorkflow(pydantic.BaseModel):
+    workflow_schema: List[Dict[str, Any]]
+    memory: List[Dict] = list()
+    reviewer_costs: Dict = dict()
+    total_cost: float = 0.0
+
+    def __post_init__(self, __context):
+        """Initialize after Pydantic model initialization."""
+        try:
+            for review_task in self.workflow_schema:
+                round_id = review_task["round"]
+                reviewers = review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
+                reviewer_names = [f"round-{round_id}_{reviewer.name}" for reviewer in reviewers]
+                inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
+                initial_inputs = [col for col in inputs if "_output_" not in col]
+                
+                for reviewer in reviewers:
+                    if not isinstance(reviewer, ScoringReviewer):
+                        raise ReviewWorkflowError(f"Invalid reviewer: {reviewer}")
+                
+                for input_col in initial_inputs:
+                    if input_col not in __context["data"].columns:
+                        if input_col.split("_output")[0] not in reviewer_names:
+                            raise ReviewWorkflowError(f"Invalid input column: {input_col}")
+        except Exception as e:
+            raise ReviewWorkflowError(f"Error initializing Review Workflow: {e}")
+
+    async def __call__(self, data: Union[pd.DataFrame, Dict[str, Any]]) -> pd.DataFrame:
+        """Run the workflow."""
+        try:
+            if isinstance(data, pd.DataFrame):
+                return await self.run(data)
+            elif isinstance(data, dict):
+                return await self.run(pd.DataFrame(data))
+            else:
+                raise ReviewWorkflowError(f"Invalid data type: {type(data)}")
+        except Exception as e:
+            raise ReviewWorkflowError(f"Error running workflow: {e}")
+
+    async def run(self, data: pd.DataFrame) -> pd.DataFrame:
+        """Run the review process."""
+        try:            
+            df = data.copy()
+            total_rounds = len(self.workflow_schema)
+            
+            for review_round, review_task in enumerate(self.workflow_schema):
+                round_id = review_task["round"]
+                print(f"\nStarting review round {round_id} ({review_round + 1}/{total_rounds})...")
+                print(f"Reviewers: {[reviewer.name for reviewer in review_task['reviewers']]}")
+                print(f"Input data: {review_task['inputs']}")
+                
+                reviewers = review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
+                inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
+                filter_func = review_task.get("filter", lambda x: True)
+                
+                # Pre-process data with progress bar
+                output_cols = [col for col in inputs if "_output_" in col]
+                for col in output_cols:
+                    mask = df[col].notna()
+                    if mask.any():
+                        df.loc[mask, col] = df.loc[mask, col].apply(
+                            lambda x: x if isinstance(x, dict) else json.loads(x) if isinstance(x, str) else {"score": None}
+                        )
+                    else:
+                        df[col] = df[col].apply(lambda x: {"score": None})
+                
+                # Create input items with progress bar
+                input_text = []
+                for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating inputs", leave=False):
+                    text = " ".join(f"{input_col}: {str(row[input_col])}" for input_col in inputs)
+                    input_text.append(text)
+                df["input_item"] = input_text
+                
+                # Apply filter with progress bar
+                try:
+                    mask = []
+                    for _, row in tqdm(df.iterrows(), total=len(df), desc="Filtering", leave=False):
+                        mask.append(filter_func(row))
+                    mask = pd.Series(mask, index=df.index)
+                    eligible_rows = mask.sum()
+                    print(f"Number of eligible rows for review: {eligible_rows}")
+                    
+                    if (eligible_rows == 0):
+                        print(f"Skipping review round {round_id} - no eligible rows")
+                        continue
+                        
+                except Exception as e:
+                    raise ReviewWorkflowError(f"Error applying filter in round {round_id}: {e}")
+                
+                df_filtered = df[mask].copy()
+                input_items = df_filtered["input_item"].tolist()
+                
+                # Create progress bar for reviewers
+                reviewer_outputs = []
+                
+                for reviewer in tqdm(reviewers, desc="Reviewers", leave=False):
+                    outputs, review_cost = await reviewer.review_items(input_items)
+                    reviewer_outputs.append(outputs)
+                    self.reviewer_costs[(round_id, reviewer.name)] = review_cost
+
+                # Add reviewer outputs with round prefix
+                for reviewer, outputs in zip(reviewers, reviewer_outputs):
+                    output_col = f"round-{round_id}_{reviewer.name}_output"
+                    outputs = [json.loads(x) for x in outputs]
+                    df_filtered[output_col] = outputs
+                
+                # Merge results back
+                merge_cols = list(set(inputs) - set([col for col in inputs if "_output" in col]))
+                if not merge_cols:
+                    df_filtered.index = df[mask].index
+                    for reviewer in reviewers:
+                        output_col = f"round-{round_id}_{reviewer.name}_output"
+                        df.loc[mask, output_col] = df_filtered[output_col]
+                else:
+                    output_cols = [f"round-{round_id}_{r.name}_output" for r in reviewers]
+                    df = pd.merge(
+                        df,
+                        df_filtered[merge_cols + output_cols],
+                        how="left",
+                        on=merge_cols
+                    )
+                
+                # Clean up temporary columns
+                if "input_item" in df.columns:
+                    df = df.drop("input_item", axis=1)
+                
+            return df
+        except Exception as e:
+            raise ReviewWorkflowError(f"Error running workflow: {e}")
+        
+    def get_total_cost(self) -> int:
+        """Return the total cost of the review process."""
+        return sum(self.reviewer_costs.values())
 
 ```
 
-## lattereview/review.py
+## lattereview/__init__.py
 
 ```py
 
@@ -94,17 +239,17 @@ if __name__ == "__main__":
 ## lattereview/generic_prompts/review_prompt.txt
 
 ```txt
-Review the item below and evaluate it against the following criteria:
+Review the input item below and evaluate it against the following criteria:
+
+Scoring task: <<${scoring_task}$>>
 
 Input item: <<${item}$>>
 
-Review criteria: <<${review_criteria}$>>
-
-Now score the article based on your evaluation and by choosing one of the following values: ${score_set}$.
-
-If you are highly in doubt about what to score, score "0". 
+Now choose your score from the following values: ${score_set}$.
 
 Your scoring should be based on the following rules: <<${scoring_rules}$>>
+
+If you are highly in doubt about what to score, score "0". 
 
 ${reasoning}$
 
@@ -536,7 +681,7 @@ class ScoringReviewer(BaseAgent):
         "score": int,
         "reasoning": str,
     }
-    review_criteria: Optional[str] = None
+    scoring_task: Optional[str] = None
     score_set: List[int] = [1, 2]
     scoring_rules: str = "Your scores should follow the defined schema."
     generic_item_prompt: Optional[str] = Field(default=None)
@@ -548,20 +693,21 @@ class ScoringReviewer(BaseAgent):
         """Initialize after Pydantic model initialization."""
         try:
             assert 0 not in self.score_set, "Score set must not contain 0. This value is reserved for uncertain scorings / errors."
+            self.score_set.insert(0, 0)
             prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
             if not prompt_path.exists():
                 raise FileNotFoundError(f"Review prompt template not found at {prompt_path}")
             self.generic_item_prompt = prompt_path.read_text(encoding='utf-8')
             self.setup()
         except Exception as e:
-            raise AgentError(f"Error in post-initialization: {str(e)}")
+            raise AgentError(f"Error initalizing agent: {str(e)}")
 
     def setup(self) -> None:
         """Build the agent's identity and configure the provider."""
         try:
             self.system_prompt = self.build_system_prompt()
             self.score_set = str(self.score_set)
-            keys_to_replace = ['review_criteria', 'score_set', 
+            keys_to_replace = ['scoring_task', 'score_set', 
                              'scoring_rules', 'reasoning', 'examples']
             
             self.item_prompt = self.build_item_prompt(
@@ -616,7 +762,7 @@ class ScoringReviewer(BaseAgent):
                     'cost': cost
                 })
 
-            return results
+            return results, cost["total_cost"]
         except Exception as e:
             raise AgentError(f"Error reviewing items: {str(e)}")
 

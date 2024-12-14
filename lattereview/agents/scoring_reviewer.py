@@ -10,7 +10,7 @@ class ScoringReviewer(BaseAgent):
         "score": int,
         "reasoning": str,
     }
-    review_criteria: Optional[str] = None
+    scoring_task: Optional[str] = None
     score_set: List[int] = [1, 2]
     scoring_rules: str = "Your scores should follow the defined schema."
     generic_item_prompt: Optional[str] = Field(default=None)
@@ -22,20 +22,21 @@ class ScoringReviewer(BaseAgent):
         """Initialize after Pydantic model initialization."""
         try:
             assert 0 not in self.score_set, "Score set must not contain 0. This value is reserved for uncertain scorings / errors."
+            self.score_set.insert(0, 0)
             prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
             if not prompt_path.exists():
                 raise FileNotFoundError(f"Review prompt template not found at {prompt_path}")
             self.generic_item_prompt = prompt_path.read_text(encoding='utf-8')
             self.setup()
         except Exception as e:
-            raise AgentError(f"Error in post-initialization: {str(e)}")
+            raise AgentError(f"Error initalizing agent: {str(e)}")
 
     def setup(self) -> None:
         """Build the agent's identity and configure the provider."""
         try:
             self.system_prompt = self.build_system_prompt()
             self.score_set = str(self.score_set)
-            keys_to_replace = ['review_criteria', 'score_set', 
+            keys_to_replace = ['scoring_task', 'score_set', 
                              'scoring_rules', 'reasoning', 'examples']
             
             self.item_prompt = self.build_item_prompt(
@@ -90,7 +91,7 @@ class ScoringReviewer(BaseAgent):
                     'cost': cost
                 })
 
-            return results
+            return results, cost["total_cost"]
         except Exception as e:
             raise AgentError(f"Error reviewing items: {str(e)}")
 
