@@ -110,8 +110,8 @@ class ReviewWorkflow(pydantic.BaseModel):
                 # Create progress bar for reviewers
                 reviewer_outputs = []
                 
-                for reviewer in tqdm(reviewers, desc="Reviewers", leave=False):
-                    outputs, review_cost = await reviewer.review_items(input_items)
+                for reviewer in reviewers:
+                    outputs, review_cost = await reviewer.review_items(input_items, {"round":round_id, "reviewer_name": reviewer.name})
                     reviewer_outputs.append(outputs)
                     self.reviewer_costs[(round_id, reviewer.name)] = review_cost
 

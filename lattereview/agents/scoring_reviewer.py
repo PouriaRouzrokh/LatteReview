@@ -1,6 +1,7 @@
 """Reviewer agent implementation with consistent error handling and type safety."""
 import asyncio
 from pathlib import Path
+import datetime
 from typing import List, Dict, Any, Optional
 from pydantic import Field
 from .base_agent import BaseAgent, AgentError
@@ -59,7 +60,7 @@ class ScoringReviewer(BaseAgent):
         except Exception as e:
             raise AgentError(f"Error in setup: {str(e)}")
 
-    async def review_items(self, items: List[str]) -> List[Dict[str, Any]]:
+    async def review_items(self, items: List[str], tqdm_keywords: dict = None) -> List[Dict[str, Any]]:
         """Review a list of items asynchronously with concurrency control and progress bar."""
         try:
 
@@ -70,11 +71,17 @@ class ScoringReviewer(BaseAgent):
                 async with semaphore:
                     return await self.review_item(item)
 
+            # Building the tqdm desc
+            if tqdm_keywords:
+                tqdm_desc = f"""{[f'{k}: {v}' for k, v in tqdm_keywords.items()]} - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
+            else:
+                tqdm_desc = f"Reviewing {len(items)} items - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+
             responses_costs = []
             async for response_cost in tqdm(
                 asyncio.as_completed([limited_review_item(item) for item in items]),
                 total=len(items),
-                desc="Reviewing items"
+                desc=tqdm_desc
             ):
                 responses_costs.append(await response_cost)
 
