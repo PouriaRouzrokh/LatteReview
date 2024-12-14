@@ -64,7 +64,7 @@ def create_markdown(
 if __name__ == "__main__":
     root_directory = Path(__file__).parent
     extensions_to_look_for = {'.py', 'ipynb', '.txt'}
-    exclude_files_list = {'personal_apis.js'}
+    exclude_files_list = {'.env, __init__.py, init.py'}
     exclude_folders_list = {'venv'}
     
     create_markdown(root_directory, extensions_to_look_for, exclude_files_list, exclude_folders_list)
