@@ -70,11 +70,9 @@ class ReviewWorkflow(pydantic.BaseModel):
                 for col in output_cols:
                     mask = df[col].notna()
                     if mask.any():
-                        df.loc[mask, col] = df.loc[mask, col].apply(
-                            lambda x: x if isinstance(x, dict) else json.loads(x) if isinstance(x, str) else {"score": None}
-                        )
+                        df.loc[mask, col] = df.loc[mask, col].apply(lambda x: x if isinstance(x, dict) else json.loads(x))
                     else:
-                        df[col] = df[col].apply(lambda x: {"score": None})
+                        df[col] = df[col].apply(lambda x: {"reasoning": None, "score": None})
                 
                 # Create input items with progress bar
                 input_text = []
@@ -113,8 +111,13 @@ class ReviewWorkflow(pydantic.BaseModel):
                 # Add reviewer outputs with round prefix
                 for reviewer, outputs in zip(reviewers, reviewer_outputs):
                     output_col = f"round-{round_id}_{reviewer.name}_output"
-                    outputs = [json.loads(x) for x in outputs]
-                    df_filtered[output_col] = outputs
+                    processed_outputs = []
+                    for output in outputs:
+                        if type(output) == dict:
+                            processed_outputs.append(output)
+                        else:
+                            processed_outputs.append(json.loads(output))
+                    df_filtered[output_col] = processed_outputs
                 
                 # Merge results back
                 merge_cols = list(set(inputs) - set([col for col in inputs if "_output" in col]))

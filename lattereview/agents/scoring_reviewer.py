@@ -7,8 +7,8 @@ from .base_agent import BaseAgent, AgentError
 
 class ScoringReviewer(BaseAgent):
     response_format: Dict[str, Any] = {
-        "score": int,
         "reasoning": str,
+        "score": int,
     }
     scoring_task: Optional[str] = None
     score_set: List[int] = [1, 2]
@@ -22,7 +22,6 @@ class ScoringReviewer(BaseAgent):
         """Initialize after Pydantic model initialization."""
         try:
             assert 0 not in self.score_set, "Score set must not contain 0. This value is reserved for uncertain scorings / errors."
-            self.score_set.insert(0, 0)
             prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
             if not prompt_path.exists():
                 raise FileNotFoundError(f"Review prompt template not found at {prompt_path}")

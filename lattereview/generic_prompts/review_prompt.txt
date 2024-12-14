@@ -4,11 +4,11 @@ Scoring task: <<${scoring_task}$>>
 
 Input item: <<${item}$>>
 
-Now choose your score from the following values: ${score_set}$.
+The possible scores for you to choose from are: ${score_set}$.
 
 Your scoring should be based on the following rules: <<${scoring_rules}$>>
 
-If you are highly in doubt about what to score, score "0". 
+If you are highly uncertain about what score to return, return a score of "0". 
 
 ${reasoning}$
 
