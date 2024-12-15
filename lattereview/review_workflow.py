@@ -7,9 +7,12 @@ import hashlib
 
 from .agents.scoring_reviewer import ScoringReviewer
 
+
 class ReviewWorkflowError(Exception):
     """Base exception for workflow-related errors."""
+
     pass
+
 
 class ReviewWorkflow(pydantic.BaseModel):
     workflow_schema: List[Dict[str, Any]]
@@ -23,16 +26,20 @@ class ReviewWorkflow(pydantic.BaseModel):
         try:
             for review_task in self.workflow_schema:
                 round_id = review_task["round"]
-                reviewers = review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
+                reviewers = (
+                    review_task["reviewers"]
+                    if isinstance(review_task["reviewers"], list)
+                    else [review_task["reviewers"]]
+                )
                 reviewer_names = [f"round-{round_id}_{reviewer.name}" for reviewer in reviewers]
                 inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
                 initial_inputs = [col for col in inputs if "_output_" not in col]
-                
+
                 # Validate reviewers
                 for reviewer in reviewers:
                     if not isinstance(reviewer, ScoringReviewer):
                         raise ReviewWorkflowError(f"Invalid reviewer: {reviewer}")
-                
+
                 # Validate input columns
                 for input_col in initial_inputs:
                     if input_col not in __context["data"].columns:
@@ -61,29 +68,33 @@ class ReviewWorkflow(pydantic.BaseModel):
         """Format input text with content tracking."""
         parts = []
         content_keys = []
-        
+
         for input_col in inputs:
             if "_output_" not in input_col:
                 value = str(row[input_col]).strip()
                 parts.append(f"=== {input_col} ===\n{value}")
                 content_keys.append(self._create_content_hash(value))
-        
+
         return "\n\n".join(parts), "-".join(content_keys)
 
     async def run(self, data: pd.DataFrame) -> pd.DataFrame:
         """Run the review process with content validation."""
-        try:            
+        try:
             df = data.copy()
             total_rounds = len(self.workflow_schema)
-            
+
             for review_round, review_task in enumerate(self.workflow_schema):
                 round_id = review_task["round"]
                 self._log(f"\nStarting review round {round_id} ({review_round + 1}/{total_rounds})...")
-                
-                reviewers = review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
+
+                reviewers = (
+                    review_task["reviewers"]
+                    if isinstance(review_task["reviewers"], list)
+                    else [review_task["reviewers"]]
+                )
                 inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
                 filter_func = review_task.get("filter", lambda x: True)
-                
+
                 # Apply filter and get eligible rows
                 mask = df.apply(filter_func, axis=1)
                 if not mask.any():
@@ -96,18 +107,16 @@ class ReviewWorkflow(pydantic.BaseModel):
                 input_items = []
                 input_hashes = []
                 eligible_indices = []
-                
+
                 for idx in df[mask].index:
                     row = df.loc[idx]
                     input_text, content_hash = self._format_input_text(row, inputs)
-                    
+
                     # Add metadata header
                     input_text = (
-                        f"Review Task ID: {round_id}-{idx}\n"
-                        f"Content Hash: {content_hash}\n\n"
-                        f"{input_text}"
+                        f"Review Task ID: {round_id}-{idx}\n" f"Content Hash: {content_hash}\n\n" f"{input_text}"
                     )
-                    
+
                     input_items.append(input_text)
                     input_hashes.append(content_hash)
                     eligible_indices.append(idx)
@@ -117,7 +126,7 @@ class ReviewWorkflow(pydantic.BaseModel):
                     output_col = f"round-{round_id}_{reviewer.name}_output"
                     score_col = f"round-{round_id}_{reviewer.name}_score"
                     reasoning_col = f"round-{round_id}_{reviewer.name}_reasoning"
-                    
+
                     # Initialize the output column if it doesn't exist
                     if output_col not in df.columns:
                         df[output_col] = None
@@ -132,17 +141,17 @@ class ReviewWorkflow(pydantic.BaseModel):
                         {
                             "round": round_id,
                             "reviewer_name": reviewer.name,
-                        }
+                        },
                     )
                     self.reviewer_costs[(round_id, reviewer.name)] = review_cost
-                    
+
                     # Verify output count
                     if len(outputs) != len(eligible_indices):
                         raise ReviewWorkflowError(
                             f"Reviewer {reviewer.name} returned {len(outputs)} outputs "
                             f"for {len(eligible_indices)} inputs"
                         )
-                    
+
                     # Process outputs with content validation
                     processed_outputs = []
                     processed_scores = []
@@ -154,25 +163,21 @@ class ReviewWorkflow(pydantic.BaseModel):
                                 processed_output = output
                             else:
                                 processed_output = json.loads(output)
-                            
+
                             # Add content hash to output for validation
                             processed_output["_content_hash"] = expected_hash
                             processed_outputs.append(processed_output)
 
                             if "score" in processed_output:
                                 processed_scores.append(processed_output["score"])
-                        
+
                             if "reasoning" in processed_output:
                                 processed_reasoning.append(processed_output["reasoning"])
-                            
+
                         except Exception as e:
                             self._log(f"Warning: Error processing output: {e}")
-                            processed_outputs.append({
-                                "reasoning": None,
-                                "score": None,
-                                "_content_hash": expected_hash
-                            })
-                    
+                            processed_outputs.append({"reasoning": None, "score": None, "_content_hash": expected_hash})
+
                     # Update dataframe with validated outputs
                     output_dict = dict(zip(eligible_indices, processed_outputs))
                     df.loc[eligible_indices, output_col] = pd.Series(output_dict)
@@ -182,9 +187,9 @@ class ReviewWorkflow(pydantic.BaseModel):
 
                     reasoning_dict = dict(zip(eligible_indices, processed_reasoning))
                     df.loc[eligible_indices, reasoning_col] = pd.Series(reasoning_dict)
-                
+
             return df
-            
+
         except Exception as e:
             raise ReviewWorkflowError(f"Error running workflow: {e}")
 
@@ -192,7 +197,7 @@ class ReviewWorkflow(pydantic.BaseModel):
         """Log message if verbose mode is enabled."""
         if self.verbose:
             print(x)
-        
+
     def get_total_cost(self) -> float:
         """Return the total cost of the review process."""
         return sum(self.reviewer_costs.values())

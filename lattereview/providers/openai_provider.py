@@ -1,9 +1,11 @@
 """OpenAI API provider implementation with comprehensive error handling and type safety."""
+
 from typing import Optional, List, Dict, Any, Union, Tuple
 import os
 from pydantic import BaseModel, create_model
 import openai
 from .base_provider import BaseProvider, ProviderError, ClientCreationError, ResponseError
+
 
 class OpenAIProvider(BaseProvider):
     provider: str = "OpenAI"
@@ -27,13 +29,13 @@ class OpenAIProvider(BaseProvider):
                 raise ValueError("Response format must be a dictionary")
             self.response_format = response_format
             fields = {key: (value, ...) for key, value in response_format.items()}
-            self.response_format_class = create_model('ResponseFormat', **fields)
+            self.response_format_class = create_model("ResponseFormat", **fields)
         except Exception as e:
             raise ProviderError(f"Error setting response format: {str(e)}")
 
     def create_client(self) -> openai.AsyncOpenAI:
         """Create and return the OpenAI client."""
-        gemini_base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
+        gemini_base_url = "https://generativelanguage.googleapis.com/v1beta/openai/"
         if not self.api_key:
             raise ClientCreationError("OPENAI_API_KEY environment variable is not set")
         try:
@@ -45,10 +47,7 @@ class OpenAIProvider(BaseProvider):
             raise ClientCreationError(f"Failed to create OpenAI client: {str(e)}")
 
     async def get_response(
-        self,
-        messages: str,
-        message_list: Optional[List[Dict[str, str]]] = None,
-        **kwargs: Any
+        self, messages: str, message_list: Optional[List[Dict[str, str]]] = None, **kwargs: Any
     ) -> Tuple[Any, Dict[str, float]]:
         """Get a response from OpenAI."""
         try:
@@ -61,10 +60,7 @@ class OpenAIProvider(BaseProvider):
             raise ResponseError(f"Error getting response: {str(e)}")
 
     async def get_json_response(
-        self,
-        messages: str,
-        message_list: Optional[List[Dict[str, str]]] = None,
-        **kwargs: Any
+        self, messages: str, message_list: Optional[List[Dict[str, str]]] = None, **kwargs: Any
     ) -> Tuple[Any, Dict[str, float]]:
         """Get a JSON response from OpenAI."""
         try:
@@ -96,33 +92,20 @@ class OpenAIProvider(BaseProvider):
         except Exception as e:
             raise ProviderError(f"Error preparing message list: {str(e)}")
 
-    async def _fetch_response(
-        self,
-        message_list: List[Dict[str, str]],
-        kwargs: Optional[Dict[str, Any]] = None
-    ) -> Any:
+    async def _fetch_response(self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None) -> Any:
         """Fetch the raw response from OpenAI."""
         try:
-            return await self.client.chat.completions.create(
-                model=self.model,
-                messages=message_list,
-                **(kwargs or {})
-            )
+            return await self.client.chat.completions.create(model=self.model, messages=message_list, **(kwargs or {}))
         except Exception as e:
             raise ResponseError(f"Error fetching response: {str(e)}")
 
     async def _fetch_json_response(
-        self,
-        message_list: List[Dict[str, str]],
-        kwargs: Optional[Dict[str, Any]] = None
+        self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None
     ) -> Any:
         """Fetch the JSON response from OpenAI."""
         try:
             return await self.client.beta.chat.completions.parse(
-                model=self.model,
-                messages=message_list,
-                response_format=self.response_format_class,
-                **(kwargs or {})
+                model=self.model, messages=message_list, response_format=self.response_format_class, **(kwargs or {})
             )
         except Exception as e:
             raise ResponseError(f"Error fetching JSON response: {str(e)}")
