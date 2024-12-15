@@ -125,5 +125,5 @@ class ScoringReviewer(BaseAgent):
                 response, cost = await self.provider.get_json_response(item_prompt, **self.model_args)
                 return response, cost
             except Exception as e:
-                warnings.warn(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.num_repeat_task}")
+                warnings.warn(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.max_retries}")
         raise AgentError("Error reviewing item!")
