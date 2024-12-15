@@ -3,8 +3,8 @@ from typing import Optional, List, Dict, Any, Union, Tuple, Type
 import json
 from pydantic import BaseModel, create_model
 import litellm
-from litellm import acompletion, completion_cost, get_supported_openai_params, supports_response_schema
-from .base_provider import BaseProvider, ProviderError, ResponseError
+from litellm import acompletion, completion_cost
+from .base_provider import BaseProvider, ProviderError, ResponseError, InvalidResponseFormatError
 
 litellm.drop_params = True  # Drop unsupported parameters from the API
 litellm.enable_json_schema_validation = True  # Enable client-side JSON schema validation
@@ -26,8 +26,10 @@ class LiteLLMProvider(BaseProvider):
     def set_response_format(self, response_format: Dict[str, Any]) -> None:
         """Set the response format for JSON responses."""
         try:
+            if not response_format:
+                raise InvalidResponseFormatError("Response format cannot be empty")
             if not isinstance(response_format, dict):
-                raise ValueError("Response format must be a dictionary")
+                raise InvalidResponseFormatError("Response format must be a dictionary")
             self.response_format = response_format
             fields = {key: (value, ...) for key, value in response_format.items()}
             self.response_format_class = create_model('ResponseFormat', **fields)

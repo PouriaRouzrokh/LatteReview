@@ -3,6 +3,8 @@ from typing import List, Optional, Dict, Any, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
+DEFAULT_CONCURRENT_REQUESTS = 20
+
 class ReasoningType(Enum):
     """Enumeration for reasoning types."""
     NONE = "none"
@@ -18,7 +20,7 @@ class BaseAgent(BaseModel):
     response_format: Dict[str, Any]
     provider: Optional[Any] = None
     model_args: Dict[str, Any] = Field(default_factory=dict)
-    max_concurrent_requests: int = 20
+    max_concurrent_requests: int = DEFAULT_CONCURRENT_REQUESTS
     name: str = "BaseAgent"
     backstory: str = "a generic base agent"
     input_description: str = "article title/abstract"

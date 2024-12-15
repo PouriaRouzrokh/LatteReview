@@ -8,6 +8,8 @@ from .base_agent import BaseAgent, AgentError, ReasoningType
 from tqdm.asyncio import tqdm
 import warnings
 
+DEFAULT_MAX_RETRIES = 3
+
 class ScoringReviewer(BaseAgent):
     response_format: Dict[str, Any] = {
         "reasoning": str,
@@ -18,7 +20,7 @@ class ScoringReviewer(BaseAgent):
     scoring_rules: str = "Your scores should follow the defined schema."
     generic_item_prompt: Optional[str] = Field(default=None)
     reasoning: ReasoningType = ReasoningType.BRIEF
-    num_repeat_task: int = 3
+    max_retries: int = DEFAULT_MAX_RETRIES
 
     class Config:
         arbitrary_types_allowed = True
@@ -116,7 +118,7 @@ class ScoringReviewer(BaseAgent):
     async def review_item(self, item: str) -> tuple[Dict[str, Any], Dict[str, float]]:
         """Review a single item asynchronously with error handling."""
         num_tried = 0
-        while num_tried < self.num_repeat_task:
+        while num_tried < self.max_retries:
             try:
                 item_prompt = self.build_item_prompt(self.item_prompt, {'item': item})
                 response, cost = await self.provider.get_json_response(

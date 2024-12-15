@@ -15,6 +15,14 @@ class ResponseError(ProviderError):
     """Raised when getting a response fails."""
     pass
 
+class InvalidResponseFormatError(ProviderError):
+    """Raised when response format is invalid."""
+    pass
+
+class ClientNotInitializedError(ProviderError):
+    """Raised when client is not initialized."""
+    pass
+
 class BaseProvider(pydantic.BaseModel):
     provider: str = "DefaultProvider"
     client: Optional[Any] = None
