@@ -4,7 +4,7 @@ from pathlib import Path
 import datetime
 from typing import List, Dict, Any, Optional
 from pydantic import Field
-from .base_agent import BaseAgent, AgentError
+from .base_agent import BaseAgent, AgentError, ReasoningType
 from tqdm.asyncio import tqdm
 
 class ScoringReviewer(BaseAgent):
@@ -16,6 +16,7 @@ class ScoringReviewer(BaseAgent):
     score_set: List[int] = [1, 2]
     scoring_rules: str = "Your scores should follow the defined schema."
     generic_item_prompt: Optional[str] = Field(default=None)
+    reasoning: ReasoningType = ReasoningType.BRIEF
 
     class Config:
         arbitrary_types_allowed = True
@@ -23,6 +24,7 @@ class ScoringReviewer(BaseAgent):
     def model_post_init(self, __context: Any) -> None:
         """Initialize after Pydantic model initialization."""
         try:
+            assert self.reasoning != ReasoningType.NONE, "Reasoning type cannot be 'none' for ScoreReviewer"
             assert 0 not in self.score_set, "Score set must not contain 0. This value is reserved for uncertain scorings / errors."
             prompt_path = Path(__file__).parent.parent / "generic_prompts" / "review_prompt.txt"
             if not prompt_path.exists():
@@ -30,7 +32,7 @@ class ScoringReviewer(BaseAgent):
             self.generic_item_prompt = prompt_path.read_text(encoding='utf-8')
             self.setup()
         except Exception as e:
-            raise AgentError(f"Error initalizing agent: {str(e)}")
+            raise AgentError(f"Error initializing agent: {str(e)}")
 
     def setup(self) -> None:
         """Build the agent's identity and configure the provider."""
@@ -48,8 +50,7 @@ class ScoringReviewer(BaseAgent):
             self.identity = {
                 "system_prompt": self.system_prompt,
                 "item_prompt": self.item_prompt,
-                'temperature': self.temperature,
-                "max_tokens": self.max_tokens,
+                "model_args": self.model_args,
             }
             
             if not self.provider:
@@ -63,13 +64,13 @@ class ScoringReviewer(BaseAgent):
     async def review_items(self, items: List[str], tqdm_keywords: dict = None) -> List[Dict[str, Any]]:
         """Review a list of items asynchronously with concurrency control and progress bar."""
         try:
-
             self.setup()
             semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
-            async def limited_review_item(item: str) -> tuple[Dict[str, Any], Dict[str, float]]:
+            async def limited_review_item(item: str, index: int) -> tuple[int, Dict[str, Any], Dict[str, float]]:
                 async with semaphore:
-                    return await self.review_item(item)
+                    response, cost = await self.review_item(item)
+                    return index, response, cost
 
             # Building the tqdm desc
             if tqdm_keywords:
@@ -77,32 +78,36 @@ class ScoringReviewer(BaseAgent):
             else:
                 tqdm_desc = f"Reviewing {len(items)} items - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
+            # Create tasks with indices
+            tasks = [limited_review_item(item, i) for i, item in enumerate(items)]
+            
+            # Collect results with indices
             responses_costs = []
-            async for response_cost in tqdm(
-                asyncio.as_completed([limited_review_item(item) for item in items]),
+            async for result in tqdm(
+                asyncio.as_completed(tasks),
                 total=len(items),
                 desc=tqdm_desc
             ):
-                responses_costs.append(await response_cost)
+                responses_costs.append(await result)
 
-            # Handle any exceptions from the gathered tasks
+            # Sort by original index and separate response and cost
+            responses_costs.sort(key=lambda x: x[0])  # Sort by index
             results = []
-            for item, response_cost in zip(items, responses_costs):
-                if isinstance(response_cost, Exception):
-                    print(f"Error processing item: {item}, Error: {str(response_cost)}")
-                    continue
-                
-                response, cost = response_cost
-                self.cost_so_far += cost["total_cost"]
+            
+            for i, response, cost in responses_costs:
+                if isinstance(cost, dict):
+                    cost = cost["total_cost"]
+                self.cost_so_far += cost
                 results.append(response)
                 self.memory.append({
                     'identity': self.identity,
-                    'item': item,
+                    'item': items[i],
                     'response': response,
-                    'cost': cost
+                    'cost': cost,
+                    'model_args': self.model_args
                 })
 
-            return results, cost["total_cost"]
+            return results, cost
         except Exception as e:
             raise AgentError(f"Error reviewing items: {str(e)}")
 
@@ -112,7 +117,7 @@ class ScoringReviewer(BaseAgent):
             item_prompt = self.build_item_prompt(self.item_prompt, {'item': item})
             response, cost = await self.provider.get_json_response(
                 item_prompt,
-                temperature=self.temperature
+                **self.model_args
             )
             return response, cost
         except Exception as e:

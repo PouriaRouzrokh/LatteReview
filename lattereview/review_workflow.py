@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Union
 import pandas as pd
 from tqdm.auto import tqdm
 import json
+import hashlib
 
 from .agents.scoring_reviewer import ScoringReviewer
 
@@ -27,10 +28,12 @@ class ReviewWorkflow(pydantic.BaseModel):
                 inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
                 initial_inputs = [col for col in inputs if "_output_" not in col]
                 
+                # Validate reviewers
                 for reviewer in reviewers:
                     if not isinstance(reviewer, ScoringReviewer):
                         raise ReviewWorkflowError(f"Invalid reviewer: {reviewer}")
                 
+                # Validate input columns
                 for input_col in initial_inputs:
                     if input_col not in __context["data"].columns:
                         if input_col.split("_output")[0] not in reviewer_names:
@@ -50,110 +53,146 @@ class ReviewWorkflow(pydantic.BaseModel):
         except Exception as e:
             raise ReviewWorkflowError(f"Error running workflow: {e}")
 
+    def _create_content_hash(self, content: str) -> str:
+        """Create a hash of the content for tracking."""
+        return hashlib.md5(content.encode()).hexdigest()
+
+    def _format_input_text(self, row: pd.Series, inputs: List[str]) -> tuple:
+        """Format input text with content tracking."""
+        parts = []
+        content_keys = []
+        
+        for input_col in inputs:
+            if "_output_" not in input_col:
+                value = str(row[input_col]).strip()
+                parts.append(f"=== {input_col} ===\n{value}")
+                content_keys.append(self._create_content_hash(value))
+        
+        return "\n\n".join(parts), "-".join(content_keys)
+
     async def run(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Run the review process."""
+        """Run the review process with content validation."""
         try:            
             df = data.copy()
             total_rounds = len(self.workflow_schema)
             
             for review_round, review_task in enumerate(self.workflow_schema):
                 round_id = review_task["round"]
-                print(f"\nStarting review round {round_id} ({review_round + 1}/{total_rounds})...")
-                self._log(f"Reviewers: {[reviewer.name for reviewer in review_task['reviewers']]}")
-                self._log(f"Input data: {review_task['inputs']}")
+                self._log(f"\nStarting review round {round_id} ({review_round + 1}/{total_rounds})...")
                 
                 reviewers = review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
                 inputs = review_task["inputs"] if isinstance(review_task["inputs"], list) else [review_task["inputs"]]
                 filter_func = review_task.get("filter", lambda x: True)
                 
-                # Pre-process data
-                output_cols = [col for col in inputs if "_output_" in col]
-                for col in output_cols:
-                    mask = df[col].notna()
-                    if mask.any():
-                        try:
-                            df.loc[mask, col] = df.loc[mask, col].apply(lambda x: x if isinstance(x, dict) else json.loads(x))
-                        except Exception as e:
-                            self._log(ReviewWorkflowError(f"Error parsing output column {col}: {e}"))
-                            df[col] = df[col].apply(lambda x: {"reasoning": None, "score": None})
-                
-                # Create input items
-                input_text = []
-                for _, row in tqdm(df.iterrows(), total=len(df), desc="Creating inputs", leave=False):
-                    text = " ".join(f"{input_col}: {str(row[input_col])}" for input_col in inputs)
-                    input_text.append(text)
-                df["input_item"] = input_text
-                
-                # Apply filter
-                try:
-                    mask = []
-                    for _, row in tqdm(df.iterrows(), total=len(df), desc="Filtering", leave=False):
-                        try:
-                            mask.append(filter_func(row))
-                        except:
-                            # If filter function fails, assume row is eligible
-                            mask.append(True)                    
-                    mask = pd.Series(mask, index=df.index)
-                    eligible_rows = mask.sum()
-                    self._log(f"Number of eligible rows for review: {eligible_rows}")
-                    
-                    if (eligible_rows == 0):
-                        self._log(f"Skipping review round {round_id} - no eligible rows")
-                        continue
-                        
-                except Exception as e:
-                    raise ReviewWorkflowError(f"Error applying filter in round {round_id}: {e}")
-                
-                df_filtered = df[mask].copy()
-                input_items = df_filtered["input_item"].tolist()
-                
-                # Create progress bar for reviewers
-                reviewer_outputs = []
-                
-                for reviewer in reviewers:
-                    outputs, review_cost = await reviewer.review_items(input_items, {"round":round_id, "reviewer_name": reviewer.name})
-                    reviewer_outputs.append(outputs)
-                    self.reviewer_costs[(round_id, reviewer.name)] = review_cost
+                # Apply filter and get eligible rows
+                mask = df.apply(filter_func, axis=1)
+                if not mask.any():
+                    self._log(f"Skipping review round {round_id} - no eligible rows")
+                    continue
 
-                # Add reviewer outputs with round prefix
-                for reviewer, outputs in zip(reviewers, reviewer_outputs):
-                    output_col = f"round-{round_id}_{reviewer.name}_output"
-                    processed_outputs = []
-                    for output in outputs:
-                        if type(output) == dict:
-                            processed_outputs.append(output)
-                        else:
-                            processed_outputs.append(json.loads(output))
-                    df_filtered[output_col] = processed_outputs
+                self._log(f"Processing {mask.sum()} eligible rows")
+
+                # Create input items with content tracking
+                input_items = []
+                input_hashes = []
+                eligible_indices = []
                 
-                # Merge results back
-                merge_cols = list(set(inputs) - set([col for col in inputs if "_output" in col]))
-                if not merge_cols:
-                    df_filtered.index = df[mask].index
-                    for reviewer in reviewers:
-                        output_col = f"round-{round_id}_{reviewer.name}_output"
-                        df.loc[mask, output_col] = df_filtered[output_col]
-                else:
-                    output_cols = [f"round-{round_id}_{r.name}_output" for r in reviewers]
-                    df = pd.merge(
-                        df,
-                        df_filtered[merge_cols + output_cols],
-                        how="left",
-                        on=merge_cols
+                for idx in df[mask].index:
+                    row = df.loc[idx]
+                    input_text, content_hash = self._format_input_text(row, inputs)
+                    
+                    # Add metadata header
+                    input_text = (
+                        f"Review Task ID: {round_id}-{idx}\n"
+                        f"Content Hash: {content_hash}\n\n"
+                        f"{input_text}"
                     )
-                
-                # Clean up temporary columns
-                if "input_item" in df.columns:
-                    df = df.drop("input_item", axis=1)
+                    
+                    input_items.append(input_text)
+                    input_hashes.append(content_hash)
+                    eligible_indices.append(idx)
+
+                # Process each reviewer
+                for reviewer in reviewers:
+                    output_col = f"round-{round_id}_{reviewer.name}_output"
+                    score_col = f"round-{round_id}_{reviewer.name}_score"
+                    reasoning_col = f"round-{round_id}_{reviewer.name}_reasoning"
+                    
+                    # Initialize the output column if it doesn't exist
+                    if output_col not in df.columns:
+                        df[output_col] = None
+                    if score_col not in df.columns:
+                        df[score_col] = None
+                    if reasoning_col not in df.columns:
+                        df[reasoning_col] = None
+
+                    # Get reviewer outputs with metadata
+                    outputs, review_cost = await reviewer.review_items(
+                        input_items,
+                        {
+                            "round": round_id,
+                            "reviewer_name": reviewer.name,
+                        }
+                    )
+                    self.reviewer_costs[(round_id, reviewer.name)] = review_cost
+                    
+                    # Verify output count
+                    if len(outputs) != len(eligible_indices):
+                        raise ReviewWorkflowError(
+                            f"Reviewer {reviewer.name} returned {len(outputs)} outputs "
+                            f"for {len(eligible_indices)} inputs"
+                        )
+                    
+                    # Process outputs with content validation
+                    processed_outputs = []
+                    processed_scores = []
+                    processed_reasoning = []
+
+                    for output, expected_hash in zip(outputs, input_hashes):
+                        try:
+                            if isinstance(output, dict):
+                                processed_output = output
+                            else:
+                                processed_output = json.loads(output)
+                            
+                            # Add content hash to output for validation
+                            processed_output["_content_hash"] = expected_hash
+                            processed_outputs.append(processed_output)
+
+                            if "score" in processed_output:
+                                processed_scores.append(processed_output["score"])
+                        
+                            if "reasoning" in processed_output:
+                                processed_reasoning.append(processed_output["reasoning"])
+                            
+                        except Exception as e:
+                            self._log(f"Warning: Error processing output: {e}")
+                            processed_outputs.append({
+                                "reasoning": None,
+                                "score": None,
+                                "_content_hash": expected_hash
+                            })
+                    
+                    # Update dataframe with validated outputs
+                    output_dict = dict(zip(eligible_indices, processed_outputs))
+                    df.loc[eligible_indices, output_col] = pd.Series(output_dict)
+
+                    score_dict = dict(zip(eligible_indices, processed_scores))
+                    df.loc[eligible_indices, score_col] = pd.Series(score_dict)
+
+                    reasoning_dict = dict(zip(eligible_indices, processed_reasoning))
+                    df.loc[eligible_indices, reasoning_col] = pd.Series(reasoning_dict)
                 
             return df
+            
         except Exception as e:
             raise ReviewWorkflowError(f"Error running workflow: {e}")
-        
+
     def _log(self, x):
+        """Log message if verbose mode is enabled."""
         if self.verbose:
             print(x)
         
-    def get_total_cost(self) -> int:
+    def get_total_cost(self) -> float:
         """Return the total cost of the review process."""
         return sum(self.reviewer_costs.values())

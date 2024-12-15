@@ -1,7 +1,7 @@
 """Base agent class with consistent error handling and type safety."""
 from typing import List, Optional, Dict, Any, Union
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class ReasoningType(Enum):
     """Enumeration for reasoning types."""
@@ -17,6 +17,7 @@ class AgentError(Exception):
 class BaseAgent(BaseModel):
     response_format: Dict[str, Any]
     provider: Optional[Any] = None
+    model_args: Dict[str, Any] = Field(default_factory=dict)
     max_concurrent_requests: int = 20
     name: str = "BaseAgent"
     backstory: str = "a generic base agent"
@@ -25,8 +26,6 @@ class BaseAgent(BaseModel):
     reasoning: ReasoningType = ReasoningType.BRIEF
     system_prompt: Optional[str] = None
     item_prompt: Optional[str] = None
-    temperature: float = 0.2
-    max_tokens: int = 150
     cost_so_far: float = 0
     memory: List[Dict[str, Any]] = []
     identity: Dict[str, Any] = {}

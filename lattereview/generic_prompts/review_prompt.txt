@@ -13,5 +13,3 @@ If you are highly uncertain about what score to return, return a score of "0".
 ${reasoning}$
 
 ${examples}$
-
-
