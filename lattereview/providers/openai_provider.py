@@ -33,10 +33,14 @@ class OpenAIProvider(BaseProvider):
 
     def create_client(self) -> openai.AsyncOpenAI:
         """Create and return the OpenAI client."""
+        gemini_base_url="https://generativelanguage.googleapis.com/v1beta/openai/"
         if not self.api_key:
             raise ClientCreationError("OPENAI_API_KEY environment variable is not set")
         try:
-            return openai.AsyncOpenAI(api_key=self.api_key)
+            if "gemini" not in self.model.lower():
+                return openai.AsyncOpenAI(api_key=self.api_key)
+            self.api_key = os.getenv("GEMINI_API_KEY", self.api_key)
+            return openai.AsyncOpenAI(api_key=self.api_key, base_url=gemini_base_url)
         except Exception as e:
             raise ClientCreationError(f"Failed to create OpenAI client: {str(e)}")
 
