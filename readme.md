@@ -109,6 +109,7 @@ Full documentation and API reference will be available in our upcoming preprint 
 
 - [ ] Development of `AbstractionReviewer` class for automated paper summarization
 - [ ] Support for image-based inputs and multimodal analysis
+- [ ] Development of a no-code web application
 - [ ] Integration of RAG (Retrieval-Augmented Generation) tools
 - [ ] Addition of graph-based analysis tools
 - [ ] Enhanced visualization capabilities
