@@ -1,0 +1,13 @@
+litellm>=1.55.2
+nest-asyncio>=1.6.0
+ollama>=0.4.4
+openai>=1.57.4
+pandas>=2.2.3
+pydantic>=2.10.3
+python-dotenv>=1.0.1
+tokencost>=0.1.17
+tqdm>=4.67.1
+openpyxl>=3.1.5
+ipykernel>=6.29.5
+black>=24.10.0
+flake8>=7.1.1
