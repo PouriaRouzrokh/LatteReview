@@ -7,7 +7,6 @@ from litellm import acompletion, completion_cost, get_supported_openai_params, s
 from .base_provider import BaseProvider, ProviderError, ResponseError
 
 litellm.drop_params = True  # Drop unsupported parameters from the API
-litellm.set_verbose = False # Disable verbose mode
 litellm.enable_json_schema_validation = True  # Enable client-side JSON schema validation
 
 class LiteLLMProvider(BaseProvider):

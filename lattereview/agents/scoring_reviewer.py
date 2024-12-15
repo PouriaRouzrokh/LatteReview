@@ -116,16 +116,14 @@ class ScoringReviewer(BaseAgent):
     async def review_item(self, item: str) -> tuple[Dict[str, Any], Dict[str, float]]:
         """Review a single item asynchronously with error handling."""
         num_tried = 0
-        try:
-            item_prompt = self.build_item_prompt(self.item_prompt, {'item': item})
-            response, cost = await self.provider.get_json_response(
-                item_prompt,
-                **self.model_args
-            )
-            return response, cost
-        except Exception as e:
-            if num_tried < self.num_repeat_task:
-                num_tried += 1
+        while num_tried < self.num_repeat_task:
+            try:
+                item_prompt = self.build_item_prompt(self.item_prompt, {'item': item})
+                response, cost = await self.provider.get_json_response(
+                    item_prompt,
+                    **self.model_args
+                )
+                return response, cost
+            except Exception as e:
                 warnings.warn(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.num_repeat_task}")
-                return await self.review_item(item)
-            raise AgentError(f"Error reviewing item: {str(e)}")
+        raise AgentError(f"Error reviewing item: {str(e)}")

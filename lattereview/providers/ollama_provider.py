@@ -101,9 +101,9 @@ class OllamaProvider(BaseProvider):
             # try:
             #     # Validate response against schema
             #     validated_response = self.response_format_class.model_validate_json(txt_response)
+            #     txt_response = validated_response.model_dump()
             # except Exception as e:
             #     raise ResponseError(f"Response validation failed: {str(e)}\nResponse: {txt_response}")
-            # txt_response = validated_response.model_dump()
             cost = {'input_cost': 0, 'output_cost': 0, 'total_cost': 0}  # Ollama models are local and therefore free.
             return txt_response, cost
         except Exception as e:
