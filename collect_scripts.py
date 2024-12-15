@@ -55,7 +55,8 @@ def create_markdown(
         code_files, excluded_files = gather_code_files(root_dir, extensions, exclude_files, exclude_folders)
         write_to_markdown(code_files, excluded_files, output_file)
         print(
-            f"Markdown file '{output_file}' created with {len(code_files)} code files and {len(excluded_files)} excluded files."
+            f"Markdown file '{output_file}' created with {len(code_files)} code files \
+                and {len(excluded_files)} excluded files."
         )
     except Exception as e:
         raise RuntimeError(f"Error creating markdown: {str(e)}")

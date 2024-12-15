@@ -61,8 +61,8 @@ class BaseAgent(BaseModel):
                 f"""
                 Your name is <<{self.name}>> and you are <<{self.backstory}>>.
                 Your task is to review input itmes with the following description: <<{self.input_description}>>.
-                Your final output should have the following keys: 
-                {", ".join(f"{k} ({v})" for k, v in self.response_format.items())}.
+                Your final output should have the following keys: \
+                    {", ".join(f"{k} ({v})" for k, v in self.response_format.items())}.
                 """
             )
         except Exception as e:
@@ -95,9 +95,13 @@ class BaseAgent(BaseModel):
 
             reasoning_map = {
                 ReasoningType.NONE: "",
-                ReasoningType.BRIEF: "You must also provide a brief (1 sentence) reasoning for your scoring. First reason then score!",
-                ReasoningType.LONG: "You must also provide a detailed reasoning for your scoring. First reason then score!",
-                ReasoningType.COT: "You must also provide a reasoning for your scoring . Think step by step in your reasoning. First reason then score!",
+                ReasoningType.BRIEF:
+                    "You must also provide a brief (1 sentence) reasoning for your scoring. First reason then score!",
+                ReasoningType.LONG:
+                    "You must also provide a detailed reasoning for your scoring. First reason then score!",
+                ReasoningType.COT:
+                    "You must also provide a reasoning for your scoring . Think step by step in your reasoning. \
+                        First reason then score!",
             }
 
             return self._clean_text(reasoning_map.get(reasoning, ""))

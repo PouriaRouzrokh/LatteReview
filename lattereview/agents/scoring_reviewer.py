@@ -80,7 +80,8 @@ class ScoringReviewer(BaseAgent):
 
             # Building the tqdm desc
             if tqdm_keywords:
-                tqdm_desc = f"""{[f'{k}: {v}' for k, v in tqdm_keywords.items()]} - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
+                tqdm_desc = f"""{[f'{k}: {v}' for k, v in tqdm_keywords.items()]} - \
+                    {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"""
             else:
                 tqdm_desc = f"Reviewing {len(items)} items - {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
 
@@ -125,4 +126,4 @@ class ScoringReviewer(BaseAgent):
                 return response, cost
             except Exception as e:
                 warnings.warn(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.num_repeat_task}")
-        raise AgentError(f"Error reviewing item: {str(e)}")
+        raise AgentError("Error reviewing item!")

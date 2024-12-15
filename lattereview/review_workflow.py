@@ -1,7 +1,6 @@
 import pydantic
 from typing import List, Dict, Any, Union
 import pandas as pd
-from tqdm.auto import tqdm
 import json
 import hashlib
 

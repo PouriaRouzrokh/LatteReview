@@ -1,6 +1,6 @@
 """OpenAI API provider implementation with comprehensive error handling and type safety."""
 
-from typing import Optional, List, Dict, Any, Union, Tuple
+from typing import Optional, List, Dict, Any, Tuple
 import os
 from pydantic import BaseModel, create_model
 import openai

@@ -1,7 +1,6 @@
 """Ollama API provider implementation using AsyncClient with comprehensive error handling and type safety."""
 
 from typing import Optional, List, Dict, Any, Union, Tuple, AsyncGenerator
-import asyncio
 import json
 from ollama import AsyncClient
 from pydantic import BaseModel, create_model
