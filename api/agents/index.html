@@ -1059,13 +1059,13 @@
 </code></pre></div>
 <h3 id="key-attributes">Key Attributes<a class="headerlink" href="#key-attributes" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>response_format</code>: Defines the expected format of agent responses</li>
+<li><code>response_format</code>: Defines the expected format of agent responses, which now includes a mandatory <code>certainty</code> field.</li>
 <li><code>provider</code>: The LLM provider instance used by the agent</li>
 <li><code>model_args</code>: Arguments passed to the language model</li>
 <li><code>max_concurrent_requests</code>: Maximum number of concurrent requests (default: 20)</li>
 <li><code>name</code>: Agent's name</li>
 <li><code>backstory</code>: Agent's background story</li>
-<li><code>reasoning</code>: Type of reasoning (NONE, BRIEF, LONG, COT)</li>
+<li><code>reasoning</code>: Type of reasoning (NONE, BRIEF, COT)</li>
 <li><code>memory</code>: List storing agent's interactions</li>
 <li><code>identity</code>: Dictionary containing agent's configuration</li>
 </ul>
@@ -1102,19 +1102,22 @@
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="n">response_format</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        <span class="s2">&quot;reasoning&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="p">}</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="n">scoring_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">score_set</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">scoring_rules</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Your scores should follow the defined schema.&quot;</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">generic_item_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">input_description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;article title/abstract&quot;</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">reasoning</span><span class="p">:</span> <span class="n">ReasoningType</span> <span class="o">=</span> <span class="n">ReasoningType</span><span class="o">.</span><span class="n">BRIEF</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MAX_RETRIES</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        <span class="s2">&quot;certainty&quot;</span><span class="p">:</span> <span class="nb">int</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="p">}</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">scoring_task</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">scoring_set</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="n">scoring_rules</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;Your scores should follow the defined schema.&quot;</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="n">generic_item_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">input_description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;article title/abstract&quot;</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">reasoning</span><span class="p">:</span> <span class="n">ReasoningType</span> <span class="o">=</span> <span class="n">ReasoningType</span><span class="o">.</span><span class="n">BRIEF</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_MAX_RETRIES</span>
 </code></pre></div>
 <h3 id="key-attributes_1">Key Attributes<a class="headerlink" href="#key-attributes_1" title="Permanent link">&para;</a></h3>
 <ul>
-<li><code>scoring_task</code>: Description of the scoring task</li>
-<li><code>score_set</code>: List of valid scores</li>
+<li><code>generic_item_prompt</code>: The path to the template but dynamic prompt used for the <code>ScoringReviewer</code>.</li>
+<li><code>response_format</code>: The expected response format from the ScoringReviewer agent with three necessary keys: <code>reasoning</code>, <code>score</code>, and <code>certainty</code>.</li>
+<li><code>scoring_task</code>: Description of the scoring task.</li>
+<li><code>scoring_set</code>: List of valid scores (now supports 0 as a valid score)</li>
 <li><code>scoring_rules</code>: Rules for scoring items</li>
 <li><code>max_retries</code>: Maximum number of retry attempts for failed reviews</li>
 </ul>
@@ -1142,9 +1145,9 @@
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ReviewerOne&quot;</span><span class="p">,</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="n">backstory</span><span class="o">=</span><span class="s2">&quot;an expert reviewer in scientific literature&quot;</span><span class="p">,</span>
 <a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="n">scoring_task</span><span class="o">=</span><span class="s2">&quot;Evaluate papers for methodology quality&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">score_set</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
+<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="n">scoring_set</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">],</span>
 <a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>    <span class="n">scoring_rules</span><span class="o">=</span><span class="s2">&quot;Score 1-5 where 1 is poor and 5 is excellent&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="n">reasoning</span><span class="o">=</span><span class="n">ReasoningType</span><span class="o">.</span><span class="n">LONG</span>
+<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>    <span class="n">reasoning</span><span class="o">=</span><span class="n">ReasoningType</span><span class="o">.</span><span class="n">COT</span>
 <a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="p">)</span>
 </code></pre></div>
 <h3 id="running-reviews">Running Reviews<a class="headerlink" href="#running-reviews" title="Permanent link">&para;</a></h3>

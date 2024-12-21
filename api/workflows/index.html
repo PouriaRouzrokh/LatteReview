@@ -1092,11 +1092,13 @@
 <li>Has access to all columns in the DataFrame, including outputs from previous rounds</li>
 <li>Determines whether the row should be included in the current round's review</li>
 </ul>
-<p>The workflow automatically generates output columns for each reviewer in the format:</p>
+<p>The workflow automatically generates output columns for each key in the reviewer outputs, e.g.:</p>
 <ul>
 <li><code>round-{round_id}_{reviewer.name}_output</code>: Raw reviewer output</li>
 <li><code>round-{round_id}_{reviewer.name}_score</code>: Numerical score</li>
 <li><code>round-{round_id}_{reviewer.name}_reasoning</code>: Reasoning text</li>
+<li><code>round-{round_id}_{reviewer.name}_certainty</code>: certainty score</li>
+<li>...</li>
 </ul>
 <p>These output columns can be referenced in subsequent rounds as inputs or in filter conditions.</p>
 <h3 id="running-complex-reviews">Running Complex Reviews<a class="headerlink" href="#running-complex-reviews" title="Permanent link">&para;</a></h3>
