@@ -994,7 +994,7 @@
 
 
 <h1 id="agents-module-documentation">Agents Module Documentation<a class="headerlink" href="#agents-module-documentation" title="Permanent link">&para;</a></h1>
-<p>This module provides the core agent functionality for the LatteReview package, implementing agent-based review workflows.</p>
+<p>This module provides the core agent functionality for the LatteReview package, implementing agent-based review workflows. The updated version supports text and image inputs for review tasks.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>The agents module consists of two main classes:</p>
 <ul>
@@ -1071,7 +1071,7 @@
 <p>Clears the agent's memory and resets cost tracking.</p>
 <h2 id="scoringreviewer-class">ScoringReviewer Class<a class="headerlink" href="#scoringreviewer-class" title="Permanent link">&para;</a></h2>
 <h3 id="overview_2">Overview<a class="headerlink" href="#overview_2" title="Permanent link">&para;</a></h3>
-<p><code>ScoringReviewer</code> extends <code>BaseAgent</code> to implement specialized reviewing capabilities with scoring functionality.</p>
+<p><code>ScoringReviewer</code> extends <code>BaseAgent</code> to implement specialized reviewing capabilities with scoring functionality. The updated version supports image inputs in addition to text inputs.</p>
 <h3 id="class-definition_1">Class Definition<a class="headerlink" href="#class-definition_1" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="k">class</span> <span class="nc">ScoringReviewer</span><span class="p">(</span><span class="n">BaseAgent</span><span class="p">):</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="n">response_format</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
@@ -1098,24 +1098,26 @@
 </ul>
 <h3 id="methods_1">Methods<a class="headerlink" href="#methods_1" title="Permanent link">&para;</a></h3>
 <h4 id="review-operations">Review Operations<a class="headerlink" href="#review-operations" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">review_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">items</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">tqdm_keywords</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">review_items</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_input_strings</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">image_path_lists</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tqdm_keywords</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span>
 </code></pre></div>
 <p>Reviews multiple items concurrently with progress tracking and error handling.</p>
 <p>Parameters:</p>
 <ul>
-<li><code>items</code>: List of items to review</li>
+<li><code>text_input_strings</code>: List of text items to review</li>
+<li><code>image_path_lists</code>: List of lists containing image file paths for each review item</li>
 <li><code>tqdm_keywords</code>: Optional keywords for progress bar customization</li>
 </ul>
 <p>Returns:</p>
 <ul>
 <li>List of review results and associated costs</li>
 </ul>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">review_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">review_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text_input_string</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">image_path_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[])</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
 </code></pre></div>
 <p>Reviews a single item with retry logic and additional context handling.</p>
 <p>Parameters:</p>
 <ul>
-<li><code>item</code>: Item to review</li>
+<li><code>text_input_string</code>: Text input for the review</li>
+<li><code>image_path_list</code>: List of image paths related to the input</li>
 </ul>
 <p>Returns:</p>
 <ul>
@@ -1145,8 +1147,9 @@
 <a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="p">)</span>
 <a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a>
 <a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="c1"># Review items</span>
-<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Content A&quot;</span><span class="p">,</span> <span class="s2">&quot;Content B&quot;</span><span class="p">]</span>
-<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="n">results</span><span class="p">,</span> <span class="n">costs</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reviewer</span><span class="o">.</span><span class="n">review_items</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="n">text_items</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Content A&quot;</span><span class="p">,</span> <span class="s2">&quot;Content B&quot;</span><span class="p">]</span>
+<a id="__codelineno-12-16" name="__codelineno-12-16" href="#__codelineno-12-16"></a><span class="n">image_paths</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;path/to/image1.png&quot;</span><span class="p">],</span> <span class="p">[]]</span>
+<a id="__codelineno-12-17" name="__codelineno-12-17" href="#__codelineno-12-17"></a><span class="n">results</span><span class="p">,</span> <span class="n">costs</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reviewer</span><span class="o">.</span><span class="n">review_items</span><span class="p">(</span><span class="n">text_items</span><span class="p">,</span> <span class="n">image_paths</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="advanced-configuration">Advanced Configuration<a class="headerlink" href="#advanced-configuration" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1"># With additional context</span>

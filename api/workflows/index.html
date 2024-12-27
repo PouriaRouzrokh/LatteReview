@@ -536,6 +536,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#image-input-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Image Input Handling
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -566,66 +575,6 @@
       Understanding Workflow Construction
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#running-complex-reviews" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running Complex Reviews
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Running Complex Reviews">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-basic-multi-reviewer-round" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Basic Multi-Reviewer Round
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-sequential-review-with-dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. Sequential Review with Dependencies
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-disagreement-resolution-pattern" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Disagreement Resolution Pattern
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-multi-stage-review-with-filtering" class="md-nav__link">
-    <span class="md-ellipsis">
-      4. Multi-Stage Review with Filtering
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-hierarchical-review-with-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      5. Hierarchical Review with Validation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -829,6 +778,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#image-input-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Image Input Handling
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -859,66 +817,6 @@
       Understanding Workflow Construction
     </span>
   </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#running-complex-reviews" class="md-nav__link">
-    <span class="md-ellipsis">
-      Running Complex Reviews
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Running Complex Reviews">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-basic-multi-reviewer-round" class="md-nav__link">
-    <span class="md-ellipsis">
-      1. Basic Multi-Reviewer Round
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-sequential-review-with-dependencies" class="md-nav__link">
-    <span class="md-ellipsis">
-      2. Sequential Review with Dependencies
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-disagreement-resolution-pattern" class="md-nav__link">
-    <span class="md-ellipsis">
-      3. Disagreement Resolution Pattern
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-multi-stage-review-with-filtering" class="md-nav__link">
-    <span class="md-ellipsis">
-      4. Multi-Stage Review with Filtering
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-hierarchical-review-with-validation" class="md-nav__link">
-    <span class="md-ellipsis">
-      5. Hierarchical Review with Validation
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
         
@@ -982,11 +880,11 @@
 
 
 <h1 id="workflows-module-documentation">Workflows Module Documentation<a class="headerlink" href="#workflows-module-documentation" title="Permanent link">&para;</a></h1>
-<p>This module provides workflow management functionality for the LatteReview package, implementing multi-agent review orchestration.</p>
+<p>This module provides workflow management functionality for the LatteReview package, implementing multi-agent review orchestration. The updated version includes support for image-based inputs alongside text inputs in the review workflow.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>The workflows module consists of one main class:</p>
 <ul>
-<li><code>ReviewWorkflow</code>: A class that orchestrates multi-agent review processes with support for sequential rounds and filtering</li>
+<li><code>ReviewWorkflow</code>: A class that orchestrates multi-agent review processes with support for sequential rounds, filtering, and handling both text and image inputs.</li>
 </ul>
 <h2 id="reviewworkflow">ReviewWorkflow<a class="headerlink" href="#reviewworkflow" title="Permanent link">&para;</a></h2>
 <h3 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
@@ -1006,33 +904,34 @@
 <li><code>reviewer_costs</code>: Dictionary tracking costs per reviewer and round</li>
 <li><code>total_cost</code>: Total accumulated cost of all reviews</li>
 <li><code>verbose</code>: Flag to enable/disable logging output</li>
-<li><code>reviewer_names</code>: Automatically generated list of reviewer identifiers</li>
 </ul>
 <h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
 <h4 id="__call__"><code>__call__()</code><a class="headerlink" href="#__call__" title="Permanent link">&para;</a></h4>
 <p>Execute the workflow on provided data.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>    <span class="c1"># Execute workflow on DataFrame or dictionary input</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute workflow on DataFrame or dictionary input.&quot;&quot;&quot;</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="c1"># Returns DataFrame with review results</span>
 </code></pre></div>
 <h4 id="run"><code>run()</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h4>
 <p>Core method to execute the review workflow.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">async</span> <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    <span class="c1"># Execute main review workflow</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute main review workflow.&quot;&quot;&quot;</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    <span class="c1"># Process each round sequentially</span>
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="c1"># Returns updated DataFrame with review results</span>
 </code></pre></div>
 <h4 id="get_total_cost"><code>get_total_cost()</code><a class="headerlink" href="#get_total_cost" title="Permanent link">&para;</a></h4>
 <p>Get total cost of workflow execution.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">def</span> <span class="nf">get_total_cost</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="c1"># Return sum of all review costs</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return sum of all review costs.&quot;&quot;&quot;</span>
 </code></pre></div>
 <h4 id="internal-methods">Internal Methods<a class="headerlink" href="#internal-methods" title="Permanent link">&para;</a></h4>
 <ul>
-<li><code>_create_content_hash()</code>: Generate hash for content tracking</li>
-<li><code>_format_input_text()</code>: Format input for reviewers</li>
+<li><code>_format_text_input()</code>: Format input for reviewers</li>
+<li><code>_format_image_input()</code>: Validate and format image paths</li>
 <li><code>_log()</code>: Handle logging based on verbose setting</li>
 </ul>
+<h3 id="image-input-handling">Image Input Handling<a class="headerlink" href="#image-input-handling" title="Permanent link">&para;</a></h3>
+<p>The updated workflow supports image inputs in addition to text inputs. Images are validated for file existence and format before being passed to reviewers.</p>
 <h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
 <h3 id="creating-a-basic-review-workflow">Creating a Basic Review Workflow<a class="headerlink" href="#creating-a-basic-review-workflow" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">lattereview.workflows</span> <span class="kn">import</span> <span class="n">ReviewWorkflow</span>
@@ -1057,19 +956,20 @@
 <a id="__codelineno-4-20" name="__codelineno-4-20" href="#__codelineno-4-20"></a>    <span class="p">{</span>
 <a id="__codelineno-4-21" name="__codelineno-4-21" href="#__codelineno-4-21"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span>
 <a id="__codelineno-4-22" name="__codelineno-4-22" href="#__codelineno-4-22"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">reviewer1</span><span class="p">,</span>
-<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">]</span>
-<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>    <span class="p">},</span>
-<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    <span class="p">{</span>
-<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span>
-<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">reviewer2</span><span class="p">,</span>
-<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">,</span> <span class="s2">&quot;round-A_Initial_output&quot;</span><span class="p">],</span>
-<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-A_Initial_score&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">3</span>
-<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>    <span class="p">}</span>
-<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a><span class="p">]</span>
-<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a>
-<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a><span class="c1"># Create and run workflow</span>
-<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="n">workflow_schema</span><span class="p">)</span>
-<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+<a id="__codelineno-4-23" name="__codelineno-4-23" href="#__codelineno-4-23"></a>        <span class="s2">&quot;text_inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-24" name="__codelineno-4-24" href="#__codelineno-4-24"></a>        <span class="s2">&quot;image_inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;figure_path&quot;</span><span class="p">]</span>
+<a id="__codelineno-4-25" name="__codelineno-4-25" href="#__codelineno-4-25"></a>    <span class="p">},</span>
+<a id="__codelineno-4-26" name="__codelineno-4-26" href="#__codelineno-4-26"></a>    <span class="p">{</span>
+<a id="__codelineno-4-27" name="__codelineno-4-27" href="#__codelineno-4-27"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span>
+<a id="__codelineno-4-28" name="__codelineno-4-28" href="#__codelineno-4-28"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">reviewer2</span><span class="p">,</span>
+<a id="__codelineno-4-29" name="__codelineno-4-29" href="#__codelineno-4-29"></a>        <span class="s2">&quot;text_inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">,</span> <span class="s2">&quot;round-A_Initial_output&quot;</span><span class="p">],</span>
+<a id="__codelineno-4-30" name="__codelineno-4-30" href="#__codelineno-4-30"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-A_Initial_score&quot;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">3</span>
+<a id="__codelineno-4-31" name="__codelineno-4-31" href="#__codelineno-4-31"></a>    <span class="p">}</span>
+<a id="__codelineno-4-32" name="__codelineno-4-32" href="#__codelineno-4-32"></a><span class="p">]</span>
+<a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>
+<a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="c1"># Create and run workflow</span>
+<a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="n">workflow_schema</span><span class="p">)</span>
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="understanding-workflow-construction">Understanding Workflow Construction<a class="headerlink" href="#understanding-workflow-construction" title="Permanent link">&para;</a></h3>
 <p>A workflow is defined by a list of dictionaries where each dictionary represents a review round. The rounds are executed sequentially in the order they appear in the list. Each round dictionary must contain:</p>
@@ -1077,176 +977,35 @@
 <ul>
 <li><code>round</code>: A string identifier for the round (e.g., 'A', 'B', '1', 'initial')</li>
 <li><code>reviewers</code>: A single ScoringReviewer or list of ScoringReviewers</li>
-<li><code>inputs</code>: A string or list of strings representing DataFrame column names to use</li>
+<li><code>text_inputs</code>: A string or list of strings representing DataFrame column names to use</li>
 </ul>
 <p>Optional Arguments:</p>
 <ul>
-<li>
-<p><code>filter</code>: A lambda function that determines which rows to review in this round. This function:</p>
-</li>
-<li>
-<p>Receives each row of the DataFrame as a pandas Series object</p>
-</li>
-<li>Is applied to every row at the start of each round</li>
-<li>Must return a boolean value (True/False)</li>
-<li>Has access to all columns in the DataFrame, including outputs from previous rounds</li>
-<li>Determines whether the row should be included in the current round's review</li>
+<li><code>image_inputs</code>: A list of DataFrame column names containing paths to image files</li>
+<li><code>filter</code>: A lambda function that determines which rows to review in this round</li>
 </ul>
-<p>The workflow automatically generates output columns for each key in the reviewer outputs, e.g.:</p>
-<ul>
-<li><code>round-{round_id}_{reviewer.name}_output</code>: Raw reviewer output</li>
-<li><code>round-{round_id}_{reviewer.name}_score</code>: Numerical score</li>
-<li><code>round-{round_id}_{reviewer.name}_reasoning</code>: Reasoning text</li>
-<li><code>round-{round_id}_{reviewer.name}_certainty</code>: certainty score</li>
-<li>...</li>
-</ul>
-<p>These output columns can be referenced in subsequent rounds as inputs or in filter conditions.</p>
-<h3 id="running-complex-reviews">Running Complex Reviews<a class="headerlink" href="#running-complex-reviews" title="Permanent link">&para;</a></h3>
-<p>Here are examples of increasingly complex workflow patterns:</p>
-<h4 id="1-basic-multi-reviewer-round">1. Basic Multi-Reviewer Round<a class="headerlink" href="#1-basic-multi-reviewer-round" title="Permanent link">&para;</a></h4>
-<p>Multiple reviewers examining the same content:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">workflow_schema</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="p">{</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">reviewer1</span><span class="p">,</span> <span class="n">reviewer2</span><span class="p">],</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">]</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="p">}</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="p">]</span>
-</code></pre></div>
-<h4 id="2-sequential-review-with-dependencies">2. Sequential Review with Dependencies<a class="headerlink" href="#2-sequential-review-with-dependencies" title="Permanent link">&para;</a></h4>
-<p>One reviewer examining previous reviews:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="n">workflow_schema</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>    <span class="p">{</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">initial_reviewer</span><span class="p">,</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">]</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>    <span class="p">},</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>    <span class="p">{</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">expert_reviewer</span><span class="p">,</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>            <span class="s2">&quot;title&quot;</span><span class="p">,</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>            <span class="s2">&quot;abstract&quot;</span><span class="p">,</span>
-<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>            <span class="s2">&quot;round-A_initial_reviewer_score&quot;</span><span class="p">,</span>
-<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>            <span class="s2">&quot;round-A_initial_reviewer_reasoning&quot;</span>
-<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>        <span class="p">]</span>
-<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a>    <span class="p">}</span>
-<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="p">]</span>
-</code></pre></div>
-<h4 id="3-disagreement-resolution-pattern">3. Disagreement Resolution Pattern<a class="headerlink" href="#3-disagreement-resolution-pattern" title="Permanent link">&para;</a></h4>
-<p>A third reviewer resolving disagreements:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="n">workflow_schema</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>    <span class="p">{</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;A&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">reviewer1</span><span class="p">,</span> <span class="n">reviewer2</span><span class="p">],</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">]</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>    <span class="p">},</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>    <span class="p">{</span>
-<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;B&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">arbitrator</span><span class="p">,</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>            <span class="s2">&quot;title&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>            <span class="s2">&quot;abstract&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>            <span class="s2">&quot;round-A_reviewer1_score&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>            <span class="s2">&quot;round-A_reviewer2_score&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>            <span class="s2">&quot;round-A_reviewer1_reasoning&quot;</span><span class="p">,</span>
-<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>            <span class="s2">&quot;round-A_reviewer2_reasoning&quot;</span>
-<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>        <span class="p">],</span>
-<a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="nb">abs</span><span class="p">(</span>
-<a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-A_reviewer1_score&quot;</span><span class="p">]</span> <span class="o">-</span>
-<a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a>            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-A_reviewer2_score&quot;</span><span class="p">]</span>
-<a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a>        <span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span>
-<a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>    <span class="p">}</span>
-<a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a><span class="p">]</span>
-</code></pre></div>
-<h4 id="4-multi-stage-review-with-filtering">4. Multi-Stage Review with Filtering<a class="headerlink" href="#4-multi-stage-review-with-filtering" title="Permanent link">&para;</a></h4>
-<p>Progressive review stages with filtering:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">workflow_schema</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>    <span class="c1"># Initial screening</span>
-<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>    <span class="p">{</span>
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;screening&#39;</span><span class="p">,</span>
-<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">screening_reviewer</span><span class="p">,</span>
-<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">]</span>
-<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>    <span class="p">},</span>
-<a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>    <span class="c1"># Detailed review of passing papers</span>
-<a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>    <span class="p">{</span>
-<a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;detailed&#39;</span><span class="p">,</span>
-<a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">expert1</span><span class="p">,</span> <span class="n">expert2</span><span class="p">],</span>
-<a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">,</span> <span class="s2">&quot;full_text&quot;</span><span class="p">],</span>
-<a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-screening_screening_reviewer_score&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">4</span>
-<a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a>    <span class="p">},</span>
-<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>    <span class="c1"># Final decision for contested papers</span>
-<a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>    <span class="p">{</span>
-<a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;final&#39;</span><span class="p">,</span>
-<a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">senior_reviewer</span><span class="p">,</span>
-<a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span>
-<a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a>            <span class="s2">&quot;title&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a>            <span class="s2">&quot;abstract&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>            <span class="s2">&quot;round-detailed_expert1_score&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>            <span class="s2">&quot;round-detailed_expert2_score&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>            <span class="s2">&quot;round-detailed_expert1_reasoning&quot;</span><span class="p">,</span>
-<a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>            <span class="s2">&quot;round-detailed_expert2_reasoning&quot;</span>
-<a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>        <span class="p">],</span>
-<a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span>
-<a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-detailed_expert1_score&quot;</span><span class="p">]</span> <span class="o">!=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-detailed_expert2_score&quot;</span><span class="p">]</span>
-<a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>    <span class="p">}</span>
-<a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a><span class="p">]</span>
-</code></pre></div>
-<h4 id="5-hierarchical-review-with-validation">5. Hierarchical Review with Validation<a class="headerlink" href="#5-hierarchical-review-with-validation" title="Permanent link">&para;</a></h4>
-<p>Multiple review levels with validation checks:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">workflow_schema</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>    <span class="c1"># Initial automated screening</span>
-<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>    <span class="p">{</span>
-<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;auto&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">auto_reviewer</span><span class="p">,</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">,</span> <span class="s2">&quot;metrics&quot;</span><span class="p">]</span>
-<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="p">},</span>
-<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="c1"># Human validation of uncertain cases</span>
-<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="p">{</span>
-<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;validation&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">human_validator</span><span class="p">,</span>
-<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span>
-<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a>            <span class="s2">&quot;title&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>            <span class="s2">&quot;abstract&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>            <span class="s2">&quot;round-auto_auto_reviewer_score&quot;</span><span class="p">,</span>
-<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>            <span class="s2">&quot;round-auto_auto_reviewer_reasoning&quot;</span>
-<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>        <span class="p">],</span>
-<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span>
-<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>            <span class="mi">2</span> <span class="o">&lt;=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-auto_auto_reviewer_score&quot;</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="mi">4</span>
-<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a>    <span class="p">},</span>
-<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a>    <span class="c1"># Expert review of validated papers</span>
-<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a>    <span class="p">{</span>
-<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a>        <span class="s2">&quot;round&quot;</span><span class="p">:</span> <span class="s1">&#39;expert&#39;</span><span class="p">,</span>
-<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a>        <span class="s2">&quot;reviewers&quot;</span><span class="p">:</span> <span class="n">domain_expert</span><span class="p">,</span>
-<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>        <span class="s2">&quot;inputs&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">,</span> <span class="s2">&quot;full_text&quot;</span><span class="p">],</span>
-<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>        <span class="s2">&quot;filter&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span>
-<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-validation_human_validator_score&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">3</span> <span class="ow">or</span>
-<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a>            <span class="n">row</span><span class="p">[</span><span class="s2">&quot;round-auto_auto_reviewer_score&quot;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mi">4</span>
-<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a>    <span class="p">}</span>
-<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a><span class="p">]</span>
-</code></pre></div>
 <h3 id="handling-results">Handling Results<a class="headerlink" href="#handling-results" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># Execute workflow</span>
-<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="n">workflow_schema</span><span class="p">)</span>
-<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>    <span class="n">results_df</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_df</span><span class="p">)</span>
-<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>
-<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>    <span class="c1"># Access costs</span>
-<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a>    <span class="n">total_cost</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get_total_cost</span><span class="p">()</span>
-<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a>    <span class="n">per_reviewer</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">reviewer_costs</span>
-<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a>
-<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>    <span class="c1"># Access results</span>
-<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a>    <span class="n">round_a_scores</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-A_Initial_score&quot;</span><span class="p">]</span>
-<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>    <span class="n">round_b_reasoning</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-B_Expert_reasoning&quot;</span><span class="p">]</span>
-<a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a>
-<a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="k">except</span> <span class="n">ReviewWorkflowError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-10-15" name="__codelineno-10-15" href="#__codelineno-10-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Workflow failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Execute workflow</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="n">workflow_schema</span><span class="p">)</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">results_df</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_df</span><span class="p">)</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="c1"># Access costs</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">total_cost</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get_total_cost</span><span class="p">()</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">per_reviewer</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">reviewer_costs</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="c1"># Access results</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">round_a_scores</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-A_Initial_score&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">round_b_reasoning</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-B_Expert_reasoning&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="k">except</span> <span class="n">ReviewWorkflowError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Workflow failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <p>The module uses <code>ReviewWorkflowError</code> for all workflow-related errors:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="k">class</span> <span class="nc">ReviewWorkflowError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base exception for workflow-related errors.&quot;&quot;&quot;</span>
-<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>    <span class="k">pass</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">class</span> <span class="nc">ReviewWorkflowError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base exception for workflow-related errors.&quot;&quot;&quot;</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="k">pass</span>
 </code></pre></div>
 <p>Common error scenarios:</p>
 <ul>
@@ -1255,6 +1014,7 @@
 <li>Reviewer initialization failures</li>
 <li>Content validation errors</li>
 <li>Output processing failures</li>
+<li>Invalid image file paths</li>
 </ul>
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <ol>
