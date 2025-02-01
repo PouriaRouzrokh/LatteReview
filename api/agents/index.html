@@ -1319,7 +1319,14 @@
 <hr />
 <h2 id="titleabstractreviewer-class">TitleAbstractReviewer Class<a class="headerlink" href="#titleabstractreviewer-class" title="Permanent link">&para;</a></h2>
 <h3 id="overview_4">Overview<a class="headerlink" href="#overview_4" title="Permanent link">&para;</a></h3>
-<p>The <code>TitleAbstractReviewer</code> is a specialized agent for reviewing and evaluating article titles and abstracts. It supports the evaluation of inclusion and exclusion criteria and provides a reasoning-backed evaluation score.</p>
+<p>The <code>TitleAbstractReviewer</code> is a specialized agent for reviewing and evaluating article titles and abstracts. It supports the evaluation of inclusion and exclusion criteria and provides a reasoning-backed evaluation score. The returned score is either of the following:</p>
+<ul>
+<li>1 means absolutely to exclude.</li>
+<li>2 means better to exclude.</li>
+<li>3 Not sure if to include or exclude.</li>
+<li>4 means better to include.</li>
+<li>5 means absolutely to include.</li>
+</ul>
 <h3 id="class-definition_3">Class Definition<a class="headerlink" href="#class-definition_3" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">class</span> <span class="nc">TitleAbstractReviewer</span><span class="p">(</span><span class="n">BasicReviewer</span><span class="p">):</span>
 <a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>    <span class="n">generic_prompt</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">generic_prompt</span>
