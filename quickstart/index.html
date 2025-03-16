@@ -654,16 +654,17 @@
 </code></pre></div>
 <p>Note: No API keys are needed if you're exclusively using local models through Ollama.</p>
 <h2 id="step-2-prepare-your-data">Step 2: Prepare Your Data<a class="headerlink" href="#step-2-prepare-your-data" title="Permanent link">&para;</a></h2>
-<p>Your input data should be in a CSV or Excel file with columns for the content you want to review. The column names should match the <code>inputs</code> specified in your workflow:</p>
+<p>Your input data should be in a CSV, Excel, or RIS file with appropriate content for review. For CSV and Excel files, the column names should match the <code>inputs</code> specified in your workflow:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Load your data</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s2">&quot;articles.xlsx&quot;</span><span class="p">)</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s2">&quot;articles.xlsx&quot;</span><span class="p">)</span>  <span class="c1"># You can also use .csv or .ris files</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Example data structure:</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Example data structure for CSV/Excel:</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Paper 1 Title&#39;</span><span class="p">,</span> <span class="s1">&#39;Paper 2 Title&#39;</span><span class="p">],</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="s1">&#39;abstract&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Paper 1 Abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;Paper 2 Abstract&#39;</span><span class="p">]</span>
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="p">})</span>
 </code></pre></div>
+<p>For RIS files, the standard bibliographic tags will be automatically mapped to appropriate columns (e.g., TI for title, AB for abstract).</p>
 <h2 id="step-3-create-reviewers">Step 3: Create Reviewers<a class="headerlink" href="#step-3-create-reviewers" title="Permanent link">&para;</a></h2>
 <p>Create reviewer agents by configuring <code>TitleAbstractReviewer</code> objects. Each reviewer needs:</p>
 <ul>
@@ -714,11 +715,13 @@
 <p>Execute the workflow and get results:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Run workflow</span>
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="n">results</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">workflow</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>  <span class="c1"># Returns DataFrame with all results</span>
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Results include original columns plus new columns for each reviewer:</span>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># - round-{ROUND}_{REVIEWER_NAME}_output: Full output dictionary</span>
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># - round-{ROUND}_{REVIEWER_NAME}_evaluation: Extracted evaluation score</span>
-<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># - round-{ROUND}_{REVIEWER_NAME}_reasoning: Reasoning explanation based on the defined style (`brief` or `cot`)</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="c1"># Or directly pass a file path:</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="n">results</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">workflow</span><span class="p">(</span><span class="s2">&quot;articles.xlsx&quot;</span><span class="p">))</span>  <span class="c1"># Can use .csv, .xlsx, or .ris files</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1"># Results include original columns plus new columns for each reviewer:</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># - round-{ROUND}_{REVIEWER_NAME}_output: Full output dictionary</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># - round-{ROUND}_{REVIEWER_NAME}_evaluation: Extracted evaluation score</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># - round-{ROUND}_{REVIEWER_NAME}_reasoning: Reasoning explanation based on the defined style (`brief` or `cot`)</span>
 </code></pre></div>
 <h2 id="complete-working-example">Complete Working Example<a class="headerlink" href="#complete-working-example" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="kn">from</span> <span class="nn">lattereview.providers</span> <span class="kn">import</span> <span class="n">LiteLLMProvider</span>
@@ -785,8 +788,11 @@
 <a id="__codelineno-8-62" name="__codelineno-8-62" href="#__codelineno-8-62"></a><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_excel</span><span class="p">(</span><span class="s2">&quot;articles.xlsx&quot;</span><span class="p">)</span>  <span class="c1"># Must have &#39;title&#39; and &#39;abstract&#39; columns</span>
 <a id="__codelineno-8-63" name="__codelineno-8-63" href="#__codelineno-8-63"></a><span class="n">results</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">workflow</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>  <span class="c1"># Returns a pandas DataFrame with all original and output columns</span>
 <a id="__codelineno-8-64" name="__codelineno-8-64" href="#__codelineno-8-64"></a>
-<a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a><span class="c1"># Save results</span>
-<a id="__codelineno-8-66" name="__codelineno-8-66" href="#__codelineno-8-66"></a><span class="n">results</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;review_results.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<a id="__codelineno-8-65" name="__codelineno-8-65" href="#__codelineno-8-65"></a><span class="c1"># Alternatively, pass the file path directly</span>
+<a id="__codelineno-8-66" name="__codelineno-8-66" href="#__codelineno-8-66"></a><span class="c1"># results = asyncio.run(workflow(&quot;articles.xlsx&quot;))  # Can use .csv, .xlsx, or .ris files</span>
+<a id="__codelineno-8-67" name="__codelineno-8-67" href="#__codelineno-8-67"></a>
+<a id="__codelineno-8-68" name="__codelineno-8-68" href="#__codelineno-8-68"></a><span class="c1"># Save results</span>
+<a id="__codelineno-8-69" name="__codelineno-8-69" href="#__codelineno-8-69"></a><span class="n">results</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">&quot;review_results.csv&quot;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 
 

@@ -545,6 +545,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#file-format-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Format Support
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -787,6 +796,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#file-format-support" class="md-nav__link">
+    <span class="md-ellipsis">
+      File Format Support
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -908,9 +926,12 @@
 <h3 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h3>
 <h4 id="__call__"><code>__call__()</code><a class="headerlink" href="#__call__" title="Permanent link">&para;</a></h4>
 <p>Execute the workflow on provided data.</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Execute workflow on DataFrame or dictionary input.&quot;&quot;&quot;</span>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="c1"># Returns DataFrame with review results</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">async</span> <span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">:</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="sd">    Execute workflow on DataFrame, dictionary input, or directly from a file path.</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="sd">    Supported file formats: .csv, .xlsx, and .ris</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="c1"># Returns DataFrame with review results</span>
 </code></pre></div>
 <h4 id="run"><code>run()</code><a class="headerlink" href="#run" title="Permanent link">&para;</a></h4>
 <p>Core method to execute the review workflow.</p>
@@ -929,9 +950,18 @@
 <li><code>_format_text_input()</code>: Format input for reviewers</li>
 <li><code>_format_image_input()</code>: Validate and format image paths</li>
 <li><code>_log()</code>: Handle logging based on verbose setting</li>
+<li><code>_load_from_file()</code>: Load data from supported file formats (.csv, .xlsx, .ris)</li>
 </ul>
 <h3 id="image-input-handling">Image Input Handling<a class="headerlink" href="#image-input-handling" title="Permanent link">&para;</a></h3>
 <p>The updated workflow supports image inputs in addition to text inputs. Images are validated for file existence and format before being passed to reviewers.</p>
+<h3 id="file-format-support">File Format Support<a class="headerlink" href="#file-format-support" title="Permanent link">&para;</a></h3>
+<p>The workflow now supports loading data directly from files in the following formats:</p>
+<ul>
+<li>CSV (.csv): Standard comma-separated values files</li>
+<li>Excel (.xlsx): Microsoft Excel spreadsheets</li>
+<li>RIS (.ris): Research Information Systems format commonly used for bibliographic citations</li>
+</ul>
+<p>When using RIS files, standard bibliographic tags (e.g., TI for title, AB for abstract) are automatically mapped to appropriate columns.</p>
 <h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
 <h3 id="creating-a-basic-review-workflow">Creating a Basic Review Workflow<a class="headerlink" href="#creating-a-basic-review-workflow" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span> <span class="nn">lattereview.workflows</span> <span class="kn">import</span> <span class="n">ReviewWorkflow</span>
@@ -969,7 +999,12 @@
 <a id="__codelineno-4-33" name="__codelineno-4-33" href="#__codelineno-4-33"></a>
 <a id="__codelineno-4-34" name="__codelineno-4-34" href="#__codelineno-4-34"></a><span class="c1"># Create and run workflow</span>
 <a id="__codelineno-4-35" name="__codelineno-4-35" href="#__codelineno-4-35"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="n">workflow_schema</span><span class="p">)</span>
-<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+<a id="__codelineno-4-36" name="__codelineno-4-36" href="#__codelineno-4-36"></a>
+<a id="__codelineno-4-37" name="__codelineno-4-37" href="#__codelineno-4-37"></a><span class="c1"># Option 1: Pass a DataFrame</span>
+<a id="__codelineno-4-38" name="__codelineno-4-38" href="#__codelineno-4-38"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_data</span><span class="p">)</span>
+<a id="__codelineno-4-39" name="__codelineno-4-39" href="#__codelineno-4-39"></a>
+<a id="__codelineno-4-40" name="__codelineno-4-40" href="#__codelineno-4-40"></a><span class="c1"># Option 2: Pass a file path directly</span>
+<a id="__codelineno-4-41" name="__codelineno-4-41" href="#__codelineno-4-41"></a><span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="s2">&quot;papers.xlsx&quot;</span><span class="p">)</span>  <span class="c1"># Can use .csv, .xlsx, or .ris files</span>
 </code></pre></div>
 <h3 id="understanding-workflow-construction">Understanding Workflow Construction<a class="headerlink" href="#understanding-workflow-construction" title="Permanent link">&para;</a></h3>
 <p>A workflow is defined by a list of dictionaries where each dictionary represents a review round. The rounds are executed sequentially in the order they appear in the list. Each round dictionary must contain:</p>
@@ -988,18 +1023,22 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Execute workflow</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="n">workflow_schema</span><span class="p">)</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="n">results_df</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_df</span><span class="p">)</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="c1"># Access costs</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="n">total_cost</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get_total_cost</span><span class="p">()</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">per_reviewer</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">reviewer_costs</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="c1"># Option 1: Pass a DataFrame</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="n">results_df</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="n">input_df</span><span class="p">)</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>    <span class="c1"># Option 2: Pass a file path directly</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>    <span class="n">results_df</span> <span class="o">=</span> <span class="k">await</span> <span class="n">workflow</span><span class="p">(</span><span class="s2">&quot;references.ris&quot;</span><span class="p">)</span>  <span class="c1"># Also supports .csv and .xlsx</span>
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="c1"># Access results</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">round_a_scores</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-A_Initial_score&quot;</span><span class="p">]</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">round_b_reasoning</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-B_Expert_reasoning&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>    <span class="c1"># Access costs</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="n">total_cost</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">get_total_cost</span><span class="p">()</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="n">per_reviewer</span> <span class="o">=</span> <span class="n">workflow</span><span class="o">.</span><span class="n">reviewer_costs</span>
 <a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="k">except</span> <span class="n">ReviewWorkflowError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Workflow failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>    <span class="c1"># Access results</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a>    <span class="n">round_a_scores</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-A_Initial_score&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a>    <span class="n">round_b_reasoning</span> <span class="o">=</span> <span class="n">results_df</span><span class="p">[</span><span class="s2">&quot;round-B_Expert_reasoning&quot;</span><span class="p">]</span>
+<a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="k">except</span> <span class="n">ReviewWorkflowError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a>    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Workflow failed: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <p>The module uses <code>ReviewWorkflowError</code> for all workflow-related errors:</p>
