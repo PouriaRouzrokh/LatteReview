@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+## [1.0.7] - 2025-4-29
+
+### Added
+
+- Swithced to UV instead of Pypi.
+
 ## [1.0.6] - 2025-4-29
 
 ### Fixed

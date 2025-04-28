@@ -13,7 +13,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="lattereview",
-    version="1.0.6",
+    version="1.0.7",
     author="Pouria Rouzrokh",
     author_email="po.rouzrokh@gmail.com",
     description="A framework for multi-agent review workflows using large language models",

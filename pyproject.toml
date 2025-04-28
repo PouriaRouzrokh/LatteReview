@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "black>=24.10.0",
+    "build>=1.2.2.post1",
     "flake8>=7.1.1",
     "ipykernel>=6.29.5",
     "litellm>=1.55.2",
@@ -19,8 +20,10 @@ dependencies = [
     "pillow>=11.0.0",
     "pydantic>=2.10.3",
     "python-dotenv>=1.0.1",
+    "setuptools>=80.0.0",
     "tokencost>=0.1.17",
     "tqdm>=4.67.1",
+    "twine>=6.1.0",
 ]
 
 [build-system]
