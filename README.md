@@ -13,12 +13,6 @@
 
 LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
 
-> ---
->
-> 🚨 **LatteReview now supports "o3-mini" family of models from OpenAI.** <br>
->
-> ---
-
 ## 🎯 Key Features
 
 - Multi-agent review system with customizable roles and expertise levels for each reviewer

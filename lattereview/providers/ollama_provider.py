@@ -95,13 +95,14 @@ class OllamaProvider(BaseProvider):
 
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
 
+            # Attempting fix for ollama not supporting response_format - To be removed if the fix is confirmed
             # Update system message to request JSON output
-            if message_list and message_list[0]["role"] == "system":
-                schema_str = json.dumps(self.response_format_class.model_json_schema(), indent=2)
-                message_list[0]["content"] = (
-                    f"{message_list[0]['content']}\n\n"
-                    f"Please provide your response as a JSON object following this schema:\n{schema_str}"
-                )
+            # if message_list and message_list[0]["role"] == "system":
+            #     schema_str = json.dumps(self.response_format_class.model_json_schema(), indent=2)
+            #     message_list[0]["content"] = (
+            #         f"{message_list[0]['content']}\n\n"
+            #         f"Please provide your response as a JSON object following this schema:\n{schema_str}"
+            #     )
 
             # Set format parameter to 'json'
             cleaned_kwargs = self._clean_kwargs(kwargs)

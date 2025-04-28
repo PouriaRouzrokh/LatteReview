@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Writing the white paper for the package and public launch
+- Adding MCP support.
+
+## [1.0.6] - 2025-4-29
+
+### Fixed
+
+- Attempted fixing the bug in handling structured outputs by the Olama provider.
 
 ## [1.0.5] - 2025-3-16
 
