@@ -30,7 +30,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - Extensible architecture supporting custom review workflow implementation
 - **NEW**: Support for RIS (Research Information Systems) file format for academic literature review
 
-## ��️ Installation
+## 💾Installation
 
 ```bash
 pip install lattereview
