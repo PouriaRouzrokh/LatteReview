@@ -11,6 +11,12 @@
 
 <p><img src="docs/images/robot.png" width="400"></p>
 
+---
+
+🚨 **NEW**: Now supports the Gemini 2.5 family of models using a new GoogleProvider class.
+
+---
+
 LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
 
 ## 🎯 Key Features

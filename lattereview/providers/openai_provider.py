@@ -51,7 +51,7 @@ class OpenAIProvider(BaseProvider):
                         "OPENAI_API_KEY or GEMINI_API_KEY environment variable is not set. Please pass your API key or set this variable."
                     )
 
-        if "gemini" in self.model.lower():      
+        if "gemini" in self.model.lower():
             self.api_key = os.getenv("GEMINI_API_KEY", self.api_key)
             base_url = base_url or gemini_base_url
             try:

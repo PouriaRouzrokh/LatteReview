@@ -10,6 +10,7 @@ The providers module includes:
 - `OpenAIProvider`: Implementation for OpenAI API (including GPT models)
 - `OllamaProvider`: Implementation for local Ollama models
 - `LiteLLMProvider`: Implementation using LiteLLM for unified API access
+- `GoogleProvider`: Implementation for Google's Gemini API (including Gemini Pro and Flash models)
 
 ** You can use any of the models offered by the providers above as far as they support structured outputs. **
 
@@ -186,6 +187,74 @@ provider = OpenAIProvider(
     api_key="your_openrouter_key",
     base_url="https://openrouter.ai/api/v1"
 )
+```
+
+## GoogleProvider
+
+### Description
+
+Implementation for Google's Gemini API, supporting the latest Gemini models including Gemini 2.5 Pro and Flash. This provider enables direct integration with Google's AI models, handling both text and multimodal inputs, as well as structured JSON responses.
+
+### Class Definition
+
+```python
+class GoogleProvider(BaseProvider):
+    provider: str = "Google"
+    api_key: Optional[str] = None
+    model: str = "gemini-2.5-pro-preview-05-06"
+    response_format: Optional[Dict[str, Any]] = None
+    response_format_class: Optional[Any] = None
+    last_response: Optional[Any] = None
+```
+
+### Key Features
+
+- Native Gemini model support via Google's official `genai` library
+- Automatic API key handling from environment variables (`GEMINI_API_KEY`)
+- Support for structured JSON responses
+- Processing of text and image inputs (multimodal capabilities)
+- Native token counting and cost calculation using Google's token counter
+- Comprehensive error handling with detailed error messages
+
+### Usage Example
+
+```python
+from lattereview.providers import GoogleProvider
+
+# Initialize with default Gemini 2.5 Pro model
+provider = GoogleProvider()
+
+# Or specify a different model
+provider = GoogleProvider(model="gemini-2.5-flash-preview-04-17")
+
+# Get a text response
+response, cost = await provider.get_response("What is the capital of France?")
+
+# Get a response with an image
+response, cost = await provider.get_response("What's in this image?", ["path/to/image.jpg"])
+
+# Get a structured JSON response
+provider.set_response_format({"name": str, "population": int, "landmarks": [str]})
+response, cost = await provider.get_json_response("Give me information about Paris.")
+```
+
+### Response Format
+
+The GoogleProvider supports structured JSON responses through the `set_response_format` method. It accepts either a Pydantic model or a Python dictionary that specifies the expected schema:
+
+```python
+# Using a dictionary schema
+provider.set_response_format({"name": str, "age": int, "hobbies": [str]})
+
+# Using a Pydantic model
+from pydantic import BaseModel
+
+class Person(BaseModel):
+    name: str
+    age: int
+    hobbies: List[str]
+
+provider.set_response_format(Person)
 ```
 
 ## OllamaProvider

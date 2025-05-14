@@ -1,6 +1,6 @@
 [project]
 name = "lattereview"
-version = "1.0.8"
+version = "1.0.9"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
@@ -8,6 +8,8 @@ dependencies = [
     "black>=24.10.0",
     "build>=1.2.2.post1",
     "flake8>=7.1.1",
+    "google>=3.0.0",
+    "google-genai>=1.15.0",
     "ipykernel>=6.29.5",
     "litellm>=1.55.2",
     "matplotlib>=3.9.4",
