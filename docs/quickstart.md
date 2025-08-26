@@ -76,6 +76,28 @@ reviewer1 = TitleAbstractReviewer(
     reasoning="brief",                               # Reasoning explanation
     model_args={"temperature": 0.1}                 # Model configuration
 )
+
+# Second Reviewer: More exploratory approach
+reviewer2 = TitleAbstractReviewer(
+    provider=LiteLLMProvider(model="gemini/gemini-1.5-flash"),
+    name="Bob",
+    backstory="a computer scientist specializing in medical AI",
+    inclusion_criteria="Relevant to artificial intelligence in radiology.",
+    exclusion_criteria="Exclude studies focused solely on hardware.",
+    reasoning="cot",
+    model_args={"temperature": 0.8}
+)
+
+# Expert Reviewer: Resolves disagreements
+expert = TitleAbstractReviewer(
+    provider=LiteLLMProvider(model="o3-mini"),
+    name="Carol",
+    backstory="a professor of AI in medical imaging",
+    inclusion_criteria="Must align with at least one of Alice or Bob's recommendations.",
+    exclusion_criteria="Exclude only if both Alice and Bob disagreed.",
+    reasoning="brief",
+    model_args={"reasoning_effort": "high"}  # o3-mini specific parameter
+)
 ```
 
 ## Step 4: Create Review Workflow

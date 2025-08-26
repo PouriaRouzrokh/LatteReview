@@ -10,7 +10,6 @@ from ..utils.data_handler import ris_to_dataframe
 
 class ReviewWorkflowError(Exception):
     """Base exception for workflow-related errors."""
-
     pass
 
 
@@ -133,8 +132,40 @@ class ReviewWorkflow(pydantic.BaseModel):
                     self._log(f"Warning: Invalid image format: {row[image_input]}")
         return image_path_list
 
+    def _safe_parse_output(self, output, idx, reviewer_name, response_keywords):
+        """Safely parse reviewer output with detailed error logging."""
+        try:
+            if isinstance(output, dict):
+                processed_output = output
+            else:
+                processed_output = json.loads(output)
+            
+            # Validate that all required keys are present
+            missing_keys = []
+            for key in response_keywords:
+                if key not in processed_output:
+                    missing_keys.append(key)
+            
+            if missing_keys:
+                self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} missing keys: {missing_keys}")
+                # Fill missing keys with None
+                for key in missing_keys:
+                    processed_output[key] = None
+            
+            return processed_output, True
+            
+        except json.JSONDecodeError as e:
+            self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} - JSON decode error: {e}")
+            self._log(f"         Raw output: {str(output)[:200]}...")
+            # Return default structure with all required keys set to None
+            return {key: None for key in response_keywords}, False
+        except Exception as e:
+            self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} - Unexpected error: {e}")
+            self._log(f"         Raw output: {str(output)[:200]}...")
+            return {key: None for key in response_keywords}, False
+
     async def run(self, data: pd.DataFrame) -> pd.DataFrame:
-        """Run the review process with content validation."""
+        """Run the review process with robust error handling."""
         try:
             df = data.copy()
             total_rounds = len(self.workflow_schema)
@@ -191,8 +222,6 @@ class ReviewWorkflow(pydantic.BaseModel):
                     output_col = f"round-{round_id}_{reviewer.name}_output"
 
                     # Initialize the output column and all expected response columns if they don't exist
-                    # The output column is the entire output from the reviewer, while the response columns are specific
-
                     if output_col not in df.columns:
                         df[output_col] = None
 
@@ -218,38 +247,50 @@ class ReviewWorkflow(pydantic.BaseModel):
                             f"for {len(eligible_indices)} inputs"
                         )
 
-                    # Process outputs with content validation
+                    # Process outputs with robust error handling
                     processed_outputs = []
+                    successful_parses = 0
+                    failed_parses = 0
 
-                    for output in outputs:
-                        try:
-                            if isinstance(output, dict):
-                                processed_output = output
-                            else:
-                                processed_output = json.loads(output)
-                            processed_outputs.append(processed_output)
+                    for i, (output, idx) in enumerate(zip(outputs, eligible_indices)):
+                        processed_output, parse_success = self._safe_parse_output(
+                            output, idx, reviewer.name, response_keywords
+                        )
+                        processed_outputs.append(processed_output)
+                        
+                        if parse_success:
+                            successful_parses += 1
+                        else:
+                            failed_parses += 1
 
-                        except Exception as e:
-                            self._log(f"Warning: Error processing output: {e}")
-                            processed_outputs.append({"reasoning": None, "score": None})
+                    # Log parsing statistics
+                    self._log(f"Reviewer {reviewer.name}: {successful_parses} successful, {failed_parses} failed parses")
 
                     # Update dataframe with validated outputs
-                    output_dict = dict(zip(eligible_indices, processed_outputs))
+                    output_dict = dict(zip(eligible_indices, outputs))  # Store original outputs
                     df.loc[eligible_indices, output_col] = pd.Series(output_dict)
 
+                    # Safely update response columns
                     for response_keyword in response_keywords:
                         response_col = f"round-{round_id}_{reviewer.name}_{response_keyword}"
-                        response_dict = dict(
-                            zip(
-                                eligible_indices,
-                                [processed_output[response_keyword] for processed_output in processed_outputs],
-                            )
-                        )
-                        df.loc[eligible_indices, response_col] = pd.Series(response_dict)
+                        try:
+                            response_values = []
+                            for processed_output in processed_outputs:
+                                # This should always work now since we ensure all keys exist
+                                response_values.append(processed_output.get(response_keyword, None))
+                            
+                            response_dict = dict(zip(eligible_indices, response_values))
+                            df.loc[eligible_indices, response_col] = pd.Series(response_dict)
+                            
+                        except Exception as e:
+                            self._log(f"Error updating column {response_col}: {e}")
+                            # Fill with None values as fallback
+                            df.loc[eligible_indices, response_col] = None
 
                     self._log(
-                        f"The following columns are present in the dataframe at the end of {reviewer.name}'s reivew in round {round_id}: {df.columns.tolist()}"
+                        f"The following columns are present in the dataframe at the end of {reviewer.name}'s review in round {round_id}: {df.columns.tolist()}"
                     )
+            
             return df
 
         except Exception as e:

@@ -46,7 +46,7 @@ Please refer to the [installation guide](./docs/installation.md) for detailed in
 
 ## 🚀 Quick Start and Documentation
 
-LatteReview enables you to create custom literature review workflows with multiple AI reviewers. Each reviewer can use different models and providers based on your needs. Below is a working example of how you can use LatteReview for doing a quick title/abstract review with two junior and one senior reviewers (all AI agents)!
+LatteReview enables you to create custom literature review workflows with multiple AI reviewers. Each reviewer can use different models and providers based on your needs. Below is a working example of how you can use LatteReview for doing a quick title/abstract review with two junior and one senior reviewers (all AI agents)! And this is just the beginning! Beyond study screening, LatteReview can handle data abstraction, customized pipelines, image analysis, and much more. Explore the [Tutorials](#-tutorials) for more examples!
 
 Please refer to the [Quick Start](./docs/quickstart.md) page and [Documentation](https://pouriarouzrokh.github.io/LatteReview/) page for detailed instructions.
 
@@ -130,6 +130,21 @@ Note: Models should support async operations and structured JSON outputs for opt
 ## 📖 Documentation
 
 Full documentation and API reference are available at: [https://pouriarouzrokh.github.io/LatteReview](https://pouriarouzrokh.github.io/LatteReview)
+
+## 🎓 Tutorials
+
+✅ TitleAbstractReviewer: 
+    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/title_abstract_review/title_abstract_review.ipynb) A simple task of abstract screening based on 1-5 scoring + inclusion and exclusion criteria
+✅ AbstractionReviewer:
+    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/abstraction_review_simple/abstraction_review_sample.ipynb) Data abstraction from abstracts/manuscripts
+✅ ScoringReviewer: 
+    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/scoring_review_simple/scoring_review_simple.ipynb) A simple task of abstract screening based on custom scoring by multiple agents
+    🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/scoring_review_rag/scoring_review_rag.ipynb) Question answering with RAG (Retrieval Augmented Generation)
+    🔸[3.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/scoring_review_image/scoring_review_image.ipynb) Image analysis by LatteReview  
+✅ Custom Reviewer:
+    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/custom_reviewer/abstraction_review_literature_analysis.ipynb) How to Customize the AbstractReviewer Agent for Your Needs
+    🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/base_functionalities/base_functionalities.ipynb) Chat with the agents and other base functionalities
+    🔸[3.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/abstraction_review_literature_analysis/abstraction_review_literature_analysis.ipynb): Combination of differnet agents for a comprehensive literature review
 
 ## 🛣️ Roadmap for Future Features
 
