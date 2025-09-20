@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)  
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
 [![View on arXiv](https://img.shields.io/badge/arXiv-View%20Paper-orange)](https://arxiv.org/abs/2501.05468)
 [![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor%20me-GitHub%20Sponsors-pink.svg)](https://github.com/sponsors/PouriaRouzrokh)
@@ -13,25 +13,28 @@
 
 A framework for multi-agent review workflows using large language models.
 
+🚨 **NEW**: Now supports the Gemini 2.5 family of models using a new GoogleProvider class.
+
 ## Overview
 
-LatteReview is a Python framework that enables you to create and manage multi-agent review workflows using various large language models. It provides a flexible and extensible architecture for implementing different types of review processes, from simple single-agent reviews to complex multi-stage workflows with multiple agents.
+LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
 
 ## Features
 
 - Multi-agent review system with customizable roles and expertise levels for each reviewer
 - Support for multiple review rounds with hierarchical decision-making workflows
-- Review diverse content types including article titles, abstracts, custom texts, and images using LLM-powered reviewer agents
-- Define reviewer agents with specialized backgrounds and distinct evaluation capabilities
+- Review diverse content types including article titles, abstracts, custom texts, and even **images** using LLM-powered reviewer agents
+- Define reviewer agents with specialized backgrounds and distinct evaluation capabilities (e.g., scoring or concept abstraction or custom reviewers of your own preferance)
 - Create flexible review workflows where multiple agents operate in parallel or sequential arrangements
 - Enable reviewer agents to analyze peer feedback, cast votes, and propose corrections to other reviewers' assessments
-- Enhance reviews with item-specific context integration, supporting use cases like Retrieval Augmented Generation (RAG)
+- Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
 - Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
 - Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, and local models via Ollama
 - High-performance asynchronous processing for efficient batch reviews
 - Standardized output format featuring detailed scoring metrics and reasoning transparency
 - Robust cost tracking and memory management systems
 - Extensible architecture supporting custom review workflow implementation
+- **NEW**: Support for RIS (Research Information Systems) file format for academic literature review
 
 ## Quick Links
 
