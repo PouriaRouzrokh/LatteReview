@@ -10,6 +10,7 @@ from typing import List, Optional, Dict, Any, Union, Callable
 from tqdm.asyncio import tqdm
 
 DEFAULT_CONCURRENT_REQUESTS = 20
+DEFAULT_MAX_RETRIES = 3
 
 
 class AgentError(Exception):
@@ -37,6 +38,7 @@ class BasicReviewer(BaseModel):
     identity: Dict[str, Any] = {}
     additional_context: Optional[Union[Callable, str]] = None
     verbose: bool = True
+    max_retries: int = DEFAULT_MAX_RETRIES
 
     class Config:
         arbitrary_types_allowed = True
@@ -271,5 +273,6 @@ class BasicReviewer(BaseModel):
                 response, cost = await self.provider.get_json_response(input_prompt, image_path_list, **self.model_args)
                 return response, input_prompt, cost
             except Exception as e:
+                num_tried += 1
                 self._log(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.max_retries}")
         raise AgentError("Error reviewing item!")
