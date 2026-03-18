@@ -1,8 +1,133 @@
+# Quick Start
+
+## v2 Agentic Quick Start
+
+LatteReview v2 provides a streamlined agentic API built on Pydantic AI. Models are specified as simple strings, and reviewers are ready to use with minimal configuration.
+
+### Set Up API Keys
+
+```bash
+export OPENAI_API_KEY="your-openai-key"
+# Or use ANTHROPIC_API_KEY, GOOGLE_API_KEY, etc.
+```
+
+### Score a Single Item
+
+```python
+from lattereview.agentic import ScoringReviewer
+import asyncio
+
+reviewer = ScoringReviewer(
+    model="openai:gpt-4o",
+    name="Scorer",
+    scoring_task="Rate relevance to AI in healthcare",
+    scoring_set=[1, 2, 3, 4, 5],
+)
+
+result, cost = asyncio.run(reviewer.review_item("A study on deep learning for X-ray diagnosis..."))
+print(result)  # ScoringOutput with score, reasoning, and certainty
+print(cost)    # Usage cost in USD
+```
+
+### Screen Titles and Abstracts
+
+```python
+from lattereview.agentic import TitleAbstractReviewer
+import asyncio
+
+reviewer = TitleAbstractReviewer(
+    model="anthropic:claude-sonnet-4-6",
+    name="Screener",
+    inclusion_criteria="Must involve AI applications in radiology",
+    exclusion_criteria="Exclude non-peer-reviewed articles",
+)
+
+result, cost = asyncio.run(reviewer.review_item({
+    "title": "Deep Learning for Chest X-Ray Interpretation",
+    "abstract": "We present a CNN model trained on 100k chest radiographs..."
+}))
+```
+
+### Run a Multi-Round Workflow
+
+```python
+from lattereview.agentic import ScoringReviewer, AgenticWorkflow
+import asyncio
+import pandas as pd
+
+# Create reviewers
+reviewer1 = ScoringReviewer(
+    model="openai:gpt-4o",
+    name="Alice",
+    scoring_task="Rate relevance to AI in healthcare",
+    scoring_set=[1, 2, 3, 4, 5],
+)
+
+reviewer2 = ScoringReviewer(
+    model="google-gla:gemini-2.5-flash",
+    name="Bob",
+    scoring_task="Rate relevance to AI in healthcare",
+    scoring_set=[1, 2, 3, 4, 5],
+)
+
+# Define workflow
+workflow = AgenticWorkflow(
+    workflow_schema=[
+        {
+            "round": "A",
+            "reviewers": [reviewer1, reviewer2],
+            "text_inputs": ["title", "abstract"],
+        }
+    ]
+)
+
+# Run on data
+data = pd.DataFrame({
+    "title": ["Deep Learning for X-Ray", "Genomic Analysis Pipeline"],
+    "abstract": ["A CNN model for chest radiographs...", "A bioinformatics tool for..."],
+})
+
+results = asyncio.run(workflow(data))
+print(results.columns.tolist())  # Original columns + reviewer output columns
+```
+
+### Enable Search Skills
+
+Install optional search dependencies first:
+
+```bash
+pip install "lattereview[search]"
+```
+
+```python
+from lattereview.agentic import ScoringReviewer
+import asyncio
+
+reviewer = ScoringReviewer(
+    model="openai:gpt-4o",
+    name="Researcher",
+    scoring_task="Rate the methodological quality of this study",
+    scoring_set=[1, 2, 3, 4, 5],
+    skills=["searching-pubmed", "managing-memory"],
+)
+
+result, cost = asyncio.run(reviewer.review_item("A study on deep learning for retinal disease detection..."))
+```
+
+---
+
+!!! note "v1 API"
+    The v1 API documented below still works but emits deprecation warnings. See the [Migration Guide](migration.md) for how to upgrade to v2.
+
+---
+
+## v1 Quick Start
+
 LatteReview enables you to create custom literature review workflows with multiple AI reviewers. Each reviewer can use different models and providers based on your needs. Please follow the below steps to perform a review task with LatteReview.
 
-💡Also, please check our [tutorial notebooks](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials) that provide complete code examples for all main functionalities of the LatteReview package.
+Also, please check our [tutorial notebooks](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials) that provide complete code examples for all main functionalities of the LatteReview package.
 
-## Step 1: Set Up API Keys
+### Step 1: Set Up API Keys
 
 To use LatteReview with different LLM engines (OpenAI, Anthropic, Google, etc.), you'll need to set up the API keys for the specific providers you plan to use. For example, if you're only using OpenAI models, you only need the OpenAI API key. Here are three ways to set up your API keys:
 
@@ -39,7 +164,7 @@ provider = OpenAIProvider(api_key="your-openai-key")  # Optional, will use envir
 
 Note: No API keys are needed if you're exclusively using local models through Ollama.
 
-## Step 2: Prepare Your Data
+### Step 2: Prepare Your Data
 
 Your input data should be in a CSV, Excel, or RIS file with appropriate content for review. For CSV and Excel files, the column names should match the `inputs` specified in your workflow:
 
@@ -56,7 +181,7 @@ data = pd.DataFrame({
 
 For RIS files, the standard bibliographic tags will be automatically mapped to appropriate columns (e.g., TI for title, AB for abstract).
 
-## Step 3: Create Reviewers
+### Step 3: Create Reviewers
 
 Create reviewer agents by configuring `TitleAbstractReviewer` objects. Each reviewer needs:
 
@@ -100,7 +225,7 @@ expert = TitleAbstractReviewer(
 )
 ```
 
-## Step 4: Create Review Workflow
+### Step 4: Create Review Workflow
 
 Define your workflow by specifying review rounds, reviewers, and input columns. The workflow automatically creates output columns for each reviewer based on their name and review round. For each reviewer, two columns are created:
 
@@ -132,7 +257,7 @@ workflow = ReviewWorkflow(
 
 In this example, the expert reviewer in round B can access both the original data columns and the outputs from round A's reviewers. The filter ensures the expert only reviews cases where the first two reviewers disagreed.
 
-## Step 5: Run the Workflow
+### Step 5: Run the Workflow
 
 Execute the workflow and get results:
 
@@ -148,7 +273,7 @@ results = asyncio.run(workflow("articles.xlsx"))  # Can use .csv, .xlsx, or .ris
 # - round-{ROUND}_{REVIEWER_NAME}_reasoning: Reasoning explanation based on the defined style (`brief` or `cot`)
 ```
 
-## Complete Working Example
+### Complete Working Example
 
 ```python
 from lattereview.providers import LiteLLMProvider

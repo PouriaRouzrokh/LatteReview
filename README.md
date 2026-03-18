@@ -1,54 +1,114 @@
-# LatteReview 🤖☕
+# LatteReview
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc/4.0/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
-[![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
 [![View on arXiv](https://img.shields.io/badge/arXiv-View%20Paper-orange)](https://arxiv.org/abs/2501.05468)
 [![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor%20me-GitHub%20Sponsors-pink.svg)](https://github.com/sponsors/PouriaRouzrokh)
 [![Support me on Ko-fi](https://img.shields.io/badge/Support%20me-Ko--fi-orange.svg?logo=ko-fi&logoColor=white)](http://ko-fi.com/pouriarouzrokh)
 
 <p><img src="docs/images/robot.png" width="400"></p>
 
----
-
-🚨 **NEW**: Now supports the Gemini 2.5 family of models using a new GoogleProvider class.
+**LatteReview** is an agentic literature review framework for LLM-powered document screening, scoring, and abstraction. Built on [Pydantic AI](https://ai.pydantic.dev/), it gives your AI reviewers agentic reasoning loops, built-in skills, memory, helper agents, and checkpoint/resume -- so reviewing hundreds of papers is as smooth as enjoying a cup of latte.
 
 ---
 
-LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
+## What's New in v2
 
-## 🎯 Key Features
+- **Agentic reasoning loops** -- reviewers think step-by-step, use tools, and self-correct before producing a final answer.
+- **9 built-in skills** -- memory management, web search (DuckDuckGo, Google, PubMed, Semantic Scholar, arXiv), content search, item flagging, and helper-agent discussion.
+- **Memory system** -- reviewers persist insights across items, building knowledge as they work through a batch.
+- **Helper agents** -- attach specialist sub-agents that a reviewer can consult mid-review.
+- **Checkpoint/resume** -- atomic per-item saves let you stop and restart long workflows without losing progress.
+- **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` work out of the box.
+- **Multi-provider support** -- use any LLM via Pydantic AI model strings (`openai:gpt-4o`, `anthropic:claude-sonnet-4-6`, `google-gla:gemini-2.5-flash`, and more).
 
-- Multi-agent review system with customizable roles and expertise levels for each reviewer
-- Support for multiple review rounds with hierarchical decision-making workflows
-- Review diverse content types including article titles, abstracts, custom texts, and even **images** using LLM-powered reviewer agents
-- Define reviewer agents with specialized backgrounds and distinct evaluation capabilities (e.g., scoring or concept abstraction or custom reviewers of your own preferance)
-- Create flexible review workflows where multiple agents operate in parallel or sequential arrangements
-- Enable reviewer agents to analyze peer feedback, cast votes, and propose corrections to other reviewers' assessments
-- Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
-- Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
-- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, and local models via Ollama
-- High-performance asynchronous processing for efficient batch reviews
-- Standardized output format featuring detailed scoring metrics and reasoning transparency
-- Robust cost tracking and memory management systems
-- Extensible architecture supporting custom review workflow implementation
-- **NEW**: Support for RIS (Research Information Systems) file format for academic literature review
+---
 
-## 💾Installation
+## Installation
 
 ```bash
 pip install lattereview
 ```
 
-Please refer to the [installation guide](./docs/installation.md) for detailed instructions.
+**Extras:**
 
-## 🚀 Quick Start and Documentation
+```bash
+# Search skills (DuckDuckGo, Google, PubMed, Semantic Scholar, arXiv)
+pip install lattereview[search]
 
-LatteReview enables you to create custom literature review workflows with multiple AI reviewers. Each reviewer can use different models and providers based on your needs. Below is a working example of how you can use LatteReview for doing a quick title/abstract review with two junior and one senior reviewers (all AI agents)! And this is just the beginning! Beyond study screening, LatteReview can handle data abstraction, customized pipelines, image analysis, and much more. Explore the [Tutorials](#-tutorials) for more examples!
+# Everything (all agentic extras)
+pip install lattereview[agentic-all]
+```
 
-Please refer to the [Quick Start](./docs/quickstart.md) page and [Documentation](https://pouriarouzrokh.github.io/LatteReview/) page for detailed instructions.
+Requires **Python >= 3.12**.
+
+---
+
+## Quick Start (v2 Agentic)
+
+### Score a single item
+
+```python
+from lattereview.agentic import ScoringReviewer
+import asyncio
+
+reviewer = ScoringReviewer(
+    model="openai:gpt-4o",
+    name="Scorer",
+    scoring_task="Rate the relevance of this article to AI in healthcare",
+    scoring_set=[1, 2, 3, 4, 5],
+)
+result, cost = asyncio.run(reviewer.review_item("A study on deep learning for chest X-ray diagnosis..."))
+print(result)  # {"reasoning": "...", "score": 4, "certainty": 85}
+```
+
+### Screen a batch with AgenticWorkflow
+
+```python
+from lattereview.agentic import TitleAbstractReviewer, AgenticWorkflow
+import pandas as pd
+import asyncio
+
+reviewer = TitleAbstractReviewer(
+    model="openai:gpt-4o",
+    name="Screener",
+    inclusion_criteria="Studies on AI applications in radiology",
+    exclusion_criteria="Non-English studies, conference abstracts only",
+)
+
+workflow = AgenticWorkflow(
+    workflow_schema=[{
+        "round": "A",
+        "reviewers": [reviewer],
+        "text_inputs": ["title", "abstract"],
+    }]
+)
+
+data = pd.DataFrame({
+    "title": ["Deep Learning in Radiology", "Cooking Recipes with AI"],
+    "abstract": ["We present a CNN for...", "This paper explores AI-generated..."],
+})
+results = asyncio.run(workflow(data))
+```
+
+### Add skills and helper agents
+
+```python
+# Enable agentic skills
+reviewer = ScoringReviewer(
+    model="anthropic:claude-sonnet-4-6",
+    skills=["searching-duckduckgo", "managing-memory"],
+    helpers=[expert_reviewer],
+)
+```
+
+---
+
+## Quick Start (v1 Classic)
+
+The original v1 API is still available. v1 modules emit deprecation warnings; see the [migration guide](docs/migration.md) for upgrade instructions.
 
 ```python
 from lattereview.providers import LiteLLMProvider
@@ -56,118 +116,80 @@ from lattereview.agents import TitleAbstractReviewer
 from lattereview.workflows import ReviewWorkflow
 import pandas as pd
 import asyncio
-from dotenv import load_dotenv
 
-# Load environment variables from the .env file in the root directory of your project
-load_dotenv()
-
-# First Reviewer: Conservative approach
-reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),
+reviewer = TitleAbstractReviewer(
+    provider=LiteLLMProvider(model="gpt-4o"),
     name="Alice",
-    backstory="a radiologist with expertise in systematic reviews",
-    inclusion_criteria="The study must focus on applications of artificial intelligence in radiology.",
-    exclusion_criteria="Exclude studies that are not peer-reviewed or not written in English.",
-    model_args={"temperature": 0.2},
+    inclusion_criteria="AI in radiology",
 )
 
-# Second Reviewer: More exploratory approach
-reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-1.5-flash"),
-    name="Bob",
-    backstory="a computer scientist specializing in medical AI",
-    inclusion_criteria="The study must focus on applications of artificial intelligence in radiology.",
-    exclusion_criteria="Exclude studies that are not peer-reviewed or not written in English.",
-    model_args={"temperature": 0.2},
-)
-
-# Expert Reviewer: Resolves disagreements
-expert = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="o3-mini"),
-    name="Carol",
-    backstory="a professor of AI in medical imaging",
-    inclusion_criteria="The study must focus on applications of artificial intelligence in radiology.",
-    exclusion_criteria="Exclude studies that are not peer-reviewed or not written in English.",
-    model_args={"reasoning_effort": "high"},
-    additional_context="Alice and Bob disagree with each other on whether or not to include this article. You can find their reasonings above.",
-)
-
-# Define workflow
 workflow = ReviewWorkflow(
-    workflow_schema=[
-        {
-            "round": 'A',  # First round: Initial review by both reviewers
-            "reviewers": [reviewer1, reviewer2],
-            "text_inputs": ["title", "abstract"]
-        },
-        {
-            "round": 'B',  # Second round: Expert reviews only disagreements
-            "reviewers": [expert],
-            "text_inputs": ["title", "abstract", "round-A_Alice_output", "round-A_Bob_output"],
-            "filter": lambda row: row["round-A_Alice_evaluation"] != row["round-A_Bob_evaluation"]
-        }
-    ]
+    workflow_schema=[{
+        "round": "A",
+        "reviewers": [reviewer],
+        "text_inputs": ["title", "abstract"],
+    }]
 )
 
-# Load and process your data
-data = pd.read_excel("articles.xlsx")  # Must have 'title' and 'abstract' columns
-results = asyncio.run(workflow(data))  # Returns a pandas DataFrame with all original and output columns
-
-# Save results
-results.to_csv("review_results.csv", index=False)
+data = pd.read_excel("articles.xlsx")
+results = asyncio.run(workflow(data))
 ```
 
-## 🔌 Model Support
+---
 
-LatteReview offers flexible model integration through multiple providers:
+## Key Features
 
-- **LiteLLMProvider** (Recommended): Supports OpenAI, Anthropic (Claude), Gemini, Groq, and more
-- **OpenAIProvider**: Direct integration with OpenAI and Gemini APIs
-- **OllamaProvider**: Optimized for local models via Ollama
+- **Agentic reasoning loops** -- reviewers iteratively reason, use tools, and refine their output before committing a final answer.
+- **9 built-in skills** -- `managing-memory`, `searching-duckduckgo`, `searching-google`, `searching-pubmed`, `searching-semantic-scholar`, `searching-arxiv`, `searching-content`, `flagging-items`, `discussing-with-helpers`.
+- **Checkpoint/resume** -- atomic per-item saves and action logging let you pause and restart long-running workflows.
+- **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` cover the most common literature review tasks.
+- **Multi-provider support** -- any provider supported by Pydantic AI works via simple model strings.
+- **Backward compatible** -- v1 providers, agents, and workflows still work (with deprecation warnings pointing to the new API).
 
-Note: Models should support async operations and structured JSON outputs for optimal performance.
+---
 
-## 📖 Documentation
+## Supported Providers
 
-Full documentation and API reference are available at: [https://pouriarouzrokh.github.io/LatteReview](https://pouriarouzrokh.github.io/LatteReview)
+| Provider | Model String | Example |
+|----------|-------------|---------|
+| OpenAI | `openai:model-name` | `openai:gpt-4o` |
+| Anthropic | `anthropic:model-name` | `anthropic:claude-sonnet-4-6` |
+| Google Gemini | `google-gla:model-name` | `google-gla:gemini-2.5-flash` |
+| OpenRouter | `openrouter:provider/model` | `openrouter:google/gemini-2.5-flash` |
+| Groq | `groq:model-name` | `groq:llama-3.3-70b` |
+| Ollama | `ollama:model-name` | `ollama:llama3.2` |
 
-## 🎓 Tutorials
+Any provider supported by [Pydantic AI](https://ai.pydantic.dev/) works with LatteReview.
 
-✅ TitleAbstractReviewer: 
-    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/title_abstract_review/title_abstract_review.ipynb) A simple task of abstract screening based on 1-5 scoring + inclusion and exclusion criteria
-✅ AbstractionReviewer:
-    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/abstraction_review_simple/abstraction_review_sample.ipynb) Data abstraction from abstracts/manuscripts
-✅ ScoringReviewer: 
-    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/scoring_review_simple/scoring_review_simple.ipynb) A simple task of abstract screening based on custom scoring by multiple agents
-    🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/scoring_review_rag/scoring_review_rag.ipynb) Question answering with RAG (Retrieval Augmented Generation)
-    🔸[3.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/scoring_review_image/scoring_review_image.ipynb) Image analysis by LatteReview  
-✅ Custom Reviewer:
-    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/custom_reviewer/abstraction_review_literature_analysis.ipynb) How to Customize the AbstractReviewer Agent for Your Needs
-    🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/base_functionalities/base_functionalities.ipynb) Chat with the agents and other base functionalities
-    🔸[3.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/abstraction_review_literature_analysis/abstraction_review_literature_analysis.ipynb): Combination of differnet agents for a comprehensive literature review
+---
 
-## 🛣️ Roadmap for Future Features
+## Documentation and Tutorials
 
-- [x] Implementing LiteLLM to add support for additional model providers
-- [x] Draft the package full documentation
-- [x] Enable agents to return a percentage of certainty
-- [x] Enable agents to be grounded in static references (text provided by the user)
-- [x] Enable agents to be grounded in dynamic references (i.e., recieve a function that outputs a text based on the input text. This function could, e.g., be a RAG function.)
-- [x] Support for image-based inputs and multimodal analysis
-- [x] Development of `AbstractionReviewer` class for automated paper summarization
-- [x] Showcase how `AbstractionReviewer` class could be used to analyse the literature around a certain topic.
-- [x] Adding a tutorial example and also a section to the docs on how to create custom reviewer agents.
-- [x] Adding a `TitleAbstractReviewer` agent and adding a tutorial for it.
-- [x] Evaluating LatteReview.
-- [x] Writing the white paper for the package and public launch
-- [x] Addign support for `RIS` files.
-- [ ] Adding support for Deepseek R1 models (and models w/o structured output capablity in general).
-- [ ] Development of a no-code web application
-- [ ] (for v>) Adding conformal prediction tool for calibrating agents on their certainty scores
-- [ ] (for v>2.0.0) Adding a dialogue tool for enabling agents to seek external help (from helper agents or parallel reviewer agents) during review.
-- [ ] (for v>2.0.0) Adding a memory component to the agents for saving their own insights or insightful feedback they receive from the helper agents.
+- **Documentation site**: [https://pouriarouzrokh.github.io/LatteReview](https://pouriarouzrokh.github.io/LatteReview)
+- **v2 Agentic tutorials**: [`tutorials_agentic/`](tutorials_agentic/)
+- **v1 Classic tutorials**: [`tutorials/`](tutorials/)
+- **Migration guide**: [`docs/migration.md`](docs/migration.md)
 
-## 👨‍💻 Author
+---
+
+## Citation
+
+If you use LatteReview in your research, please cite our paper:
+
+```bibtex
+@misc{rouzrokh2025lattereview,
+    title={LatteReview: A Multi-Agent Framework for Systematic Review Automation Using Large Language Models},
+    author={Pouria Rouzrokh and Moein Shariatnia},
+    year={2025},
+    eprint={2501.05468},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
+}
+```
+
+---
+
+## Author
 
 <table border="0">
 <tr>
@@ -198,42 +220,25 @@ Former Data Scientist @Mayo Clinic AI Lab<br>
 </tr>
 </table>
 
-## ❤️ Support LatteReview
+---
 
-If you find LatteReview helpful in your research or work, consider supporting its continued development. Since we're already sharing a virtual coffee break while reviewing papers, maybe you'd like to treat me to a real one? ☕ 😊
+## Support
 
-### Ways to Support:
+If you find LatteReview helpful in your research or work, consider supporting its continued development:
 
-- [Become my sponsor](https://github.com/sponsors/PouriaRouzrokh) on GitHub
-- [Treat me to a cup of coffee](http://ko-fi.com/pouriarouzrokh) on Ko-fi ☕
+- [Become a sponsor](https://github.com/sponsors/PouriaRouzrokh) on GitHub
+- [Support me on Ko-fi](http://ko-fi.com/pouriarouzrokh)
 - [Star the repository](https://github.com/PouriaRouzrokh/LatteReview) to help others discover the project
-- Submit bug reports, feature requests, or contribute code
-- Share your experience using LatteReview in your research
 
-## 📜 License
-
-This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.  
-To view a copy of this license, visit [LICENSE](http://creativecommons.org/licenses/by-nc/4.0/).
-
-## 🤝 Contributing
-
-I welcome contributions! Please feel free to submit a Pull Request.
+---
 
 ## Acknowledgement
 
-I would like to express my heartfelt gratitude to [Moein Shariatnia](https://github.com/moein-shariatnia) for his invaluable support and contributions to this project.
+Heartfelt gratitude to [Moein Shariatnia](https://github.com/moein-shariatnia) for his invaluable support and contributions to this project.
 
-## 📚 Citation
+---
 
-If you use LatteReview in your research, please cite our paper:
+## License
 
-```bibtex
-@misc{rouzrokh2025lattereview,
-    title={LatteReview: A Multi-Agent Framework for Systematic Review Automation Using Large Language Models},
-    author={Pouria Rouzrokh and Moein Shariatnia},
-    year={2025},
-    eprint={2501.05468},
-    archivePrefix={arXiv},
-    primaryClass={cs.CL}
-}
-```
+This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.
+To view a copy of this license, visit [CC BY-NC 4.0](http://creativecommons.org/licenses/by-nc/4.0/).

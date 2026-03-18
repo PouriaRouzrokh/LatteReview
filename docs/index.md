@@ -1,8 +1,8 @@
-# LatteReview 🤖☕
+# LatteReview
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](http://creativecommons.org/licenses/by-nc/4.0/)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
 [![View on arXiv](https://img.shields.io/badge/arXiv-View%20Paper-orange)](https://arxiv.org/abs/2501.05468)
@@ -13,42 +13,57 @@
 
 A framework for multi-agent review workflows using large language models.
 
-🚨 **NEW**: Now supports the Gemini 2.5 family of models using a new GoogleProvider class.
-
 ## Overview
 
-LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
+LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
+
+### What's New in v2
+
+LatteReview v2 introduces a fully redesigned **agentic framework** built on [Pydantic AI](https://ai.pydantic.dev/). The new architecture provides:
+
+- **Simplified model configuration** -- use model strings like `"openai:gpt-4o"`, `"anthropic:claude-sonnet-4-6"`, or `"google-gla:gemini-2.5-flash"` instead of provider wrapper classes.
+- **Skill system** -- extend reviewers with configurable and tool-based skills (web search, PubMed, arXiv, Semantic Scholar, and more).
+- **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` are ready to use out of the box.
+- **AgenticWorkflow** -- a new workflow engine with checkpoint/resume, per-item cost tracking, and action logging.
+- **Memory and helpers** -- reviewers can carry context across items and use helper functions during review.
+
+The v1 API remains fully functional but emits deprecation warnings. See the [Migration Guide](migration.md) for details on upgrading.
 
 ## Features
 
 - Multi-agent review system with customizable roles and expertise levels for each reviewer
 - Support for multiple review rounds with hierarchical decision-making workflows
 - Review diverse content types including article titles, abstracts, custom texts, and even **images** using LLM-powered reviewer agents
-- Define reviewer agents with specialized backgrounds and distinct evaluation capabilities (e.g., scoring or concept abstraction or custom reviewers of your own preferance)
+- Define reviewer agents with specialized backgrounds and distinct evaluation capabilities (e.g., scoring or concept abstraction or custom reviewers of your own preference)
 - Create flexible review workflows where multiple agents operate in parallel or sequential arrangements
 - Enable reviewer agents to analyze peer feedback, cast votes, and propose corrections to other reviewers' assessments
 - Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
-- Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
 - Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, and local models via Ollama
 - High-performance asynchronous processing for efficient batch reviews
 - Standardized output format featuring detailed scoring metrics and reasoning transparency
 - Robust cost tracking and memory management systems
 - Extensible architecture supporting custom review workflow implementation
-- **NEW**: Support for RIS (Research Information Systems) file format for academic literature review
+- Support for RIS (Research Information Systems) file format for academic literature review
+- **v2**: Skill system with built-in search skills (Google, DuckDuckGo, PubMed, Semantic Scholar, arXiv)
+- **v2**: Checkpoint/resume for long-running workflows with atomic per-item saves
+- **v2**: Simplified model configuration via Pydantic AI model strings
 
 ## Quick Links
 
 - [Installation Guide](installation.md)
 - [Quick Start Guide](quickstart.md)
-- [Tutorial notebooks](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials)
-- [API Reference](api/workflows.md)
+- [Migration Guide (v1 to v2)](migration.md)
+- [Agentic API Reference (v2)](api/agentic.md)
+- [Tutorial notebooks (v1)](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials)
+- [Tutorial notebooks (v2)](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials_agentic)
+- [API Reference (v1)](api/workflows.md)
 - [GitHub Repository](https://github.com/PouriaRouzrokh/LatteReview)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) file for details.
+This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License. See [CC BY-NC 4.0](http://creativecommons.org/licenses/by-nc/4.0/) for details.
 
-## 👨‍💻 Authors
+## Authors
 
 <table border="0">
 <tr>
@@ -81,12 +96,12 @@ Former Data Scientist @Mayo Clinic AI Lab<br>
 
 ## Support LatteReview
 
-If you find LatteReview helpful in your research or work, consider supporting its continued development. Since we're already sharing a virtual coffee break while reviewing papers, maybe you'd like to treat me to a real one? ☕ 😊
+If you find LatteReview helpful in your research or work, consider supporting its continued development.
 
 ### Ways to Support:
 
 - [Become my sponsor](https://github.com/sponsors/PouriaRouzrokh) on GitHub
-- [Treat me to a cup of coffee](http://ko-fi.com/pouriarouzrokh) on Ko-fi ☕
+- [Treat me to a cup of coffee](http://ko-fi.com/pouriarouzrokh) on Ko-fi
 - [Star the repository](https://github.com/PouriaRouzrokh/LatteReview) to help others discover the project
 - Submit bug reports, feature requests, or contribute code
 - Share your experience using LatteReview in your research
@@ -95,7 +110,7 @@ If you find LatteReview helpful in your research or work, consider supporting it
 
 I would like to express my heartfelt gratitude to [Moein Shariatnia](https://github.com/moein-shariatnia) for his invaluable support and contributions to this project.
 
-## 📚 Citation
+## Citation
 
 If you use LatteReview in your research, please cite our paper:
 

@@ -20,14 +20,16 @@ theme:
         name: Switch to light mode
 
 nav:
-  - ☕Home: index.md
-  - 🛠️Installation: installation.md
-  - 🚀 Quick Start: quickstart.md
-  - 💻API Reference:
-      - Providers: api/providers.md
-      - Agents: api/agents.md
-      - Workflows: api/workflows.md
-  - 💡About: about.md
+  - Home: index.md
+  - Installation: installation.md
+  - Quick Start: quickstart.md
+  - API Reference:
+      - Agentic (v2): api/agentic.md
+      - Providers (v1): api/providers.md
+      - Agents (v1): api/agents.md
+      - Workflows (v1): api/workflows.md
+  - Migration Guide: migration.md
+  - About: about.md
 
 markdown_extensions:
   - pymdownx.highlight:

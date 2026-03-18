@@ -1,4 +1,9 @@
-There are several ways to install LatteReview:
+# Installation
+
+## Requirements
+
+- **Python 3.12 or later**
+- Core dependencies are installed automatically (pydantic-ai, pandas, pydantic, pyyaml, and others)
 
 ## 1. Install from PyPI (Recommended)
 
@@ -6,9 +11,20 @@ There are several ways to install LatteReview:
 pip install lattereview
 ```
 
-You can also install additional features using these extras:
+### Optional Extras
+
+LatteReview provides optional dependency groups for extended functionality:
 
 ```bash
+# v2 search skills (DuckDuckGo, Google, PubMed, arXiv)
+pip install "lattereview[search]"
+
+# v2 Semantic Scholar search skill
+pip install "lattereview[scholar]"
+
+# All v2 agentic extras (search + scholar)
+pip install "lattereview[agentic-all]"
+
 # Development tools
 pip install "lattereview[dev]"
 
@@ -60,15 +76,16 @@ import lattereview
 print(lattereview.__version__)
 ```
 
-## Requirements
+## Core Dependencies
 
-- Python 3.9 or later
-- Core dependencies (automatically installed):
-  - litellm (>=1.55.2)
-  - openai (>=1.57.4)
-  - pandas (>=2.2.3)
-  - pydantic (>=2.10.3)
-  - And others as specified in `setup.py`
+The following are installed automatically with the base package:
+
+- **pydantic-ai** (>=1.69.0) -- v2 agentic framework backbone
+- **pyyaml** (>=6.0) -- skill configuration loading
+- **pandas** (>=2.2.3) -- data handling
+- **pydantic** (>=2.10.3) -- data validation and output models
+- **litellm** (>=1.55.2) -- v1 provider support
+- **openai** (>=1.57.4) -- v1 OpenAI provider
 
 ## Troubleshooting
 
@@ -76,7 +93,7 @@ If you encounter installation issues:
 
 ```bash
 # Check Python version
-python --version  # Should be 3.9 or later
+python --version  # Should be 3.12 or later
 
 # Update pip
 pip install --upgrade pip
