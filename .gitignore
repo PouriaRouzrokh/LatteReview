@@ -1,3 +1,7 @@
+# Claude Code
+.claude/
+CLAUDE.md
+
 # Temporary files
 
 test_google_provider.py
