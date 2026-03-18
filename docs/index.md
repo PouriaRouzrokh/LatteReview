@@ -21,7 +21,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 
 LatteReview v2 introduces a fully redesigned **agentic framework** built on [Pydantic AI](https://ai.pydantic.dev/). The new architecture provides:
 
-- **Simplified model configuration** -- use model strings like `"openai:gpt-4o"`, `"anthropic:claude-sonnet-4-6"`, or `"google-gla:gemini-2.5-flash"` instead of provider wrapper classes.
+- **Simplified model configuration** -- use model strings like `"openai:gpt-5.4-mini"`, `"anthropic:claude-sonnet-4-6"`, or `"google-gla:gemini-3-flash-preview"` instead of provider wrapper classes.
 - **Skill system** -- extend reviewers with configurable and tool-based skills (web search, PubMed, arXiv, Semantic Scholar, and more).
 - **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` are ready to use out of the box.
 - **AgenticWorkflow** -- a new workflow engine with checkpoint/resume, per-item cost tracking, and action logging.

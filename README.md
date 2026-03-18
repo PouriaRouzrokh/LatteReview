@@ -10,19 +10,22 @@
 
 <p><img src="docs/images/robot.png" width="400"></p>
 
-**LatteReview** is an agentic literature review framework for LLM-powered document screening, scoring, and abstraction. Built on [Pydantic AI](https://ai.pydantic.dev/), it gives your AI reviewers agentic reasoning loops, built-in skills, memory, helper agents, and checkpoint/resume -- so reviewing hundreds of papers is as smooth as enjoying a cup of latte.
+**LatteReview** is an agentic literature review framework for LLM-powered document screening, scoring, and abstraction. Built on [Pydantic AI](https://ai.pydantic.dev/), it gives your AI reviewers agentic reasoning loops, built-in skills, persistent memory, helper agents, and checkpoint/resume -- so reviewing hundreds of papers is as smooth as enjoying a cup of latte.
 
 ---
 
 ## What's New in v2
 
-- **Agentic reasoning loops** -- reviewers think step-by-step, use tools, and self-correct before producing a final answer.
-- **9 built-in skills** -- memory management, web search (DuckDuckGo, Google, PubMed, Semantic Scholar, arXiv), content search, item flagging, and helper-agent discussion.
-- **Memory system** -- reviewers persist insights across items, building knowledge as they work through a batch.
-- **Helper agents** -- attach specialist sub-agents that a reviewer can consult mid-review.
-- **Checkpoint/resume** -- atomic per-item saves let you stop and restart long workflows without losing progress.
-- **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` work out of the box.
-- **Multi-provider support** -- use any LLM via Pydantic AI model strings (`openai:gpt-4o`, `anthropic:claude-sonnet-4-6`, `google-gla:gemini-2.5-flash`, and more).
+v2 transforms reviewers from one-shot LLM calls into **agentic entities** that think, search, remember, consult experts, and self-correct:
+
+- **Agentic reasoning loops** -- reviewers iterate up to `max_iterations` times, using tools and refining their reasoning before committing a final answer. Control effort with `agentic_effort` (low/medium/high).
+- **9 built-in skills** -- memory management, web search (DuckDuckGo, Google, PubMed, Semantic Scholar, arXiv), content search, item flagging, and helper-agent discussion. Enable any combination with `skills=[...]`.
+- **Persistent memory** -- reviewers accumulate insights across items in a batch, learning patterns and building expertise as they review.
+- **Helper agents** -- attach specialist sub-agents that the primary reviewer can consult mid-review for second opinions or domain expertise.
+- **Checkpoint/resume** -- atomic per-item saves let you stop and restart long workflows without losing progress. Set `working_dir` and `resume=True`.
+- **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` work out of the box with sensible defaults.
+- **Multi-provider via model strings** -- switch between any LLM with a single string: `"openai:gpt-5.4-mini"`, `"anthropic:claude-sonnet-4-6"`, `"google-gla:gemini-3-flash-preview"`, and more.
+- **Custom skills** -- create your own skill folders with a `SKILL.md` manifest and `tools.py`, and pass them via `custom_skill_paths=[...]`.
 
 ---
 
@@ -48,59 +51,123 @@ Requires **Python >= 3.12**.
 
 ## Quick Start (v2 Agentic)
 
-### Score a single item
+### 1. Score a single item
+
+The simplest use case: a `ScoringReviewer` evaluates one item. With `max_iterations=1`, this behaves like v1 (a single LLM call). Increase `max_iterations` to enable the agentic loop.
 
 ```python
 from lattereview.agentic import ScoringReviewer
 import asyncio
 
 reviewer = ScoringReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4-mini",
     name="Scorer",
     scoring_task="Rate the relevance of this article to AI in healthcare",
     scoring_set=[1, 2, 3, 4, 5],
+    max_iterations=1,  # Single LLM call (non-agentic, like v1)
 )
 result, cost = asyncio.run(reviewer.review_item("A study on deep learning for chest X-ray diagnosis..."))
 print(result)  # {"reasoning": "...", "score": 4, "certainty": 85}
 ```
 
-### Screen a batch with AgenticWorkflow
+### 2. Agentic review with skills and memory
+
+This is where v2 shines. Enable skills so the reviewer can search the literature, build memory across items, and flag uncertain cases for human review:
 
 ```python
-from lattereview.agentic import TitleAbstractReviewer, AgenticWorkflow
+from lattereview.agentic import ScoringReviewer
+import asyncio
+
+reviewer = ScoringReviewer(
+    model="anthropic:claude-sonnet-4-6",
+    name="Analyst",
+    scoring_task="Rate the methodological rigor of this study",
+    scoring_set=[1, 2, 3, 4, 5],
+    scoring_rules="1=anecdotal, 2=weak methodology, 3=adequate, 4=strong, 5=gold standard",
+    # -- v2 agentic capabilities --
+    max_iterations=20,         # Allow up to 20 reasoning steps
+    agentic_effort="high",     # Encourage thorough tool use
+    skills=[
+        "searching-pubmed",        # Search PubMed to verify claims
+        "searching-duckduckgo",    # General web search for context
+        "managing-memory",         # Remember patterns across items
+        "flagging-items",          # Flag uncertain items for human review
+    ],
+)
+
+# The reviewer will search, reason, build memory, and may flag uncertain items
+result, cost = asyncio.run(reviewer.review_item(
+    "A novel GNN architecture predicts drug interactions with F1=0.94 on DrugBank, "
+    "outperforming all existing methods by 8%."
+))
+print(f"Score: {result['score']}, Cost: ${cost:.4f}")
+```
+
+### 3. Multi-agent workflow with helper agents
+
+Attach expert helper agents that the primary reviewer can consult mid-review. Run everything through `AgenticWorkflow` with checkpoint/resume:
+
+```python
+from lattereview.agentic import TitleAbstractReviewer, ScoringReviewer, AgenticWorkflow
+from pathlib import Path
 import pandas as pd
 import asyncio
 
-reviewer = TitleAbstractReviewer(
-    model="openai:gpt-4o",
-    name="Screener",
-    inclusion_criteria="Studies on AI applications in radiology",
-    exclusion_criteria="Non-English studies, conference abstracts only",
+# Expert helper -- a specialist the main reviewer can consult
+expert = ScoringReviewer(
+    model="anthropic:claude-sonnet-4-6",
+    name="MethodsExpert",
+    backstory="You are a biostatistician who evaluates study methodology.",
+    scoring_task="Assess the statistical methodology",
+    scoring_set=[1, 2, 3, 4, 5],
+    max_iterations=5,
 )
 
+# Primary reviewer with helper access, memory, and search
+screener = TitleAbstractReviewer(
+    model="openai:gpt-5.4-mini",
+    name="Screener",
+    inclusion_criteria="Studies applying AI/ML to diagnostic medical imaging",
+    exclusion_criteria="Non-English, conference abstracts only, non-clinical",
+    max_iterations=15,
+    agentic_effort="medium",
+    skills=["searching-pubmed", "managing-memory", "discussing-with-helpers"],
+    helpers=[expert],
+    helper_max_iterations=5,
+)
+
+# Multi-round workflow with checkpoint/resume
 workflow = AgenticWorkflow(
     workflow_schema=[{
         "round": "A",
-        "reviewers": [reviewer],
+        "reviewers": [screener],
         "text_inputs": ["title", "abstract"],
-    }]
+    }],
+    working_dir=Path("./review_output"),  # Saves progress here
+    verbose=True,
 )
 
-data = pd.DataFrame({
-    "title": ["Deep Learning in Radiology", "Cooking Recipes with AI"],
-    "abstract": ["We present a CNN for...", "This paper explores AI-generated..."],
-})
+data = pd.read_csv("articles.csv")
 results = asyncio.run(workflow(data))
+
+# If interrupted, just re-run with resume=True to continue where you left off:
+# workflow = AgenticWorkflow(..., working_dir=Path("./review_output"), resume=True)
 ```
 
-### Add skills and helper agents
+### 4. Custom skills
+
+Create your own skills by adding a folder with `SKILL.md` (manifest) and `tools.py` (tool functions):
 
 ```python
-# Enable agentic skills
+from lattereview.agentic import ScoringReviewer
+from pathlib import Path
+
 reviewer = ScoringReviewer(
-    model="anthropic:claude-sonnet-4-6",
-    skills=["searching-duckduckgo", "managing-memory"],
-    helpers=[expert_reviewer],
+    model="google-gla:gemini-3-flash-preview",
+    name="Reviewer",
+    scoring_task="Rate this article",
+    custom_skill_paths=[Path("./my_skills/clinical_lookup")],
+    skills=["clinical-lookup"],  # Name from your SKILL.md
 )
 ```
 
@@ -114,11 +181,10 @@ The original v1 API is still available. v1 modules emit deprecation warnings; se
 from lattereview.providers import LiteLLMProvider
 from lattereview.agents import TitleAbstractReviewer
 from lattereview.workflows import ReviewWorkflow
-import pandas as pd
 import asyncio
 
 reviewer = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o"),
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),
     name="Alice",
     inclusion_criteria="AI in radiology",
 )
@@ -131,20 +197,25 @@ workflow = ReviewWorkflow(
     }]
 )
 
-data = pd.read_excel("articles.xlsx")
-results = asyncio.run(workflow(data))
+results = asyncio.run(workflow("articles.xlsx"))
 ```
 
 ---
 
 ## Key Features
 
-- **Agentic reasoning loops** -- reviewers iteratively reason, use tools, and refine their output before committing a final answer.
-- **9 built-in skills** -- `managing-memory`, `searching-duckduckgo`, `searching-google`, `searching-pubmed`, `searching-semantic-scholar`, `searching-arxiv`, `searching-content`, `flagging-items`, `discussing-with-helpers`.
-- **Checkpoint/resume** -- atomic per-item saves and action logging let you pause and restart long-running workflows.
-- **Preset reviewer types** -- `ScoringReviewer`, `TitleAbstractReviewer`, and `AbstractionReviewer` cover the most common literature review tasks.
-- **Multi-provider support** -- any provider supported by Pydantic AI works via simple model strings.
-- **Backward compatible** -- v1 providers, agents, and workflows still work (with deprecation warnings pointing to the new API).
+| Feature | v1 | v2 |
+|---------|----|----|
+| Structured LLM output | Single call | Agentic loop (up to N iterations) |
+| Tool use (search, memory) | -- | 9 built-in skills + custom skills |
+| Cross-item learning | -- | Persistent memory system |
+| Expert consultation | -- | Helper agents with priority delegation |
+| Crash recovery | -- | Checkpoint/resume with atomic saves |
+| Model configuration | Provider wrapper classes | One-line model strings |
+| Action logging | -- | Per-item JSONL action logs |
+| Item flagging | -- | Flag uncertain items for human review |
+
+**Built-in skills:** `managing-memory`, `searching-duckduckgo`, `searching-google`, `searching-pubmed`, `searching-semantic-scholar`, `searching-arxiv`, `searching-content`, `flagging-items`, `discussing-with-helpers`.
 
 ---
 
@@ -152,11 +223,11 @@ results = asyncio.run(workflow(data))
 
 | Provider | Model String | Example |
 |----------|-------------|---------|
-| OpenAI | `openai:model-name` | `openai:gpt-4o` |
+| OpenAI | `openai:model-name` | `openai:gpt-5.4-mini` |
 | Anthropic | `anthropic:model-name` | `anthropic:claude-sonnet-4-6` |
-| Google Gemini | `google-gla:model-name` | `google-gla:gemini-2.5-flash` |
-| OpenRouter | `openrouter:provider/model` | `openrouter:google/gemini-2.5-flash` |
-| Groq | `groq:model-name` | `groq:llama-3.3-70b` |
+| Google Gemini | `google-gla:model-name` | `google-gla:gemini-3-flash-preview` |
+| OpenRouter | `openrouter:provider/model` | `openrouter:google/gemini-3-flash-preview` |
+| Groq | `groq:model-name` | `groq:llama-4-scout-17b-16e-instruct` |
 | Ollama | `ollama:model-name` | `ollama:llama3.2` |
 
 Any provider supported by [Pydantic AI](https://ai.pydantic.dev/) works with LatteReview.
@@ -166,7 +237,7 @@ Any provider supported by [Pydantic AI](https://ai.pydantic.dev/) works with Lat
 ## Documentation and Tutorials
 
 - **Documentation site**: [https://pouriarouzrokh.github.io/LatteReview](https://pouriarouzrokh.github.io/LatteReview)
-- **v2 Agentic tutorials**: [`tutorials_agentic/`](tutorials_agentic/)
+- **v2 Agentic tutorials**: [`tutorials_agentic/`](tutorials_agentic/) -- scoring, screening, abstraction, skills, checkpoint/resume
 - **v1 Classic tutorials**: [`tutorials/`](tutorials/)
 - **Migration guide**: [`docs/migration.md`](docs/migration.md)
 

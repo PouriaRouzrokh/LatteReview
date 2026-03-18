@@ -7,7 +7,7 @@ LatteReview v2 introduces a new agentic framework built on Pydantic AI. The v1 A
 | Area | v1 | v2 |
 |------|----|----|
 | Import path | `lattereview.agents` | `lattereview.agentic` |
-| Model config | Provider wrapper classes | Model strings (e.g., `"openai:gpt-4o"`) |
+| Model config | Provider wrapper classes | Model strings (e.g., `"openai:gpt-5.4-mini"`) |
 | Workflow class | `ReviewWorkflow` | `AgenticWorkflow` |
 | Python version | >=3.9 | >=3.12 |
 | New capabilities | -- | Skills, memory, helpers, checkpoint/resume |
@@ -22,16 +22,16 @@ v1 required instantiating provider wrapper classes. v2 uses Pydantic AI model st
     from lattereview.providers import LiteLLMProvider, OpenAIProvider
 
     # OpenAI via LiteLLM
-    provider = LiteLLMProvider(model="gpt-4o")
+    provider = LiteLLMProvider(model="gpt-5.4-mini")
 
     # OpenAI native
-    provider = OpenAIProvider(model="gpt-4o")
+    provider = OpenAIProvider(model="gpt-5.4-mini")
 
     # Google via LiteLLM
-    provider = LiteLLMProvider(model="gemini/gemini-1.5-flash")
+    provider = LiteLLMProvider(model="gemini/gemini-3-flash-preview")
 
     # Anthropic via LiteLLM
-    provider = LiteLLMProvider(model="anthropic/claude-3-5-sonnet-20241022")
+    provider = LiteLLMProvider(model="anthropic/claude-sonnet-4-6")
     ```
 
 === "v2"
@@ -39,8 +39,8 @@ v1 required instantiating provider wrapper classes. v2 uses Pydantic AI model st
     ```python
     # No provider imports needed -- just use model strings
 
-    model = "openai:gpt-4o"
-    model = "google-gla:gemini-2.5-flash"
+    model = "openai:gpt-5.4-mini"
+    model = "google-gla:gemini-3-flash-preview"
     model = "anthropic:claude-sonnet-4-6"
     ```
 
@@ -55,7 +55,7 @@ The reviewer classes have the same names but live in a different module and acce
     from lattereview.agents import ScoringReviewer, TitleAbstractReviewer, AbstractionReviewer
 
     reviewer = ScoringReviewer(
-        provider=LiteLLMProvider(model="gpt-4o"),
+        provider=LiteLLMProvider(model="gpt-5.4-mini"),
         name="Scorer",
         scoring_task="Rate relevance",
         scoring_set=[1, 2, 3, 4, 5],
@@ -70,7 +70,7 @@ The reviewer classes have the same names but live in a different module and acce
     from lattereview.agentic import ScoringReviewer
 
     reviewer = ScoringReviewer(
-        model="openai:gpt-4o",
+        model="openai:gpt-5.4-mini",
         name="Scorer",
         scoring_task="Rate relevance",
         scoring_set=[1, 2, 3, 4, 5],
@@ -141,7 +141,7 @@ import pandas as pd
 import asyncio
 
 reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o"),
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),
     name="Alice",
     inclusion_criteria="Must involve AI in radiology",
     exclusion_criteria="Exclude non-peer-reviewed",
@@ -150,7 +150,7 @@ reviewer1 = TitleAbstractReviewer(
 )
 
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),
     name="Bob",
     inclusion_criteria="Must involve AI in radiology",
     exclusion_criteria="Exclude non-peer-reviewed",
@@ -181,14 +181,14 @@ import pandas as pd
 import asyncio
 
 reviewer1 = TitleAbstractReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4-mini",
     name="Alice",
     inclusion_criteria="Must involve AI in radiology",
     exclusion_criteria="Exclude non-peer-reviewed",
 )
 
 reviewer2 = TitleAbstractReviewer(
-    model="openai:gpt-4o-mini",
+    model="openai:gpt-5.4-mini",
     name="Bob",
     inclusion_criteria="Must involve AI in radiology",
     exclusion_criteria="Exclude non-peer-reviewed",
@@ -219,7 +219,7 @@ The following features are only available in the v2 agentic API:
 from lattereview.agentic import ScoringReviewer
 
 reviewer = ScoringReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4-mini",
     name="Researcher",
     scoring_task="Rate the methodological quality",
     skills=["searching-pubmed", "managing-memory", "flagging-items"],
@@ -248,7 +248,7 @@ from lattereview.agentic import ScoringReviewer
 
 expert = ScoringReviewer(model="anthropic:claude-sonnet-4-6", name="Expert", ...)
 reviewer = ScoringReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4-mini",
     helpers=[expert],
     skills=["discussing-with-helpers"],
     ...

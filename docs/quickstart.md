@@ -18,10 +18,11 @@ from lattereview.agentic import ScoringReviewer
 import asyncio
 
 reviewer = ScoringReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4-mini",
     name="Scorer",
     scoring_task="Rate relevance to AI in healthcare",
     scoring_set=[1, 2, 3, 4, 5],
+    max_iterations=1,  # Increase for agentic multi-step reasoning
 )
 
 result, cost = asyncio.run(reviewer.review_item("A study on deep learning for X-ray diagnosis..."))
@@ -57,14 +58,14 @@ import pandas as pd
 
 # Create reviewers
 reviewer1 = ScoringReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4-mini",
     name="Alice",
     scoring_task="Rate relevance to AI in healthcare",
     scoring_set=[1, 2, 3, 4, 5],
 )
 
 reviewer2 = ScoringReviewer(
-    model="google-gla:gemini-2.5-flash",
+    model="google-gla:gemini-3-flash-preview",
     name="Bob",
     scoring_task="Rate relevance to AI in healthcare",
     scoring_set=[1, 2, 3, 4, 5],
@@ -104,11 +105,13 @@ from lattereview.agentic import ScoringReviewer
 import asyncio
 
 reviewer = ScoringReviewer(
-    model="openai:gpt-4o",
+    model="openai:gpt-5.4",
     name="Researcher",
     scoring_task="Rate the methodological quality of this study",
     scoring_set=[1, 2, 3, 4, 5],
-    skills=["searching-pubmed", "managing-memory"],
+    skills=["searching-pubmed", "searching-semantic-scholar", "managing-memory"],
+    max_iterations=3,  # Allow multiple agentic steps for thorough research
+    agentic_effort="high",  # Controls how aggressively the reviewer uses tools
 )
 
 result, cost = asyncio.run(reviewer.review_item("A study on deep learning for retinal disease detection..."))
@@ -194,7 +197,7 @@ Create reviewer agents by configuring `TitleAbstractReviewer` objects. Each revi
 ```python
 # Example of creating a TitleAbstractReviewer
 reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),  # Choose your model provider
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),  # Choose your model provider
     name="Alice",                                    # Unique name for the reviewer
     inclusion_criteria="Must be relevant to AI in medical imaging.",
     exclusion_criteria="Exclude papers focusing only on basic sciences.",
@@ -204,7 +207,7 @@ reviewer1 = TitleAbstractReviewer(
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-1.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-3-flash-preview"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="Relevant to artificial intelligence in radiology.",
@@ -215,13 +218,13 @@ reviewer2 = TitleAbstractReviewer(
 
 # Expert Reviewer: Resolves disagreements
 expert = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="o3-mini"),
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),
     name="Carol",
     backstory="a professor of AI in medical imaging",
     inclusion_criteria="Must align with at least one of Alice or Bob's recommendations.",
     exclusion_criteria="Exclude only if both Alice and Bob disagreed.",
     reasoning="brief",
-    model_args={"reasoning_effort": "high"}  # o3-mini specific parameter
+    model_args={"temperature": 0.1}
 )
 ```
 
@@ -288,7 +291,7 @@ load_dotenv()
 
 # First Reviewer: Conservative approach
 reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),
     name="Alice",
     backstory="a radiologist with expertise in systematic reviews",
     inclusion_criteria="Must be relevant to artificial intelligence in radiology.",
@@ -299,7 +302,7 @@ reviewer1 = TitleAbstractReviewer(
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-1.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-3-flash-preview"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="Relevant to artificial intelligence in radiology.",
@@ -310,13 +313,13 @@ reviewer2 = TitleAbstractReviewer(
 
 # Expert Reviewer: Resolves disagreements
 expert = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="o3-mini"),
+    provider=LiteLLMProvider(model="gpt-5.4-mini"),
     name="Carol",
     backstory="a professor of AI in medical imaging",
     inclusion_criteria="Must align with at least one of Alice or Bob's recommendations.",
     exclusion_criteria="Exclude only if both Alice and Bob disagreed.",
     reasoning="brief",
-    model_args={"reasoning_effort": "high"}  # o3-mini specific parameter
+    model_args={"temperature": 0.1}
 )
 
 # Define workflow
