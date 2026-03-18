@@ -9,9 +9,12 @@ from lattereview.agentic.output_models import (
     build_dynamic_output_model,
 )
 from lattereview.agentic.prompts import build_system_prompt, build_task_prompt
+from lattereview.agentic.workflow import AgenticWorkflow, AgenticWorkflowError
 
 __all__ = [
     "AgenticReviewer",
+    "AgenticWorkflow",
+    "AgenticWorkflowError",
     "ReviewDeps",
     "ScoringOutput",
     "EvaluationOutput",
