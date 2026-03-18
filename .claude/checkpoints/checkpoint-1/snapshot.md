@@ -1,6 +1,6 @@
 # LatteReview Technical Snapshot
 
-**Date:** 2026-03-18 (updated after RFD-4)
+**Date:** 2026-03-18 (updated after RFD-5)
 **Version:** 1.1.1 (v2 in development on `dev/v2` branch)
 **Python:** >=3.12
 **License:** CC BY-NC 4.0
@@ -20,20 +20,20 @@ LatteReview is a literature review framework for LLM-powered document screening,
 | RFD-2: AgenticWorkflow | COMPLETE | 29 unit + 2 live |
 | RFD-3: Skills System + Registry | COMPLETE | 43 unit + 1 live |
 | RFD-4: Memory System | COMPLETE | 44 unit + 2 live |
-| RFD-5: Flagging + Revisit | **NEXT** | — |
-| RFD-6: Helper Agents | Planned | — |
+| RFD-5: Flagging + Revisit | COMPLETE | 39 unit + 2 live |
+| RFD-6: Helper Agents | **NEXT** | — |
 | RFD-7: Checkpoint/Resume | Planned | — |
 | RFD-8: Search Skills Bundle | Planned | — |
 | RFD-9: Preset Reviewer Types | Planned | — |
 | RFD-10: Backward Compatibility | Planned | — |
 | RFD-11: Docs + Tutorials | Planned | — |
 
-**Total tests:** 162 unit + 11 live = 173 (all passing)
+**Total tests:** 201 unit + 13 live = 214 (all passing)
 
 ### v2 Code Location
 All v2 code lives under `lattereview/agentic/`. v1 code is untouched.
 
-### What's Built (RFD-1 through RFD-4)
+### What's Built (RFD-1 through RFD-5)
 
 #### RFD-1: Core AgenticReviewer
 - `lattereview/agentic/reviewer.py` — `AgenticReviewer` class wrapping Pydantic AI `Agent`
@@ -68,13 +68,22 @@ All v2 code lives under `lattereview/agentic/`. v1 code is untouched.
 - **Storage**: `working_dir/round_{ID}/agent_{NAME}/memory/{_index.json, mem_001.md, ...}`
 - **System prompt**: Memory summaries (id + brief) injected into "# Your Memories" section
 
+#### RFD-5: Flagging + Revisit System
+- `lattereview/agentic/flags/store.py` — `FlagStore` (file-backed `flags.json` with asyncio.Lock)
+- `lattereview/agentic/flags/__init__.py` — Exports FlagStore
+- `lattereview/agentic/skills/builtin/flagging-items/` — Skill with 3 tools (flag_for_revisit, list_flagged_items, resolve_current_flag)
+- **Integration**: `review_item()` auto-creates FlagStore from working_dir; `review_items()` shares store across items; `AgenticWorkflow` creates per-agent/round stores
+- **Revisit**: `AgenticWorkflow._revisit_flagged_items()` re-reviews flagged items sequentially after initial pass
+- **DataFrame columns**: `round-{ID}_{NAME}_flagged` (bool) and `round-{ID}_{NAME}_flag_reason` (str) for unresolved flags
+- **Storage**: `working_dir/round_{ID}/agent_{NAME}/flags/flags.json`
+- **System prompt**: Flag summaries (item_id + reason) injected into "# Flagged Items" section
+
 ### Empty Directory Structure (ready for future RFDs)
 ```
 lattereview/agentic/
-├── skills/builtin/{discussing-with-helpers,flagging-items,
+├── skills/builtin/{discussing-with-helpers,
 │                   searching-google,searching-duckduckgo,searching-pubmed,
-│                   searching-semantic-scholar,searching-arxiv}/  (empty, awaiting RFD-5-8)
-├── flags/      (empty __init__.py, awaiting RFD-5)
+│                   searching-semantic-scholar,searching-arxiv}/  (empty, awaiting RFD-6-8)
 ├── helpers/    (empty __init__.py, awaiting RFD-6)
 ├── checkpoint/ (empty __init__.py, awaiting RFD-7)
 └── logging/    (empty __init__.py, awaiting RFD-7)

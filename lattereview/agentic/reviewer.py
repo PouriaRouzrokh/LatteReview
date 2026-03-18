@@ -97,6 +97,7 @@ class AgenticReviewer(BaseModel):
         self,
         memory_summaries: Optional[List[Dict[str, str]]] = None,
         skill_descriptions: Optional[List[Dict[str, str]]] = None,
+        flag_summaries: Optional[List[Dict[str, str]]] = None,
     ) -> str:
         """Build the complete system prompt for this reviewer."""
         return build_system_prompt(
@@ -108,6 +109,7 @@ class AgenticReviewer(BaseModel):
             agentic_effort=self.agentic_effort,
             enabled_skill_descriptions=skill_descriptions,
             memory_summaries=memory_summaries,
+            flag_summaries=flag_summaries,
         )
 
     def _build_agent(
@@ -171,6 +173,7 @@ class AgenticReviewer(BaseModel):
         working_dir: Optional[Path] = None,
         memory_summaries: Optional[List[Dict[str, str]]] = None,
         memory_store: Optional[Any] = None,
+        flag_store: Optional[Any] = None,
         skill_descriptions: Optional[List[Dict[str, str]]] = None,
         toolsets: Optional[list] = None,
     ) -> Tuple[Dict[str, Any], float]:
@@ -183,6 +186,7 @@ class AgenticReviewer(BaseModel):
             working_dir: Working directory for state files.
             memory_summaries: Pre-loaded memory summaries for the system prompt.
             memory_store: MemoryStore instance for memory tools.
+            flag_store: FlagStore instance for flagging tools.
             skill_descriptions: Enabled skill descriptions for the system prompt.
             toolsets: Pydantic AI FunctionToolset objects to register.
 
@@ -206,16 +210,32 @@ class AgenticReviewer(BaseModel):
             memory_store = MemoryStore(memory_dir)
             await memory_store.initialize()
 
+        # Set up flag store if working_dir provided and agentic mode
+        if flag_store is None and working_dir is not None and self.is_agentic:
+            from lattereview.agentic.flags.store import FlagStore
+
+            flags_dir = working_dir / f"round_{round_id}" / f"agent_{self.name}" / "flags"
+            flag_store = FlagStore(flags_dir)
+            await flag_store.initialize()
+
         # Load memory summaries from store if not provided
         if memory_summaries is None and memory_store is not None:
             summaries = await memory_store.get_summaries()
             if summaries:
                 memory_summaries = summaries
 
+        # Load flag summaries from store
+        flag_summaries = None
+        if flag_store is not None:
+            unresolved = await flag_store.get_unresolved()
+            if unresolved:
+                flag_summaries = unresolved
+
         # Build system prompt
         system_prompt_str = self._build_system_prompt(
             memory_summaries=memory_summaries,
             skill_descriptions=skill_descriptions,
+            flag_summaries=flag_summaries,
         )
 
         # Build agent
@@ -234,6 +254,7 @@ class AgenticReviewer(BaseModel):
             agentic_effort=self.agentic_effort,
             working_dir=working_dir,
             memory_store=memory_store,
+            flag_store=flag_store,
         )
 
         # Set usage limits for agentic mode
@@ -263,6 +284,7 @@ class AgenticReviewer(BaseModel):
         round_id: str = "A",
         working_dir: Optional[Path] = None,
         memory_store: Optional[Any] = None,
+        flag_store: Optional[Any] = None,
     ) -> Tuple[List[Dict[str, Any]], float]:
         """Review multiple items concurrently.
 
@@ -272,6 +294,7 @@ class AgenticReviewer(BaseModel):
             round_id: Current review round identifier.
             working_dir: Working directory for state files.
             memory_store: Shared MemoryStore for cross-item memory.
+            flag_store: Shared FlagStore for cross-item flagging.
 
         Returns:
             Tuple of (list_of_response_dicts, total_cost).
@@ -290,6 +313,14 @@ class AgenticReviewer(BaseModel):
             memory_store = MemoryStore(memory_dir)
             await memory_store.initialize()
 
+        # Create shared flag store if working_dir provided and agentic mode
+        if flag_store is None and working_dir is not None and self.is_agentic:
+            from lattereview.agentic.flags.store import FlagStore
+
+            flags_dir = working_dir / f"round_{round_id}" / f"agent_{self.name}" / "flags"
+            flag_store = FlagStore(flags_dir)
+            await flag_store.initialize()
+
         semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
         async def _review_with_semaphore(text: str, item_id: str) -> Tuple[Dict[str, Any], float]:
@@ -300,6 +331,7 @@ class AgenticReviewer(BaseModel):
                     round_id=round_id,
                     working_dir=working_dir,
                     memory_store=memory_store,
+                    flag_store=flag_store,
                 )
 
         tasks = [_review_with_semaphore(text, iid) for text, iid in zip(text_inputs, item_ids)]

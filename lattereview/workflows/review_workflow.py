@@ -10,6 +10,7 @@ from ..utils.data_handler import ris_to_dataframe
 
 class ReviewWorkflowError(Exception):
     """Base exception for workflow-related errors."""
+
     pass
 
 
@@ -139,21 +140,21 @@ class ReviewWorkflow(pydantic.BaseModel):
                 processed_output = output
             else:
                 processed_output = json.loads(output)
-            
+
             # Validate that all required keys are present
             missing_keys = []
             for key in response_keywords:
                 if key not in processed_output:
                     missing_keys.append(key)
-            
+
             if missing_keys:
                 self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} missing keys: {missing_keys}")
                 # Fill missing keys with None
                 for key in missing_keys:
                     processed_output[key] = None
-            
+
             return processed_output, True
-            
+
         except json.JSONDecodeError as e:
             self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} - JSON decode error: {e}")
             self._log(f"         Raw output: {str(output)[:200]}...")
@@ -257,14 +258,16 @@ class ReviewWorkflow(pydantic.BaseModel):
                             output, idx, reviewer.name, response_keywords
                         )
                         processed_outputs.append(processed_output)
-                        
+
                         if parse_success:
                             successful_parses += 1
                         else:
                             failed_parses += 1
 
                     # Log parsing statistics
-                    self._log(f"Reviewer {reviewer.name}: {successful_parses} successful, {failed_parses} failed parses")
+                    self._log(
+                        f"Reviewer {reviewer.name}: {successful_parses} successful, {failed_parses} failed parses"
+                    )
 
                     # Update dataframe with validated outputs
                     output_dict = dict(zip(eligible_indices, outputs))  # Store original outputs
@@ -278,10 +281,10 @@ class ReviewWorkflow(pydantic.BaseModel):
                             for processed_output in processed_outputs:
                                 # This should always work now since we ensure all keys exist
                                 response_values.append(processed_output.get(response_keyword, None))
-                            
+
                             response_dict = dict(zip(eligible_indices, response_values))
                             df.loc[eligible_indices, response_col] = pd.Series(response_dict)
-                            
+
                         except Exception as e:
                             self._log(f"Error updating column {response_col}: {e}")
                             # Fill with None values as fallback
@@ -290,7 +293,7 @@ class ReviewWorkflow(pydantic.BaseModel):
                     self._log(
                         f"The following columns are present in the dataframe at the end of {reviewer.name}'s review in round {round_id}: {df.columns.tolist()}"
                     )
-            
+
             return df
 
         except Exception as e:

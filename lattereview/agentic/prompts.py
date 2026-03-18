@@ -17,12 +17,13 @@ def build_system_prompt(
     agentic_effort: str = "medium",
     enabled_skill_descriptions: Optional[List[Dict[str, str]]] = None,
     memory_summaries: Optional[List[Dict[str, str]]] = None,
+    flag_summaries: Optional[List[Dict[str, str]]] = None,
 ) -> str:
     """Build the full system prompt for an AgenticReviewer.
 
     In non-agentic mode (max_iterations=1), produces a minimal prompt focused
     on structured output. In agentic mode, adds tool usage guidance, memory
-    context, and skill descriptions.
+    context, flag context, and skill descriptions.
 
     Args:
         name: Agent name/identity.
@@ -33,6 +34,7 @@ def build_system_prompt(
         agentic_effort: Tool usage guidance level (low/medium/high).
         enabled_skill_descriptions: List of {"name": ..., "description": ...} for enabled skills.
         memory_summaries: List of {"id": ..., "brief": ...} for loaded memories.
+        flag_summaries: List of {"item_id": ..., "reason": ...} for unresolved flags.
 
     Returns:
         Complete system prompt string.
@@ -61,6 +63,9 @@ def build_system_prompt(
 
         if memory_summaries:
             sections.append(_build_memory_section(memory_summaries))
+
+        if flag_summaries:
+            sections.append(_build_flag_section(flag_summaries))
 
     return "\n\n".join(sections)
 
@@ -142,4 +147,17 @@ def _build_memory_section(memory_summaries: List[Dict[str, str]]) -> str:
     for mem in memory_summaries:
         lines.append(f"- {mem['id']}: {mem['brief']}")
     lines.append("\nUse the load_memory tool to read full details when relevant.")
+    return "\n".join(lines)
+
+
+def _build_flag_section(flag_summaries: List[Dict[str, str]]) -> str:
+    """Build the flagged items section for the system prompt."""
+    lines = [f"# Flagged Items ({len(flag_summaries)} unresolved)"]
+    for flag in flag_summaries:
+        lines.append(f"- {flag['item_id']}: {flag['reason']}")
+    lines.append(
+        "\nThese items were flagged for revisiting. "
+        "If you encounter one of these items, consider the flag reason "
+        "and use your updated knowledge to reassess."
+    )
     return "\n".join(lines)

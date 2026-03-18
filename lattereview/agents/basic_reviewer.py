@@ -91,15 +91,13 @@ class BasicReviewer(BaseModel):
     def _build_system_prompt(self) -> str:
         """Build the system prompt for the agent."""
         try:
-            return self._clean_text(
-                f"""
+            return self._clean_text(f"""
                 Your name is: <<{self.name}>> 
                 Your backstory is: <<{self.backstory}>>.
                 Your task is to review input itmes with the following description: <<{self.input_description}>>.
                 Your final output should have the following keys: \
                     {", ".join(f"{k} ({v})" for k, v in self.response_format.items())}.
-                """
-            )
+                """)
         except Exception as e:
             raise AgentError(f"Error building system prompt: {str(e)}")
 

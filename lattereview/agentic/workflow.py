@@ -42,6 +42,7 @@ class AgenticWorkflow(pydantic.BaseModel):
     workflow_schema: List[Dict[str, Any]]
     working_dir: Optional[Path] = None
     verbose: bool = True
+    revisit_flagged: bool = True
     reviewer_costs: Dict[Tuple[str, str], float] = Field(default_factory=dict)
     total_cost: float = 0.0
 
@@ -214,12 +215,22 @@ class AgenticWorkflow(pydantic.BaseModel):
                     memory_store = MemoryStore(memory_dir)
                     await memory_store.initialize()
 
+                # Set up shared flag store for this reviewer/round if working_dir exists
+                flag_store = None
+                if self.working_dir is not None and reviewer.is_agentic:
+                    from lattereview.agentic.flags.store import FlagStore
+
+                    flags_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "flags"
+                    flag_store = FlagStore(flags_dir)
+                    await flag_store.initialize()
+
                 responses, review_cost = await reviewer.review_items(
                     text_inputs=text_input_strings,
                     item_ids=item_ids,
                     round_id=round_id,
                     working_dir=self.working_dir,
                     memory_store=memory_store,
+                    flag_store=flag_store,
                 )
 
                 # Track costs (tuple key matches v1 convention)
@@ -254,7 +265,113 @@ class AgenticWorkflow(pydantic.BaseModel):
                 self._log(f"Reviewer {reviewer.name}: {successful} successful, {failed} failed")
                 self._log(f"Columns after {reviewer.name}: {df.columns.tolist()}")
 
+                # Revisit flagged items
+                if flag_store is not None and self.revisit_flagged:
+                    df = await self._revisit_flagged_items(
+                        df=df,
+                        reviewer=reviewer,
+                        flag_store=flag_store,
+                        memory_store=memory_store,
+                        round_id=round_id,
+                        text_inputs=text_inputs,
+                        eligible_indices=eligible_indices,
+                        output_fields=output_fields,
+                        output_col=output_col,
+                    )
+
         self._log(f"\nWorkflow complete. Total cost: ${self.total_cost:.4f}")
+        return df
+
+    async def _revisit_flagged_items(
+        self,
+        *,
+        df: pd.DataFrame,
+        reviewer: AgenticReviewer,
+        flag_store: Any,
+        memory_store: Any,
+        round_id: str,
+        text_inputs: List[str],
+        eligible_indices: List[int],
+        output_fields: List[str],
+        output_col: str,
+    ) -> pd.DataFrame:
+        """Re-review items that were flagged during the initial pass.
+
+        Flagged items are re-reviewed one at a time (not concurrently) so the
+        agent can leverage memories accumulated during the initial pass.
+
+        After the revisit pass, any items still flagged get ``_flagged`` and
+        ``_flag_reason`` columns added to the DataFrame.
+        """
+        unresolved = await flag_store.get_unresolved()
+        if not unresolved:
+            return df
+
+        self._log(f"Revisiting {len(unresolved)} flagged items for {reviewer.name}")
+
+        # Build a map from item_id -> DataFrame index
+        item_id_to_idx = {f"{round_id}-{idx}": idx for idx in eligible_indices}
+
+        for flag in unresolved:
+            flag_item_id = flag["item_id"]
+            idx = item_id_to_idx.get(flag_item_id)
+            if idx is None:
+                continue
+
+            row = df.loc[idx]
+            text_input_string = self._format_text_input(row, text_inputs)
+            text_input_string = (
+                f"Review Task ID: {flag_item_id}\n"
+                f"NOTE: This item was previously flagged for revisit.\n"
+                f"Previous flag reason: {flag['reason']}\n"
+                f"Please re-assess with your updated knowledge.\n\n"
+                f"{text_input_string}"
+            )
+
+            try:
+                resp, revisit_cost = await reviewer.review_item(
+                    item_text=text_input_string,
+                    item_id=flag_item_id,
+                    round_id=round_id,
+                    working_dir=self.working_dir,
+                    memory_store=memory_store,
+                    flag_store=flag_store,
+                )
+
+                # Update cost tracking
+                cost_key = (round_id, reviewer.name)
+                self.reviewer_costs[cost_key] = self.reviewer_costs.get(cost_key, 0.0) + revisit_cost
+                self.total_cost += revisit_cost
+
+                # Update DataFrame with revisit results
+                df.at[idx, output_col] = resp
+                for field_name in output_fields:
+                    col_name = f"round-{round_id}_{reviewer.name}_{field_name}"
+                    df.at[idx, col_name] = resp.get(field_name)
+
+                self._log(f"  Revisited {flag_item_id}")
+            except Exception as e:
+                self._log(f"  Error revisiting {flag_item_id}: {e}")
+
+        # After revisit, mark still-unresolved items in DataFrame
+        still_unresolved = await flag_store.get_unresolved()
+        if still_unresolved:
+            flagged_col = f"round-{round_id}_{reviewer.name}_flagged"
+            flag_reason_col = f"round-{round_id}_{reviewer.name}_flag_reason"
+            if flagged_col not in df.columns:
+                df[flagged_col] = False
+            if flag_reason_col not in df.columns:
+                df[flag_reason_col] = None
+
+            for flag in still_unresolved:
+                flag_item_id = flag["item_id"]
+                idx = item_id_to_idx.get(flag_item_id)
+                if idx is not None:
+                    df.at[idx, flagged_col] = True
+                    df.at[idx, flag_reason_col] = flag["reason"]
+
+            self._log(f"  {len(still_unresolved)} items still flagged after revisit " f"(see {flagged_col} column)")
+
         return df
 
     def get_total_cost(self) -> float:
