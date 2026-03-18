@@ -13,7 +13,6 @@ from lattereview.agentic.skills.registry import SkillRegistry
 from lattereview.agentic.reviewer import AgenticReviewer
 from lattereview.agentic.output_models import ScoringOutput
 
-
 # ---------------------------------------------------------------------------
 # SkillManifest & Validation
 # ---------------------------------------------------------------------------
@@ -96,9 +95,7 @@ class TestParseSkillMd:
     def test_parse_valid_skill_md(self, tmp_path):
         skill_dir = tmp_path / "my-skill"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: my-skill
             description: Does something useful. Use when the agent needs to do something.
@@ -107,9 +104,7 @@ class TestParseSkillMd:
             # My Skill
 
             Some detailed instructions here.
-            """
-            )
-        )
+            """))
         manifest = parse_skill_md(skill_dir)
         assert manifest is not None
         assert manifest.name == "my-skill"
@@ -130,31 +125,23 @@ class TestParseSkillMd:
     def test_parse_missing_name(self, tmp_path):
         skill_dir = tmp_path / "no-name"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             description: Missing name field.
             ---
             Body.
-            """
-            )
-        )
+            """))
         assert parse_skill_md(skill_dir) is None
 
     def test_parse_missing_description(self, tmp_path):
         skill_dir = tmp_path / "no-desc"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: no-desc
             ---
             Body.
-            """
-            )
-        )
+            """))
         assert parse_skill_md(skill_dir) is None
 
 
@@ -174,17 +161,13 @@ class TestDiscoverSkills:
         """Custom skill paths are scanned alongside builtins."""
         skill_dir = tmp_path / "custom-skill"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: custom-skill
             description: A custom user skill.
             ---
             Custom body.
-            """
-            )
-        )
+            """))
         manifests = discover_skills(tmp_path)
         names = [m.name for m in manifests]
         assert "custom-skill" in names
@@ -193,16 +176,12 @@ class TestDiscoverSkills:
     def test_discover_skips_hidden_dirs(self, tmp_path):
         hidden = tmp_path / ".hidden"
         hidden.mkdir()
-        (hidden / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (hidden / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: hidden-skill
             description: Should be skipped.
             ---
-            """
-            )
-        )
+            """))
         manifests = discover_skills(tmp_path)
         names = [m.name for m in manifests]
         assert "hidden-skill" not in names
@@ -211,16 +190,12 @@ class TestDiscoverSkills:
         """If custom skill has same name as builtin, custom is skipped (builtin wins)."""
         skill_dir = tmp_path / "searching-content"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: searching-content
             description: Duplicate of builtin.
             ---
-            """
-            )
-        )
+            """))
         manifests = discover_skills(tmp_path)
         content_skills = [m for m in manifests if m.name == "searching-content"]
         assert len(content_skills) == 1  # No duplicates
@@ -255,16 +230,12 @@ class TestLoadToolset:
         """tools.py that doesn't export `toolset` should raise AttributeError."""
         skill_dir = tmp_path / "bad-tools"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: bad-tools
             description: Has tools.py but no toolset var.
             ---
-            """
-            )
-        )
+            """))
         (skill_dir / "tools.py").write_text("x = 42\n")
         manifest = parse_skill_md(skill_dir)
         with pytest.raises(AttributeError, match="must export"):
@@ -368,20 +339,14 @@ class TestSkillRegistry:
         """Registry can discover skills from custom paths."""
         skill_dir = tmp_path / "my-custom"
         skill_dir.mkdir()
-        (skill_dir / "SKILL.md").write_text(
-            textwrap.dedent(
-                """\
+        (skill_dir / "SKILL.md").write_text(textwrap.dedent("""\
             ---
             name: my-custom
             description: Custom test skill.
             ---
             Custom body.
-            """
-            )
-        )
-        (skill_dir / "tools.py").write_text(
-            textwrap.dedent(
-                """\
+            """))
+        (skill_dir / "tools.py").write_text(textwrap.dedent("""\
             from pydantic_ai.toolsets import FunctionToolset
             from pydantic_ai import RunContext
 
@@ -391,9 +356,7 @@ class TestSkillRegistry:
             async def custom_tool(ctx: RunContext, query: str) -> str:
                 \"\"\"A custom tool.\"\"\"
                 return f"custom: {query}"
-            """
-            )
-        )
+            """))
         registry = SkillRegistry()
         registry.discover(tmp_path)
         registry.enable(["my-custom"])

@@ -12,7 +12,6 @@ from lattereview.agentic.reviewer import AgenticReviewer
 from lattereview.agentic.workflow import AgenticWorkflow, AgenticWorkflowError
 from lattereview.agentic.output_models import ScoringOutput, EvaluationOutput
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
