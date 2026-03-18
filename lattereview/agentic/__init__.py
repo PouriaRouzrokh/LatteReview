@@ -10,12 +10,15 @@ from lattereview.agentic.output_models import (
 )
 from lattereview.agentic.prompts import build_system_prompt, build_task_prompt
 from lattereview.agentic.workflow import AgenticWorkflow, AgenticWorkflowError
+from lattereview.agentic.skills import SkillRegistry, SkillManifest
 
 __all__ = [
     "AgenticReviewer",
     "AgenticWorkflow",
     "AgenticWorkflowError",
     "ReviewDeps",
+    "SkillManifest",
+    "SkillRegistry",
     "ScoringOutput",
     "EvaluationOutput",
     "AbstractionOutput",

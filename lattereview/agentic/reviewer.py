@@ -139,6 +139,30 @@ class AgenticReviewer(BaseModel):
 
         return Agent(self.model, **agent_kwargs)
 
+    def _setup_skills(self) -> tuple:
+        """Set up skill registry, returning (toolsets, descriptions).
+
+        Returns:
+            Tuple of (toolsets_list, skill_descriptions_list).
+            Both are empty lists if no skills are configured or non-agentic mode.
+        """
+        if not self.is_agentic or not self.skills:
+            return [], []
+
+        from lattereview.agentic.skills import SkillRegistry
+
+        registry = SkillRegistry()
+        registry.discover(*self.custom_skill_paths)
+        registry.enable(self.skills)
+
+        toolsets = registry.get_enabled_toolsets()
+        descriptions = registry.get_enabled_descriptions()
+
+        # Add the meta-tool for L3 progressive disclosure
+        toolsets.append(registry.build_meta_toolset())
+
+        return toolsets, descriptions
+
     async def review_item(
         self,
         item_text: str,
@@ -165,6 +189,13 @@ class AgenticReviewer(BaseModel):
             response_dict contains the structured output fields.
             cost is the estimated cost in USD (0.0 if unavailable).
         """
+        # Set up skills from self.skills config if not provided externally
+        skill_toolsets, skill_descs = self._setup_skills()
+        if toolsets is None:
+            toolsets = skill_toolsets
+        if skill_descriptions is None:
+            skill_descriptions = skill_descs if skill_descs else None
+
         # Build system prompt
         system_prompt_str = self._build_system_prompt(
             memory_summaries=memory_summaries,
