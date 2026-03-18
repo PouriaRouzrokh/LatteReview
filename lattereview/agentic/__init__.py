@@ -16,8 +16,14 @@ from lattereview.agentic.flags import FlagStore
 from lattereview.agentic.helpers import HelperAgentManager
 from lattereview.agentic.checkpoint import CheckpointManager, RunState, compute_schema_hash
 from lattereview.agentic.logging import ActionLogger
+from lattereview.agentic.reviewer_types import (
+    ScoringReviewer,
+    TitleAbstractReviewer,
+    AbstractionReviewer,
+)
 
 __all__ = [
+    "AbstractionReviewer",
     "ActionLogger",
     "AgenticReviewer",
     "AgenticWorkflow",
@@ -29,8 +35,10 @@ __all__ = [
     "MemoryStore",
     "ReviewDeps",
     "RunState",
+    "ScoringReviewer",
     "SkillManifest",
     "SkillRegistry",
+    "TitleAbstractReviewer",
     "ScoringOutput",
     "EvaluationOutput",
     "AbstractionOutput",
