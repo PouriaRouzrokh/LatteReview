@@ -176,6 +176,8 @@ class AgenticReviewer(BaseModel):
         flag_store: Optional[Any] = None,
         skill_descriptions: Optional[List[Dict[str, str]]] = None,
         toolsets: Optional[list] = None,
+        action_logger: Optional[Any] = None,
+        checkpoint_manager: Optional[Any] = None,
     ) -> Tuple[Dict[str, Any], float]:
         """Review a single item and return structured output.
 
@@ -189,6 +191,8 @@ class AgenticReviewer(BaseModel):
             flag_store: FlagStore instance for flagging tools.
             skill_descriptions: Enabled skill descriptions for the system prompt.
             toolsets: Pydantic AI FunctionToolset objects to register.
+            action_logger: ActionLogger instance for structured logging.
+            checkpoint_manager: CheckpointManager for per-item saves.
 
         Returns:
             Tuple of (response_dict, cost).
@@ -244,6 +248,16 @@ class AgenticReviewer(BaseModel):
         # Build task prompt
         user_prompt = build_task_prompt(self.task_prompt, item_text)
 
+        # Set up helper manager if helpers configured and agentic mode
+        helper_manager = None
+        if self.is_agentic and self.helpers:
+            from lattereview.agentic.helpers.manager import HelperAgentManager
+
+            helper_manager = HelperAgentManager(
+                helpers=self.helpers,
+                helper_max_iterations=self.helper_max_iterations,
+            )
+
         # Build deps
         deps = ReviewDeps(
             item_id=item_id,
@@ -255,7 +269,13 @@ class AgenticReviewer(BaseModel):
             working_dir=working_dir,
             memory_store=memory_store,
             flag_store=flag_store,
+            helper_manager=helper_manager,
+            action_logger=action_logger,
         )
+
+        # Log review start
+        if action_logger is not None:
+            action_logger.log(item_id, "review_start", {"agent": self.name, "round": round_id})
 
         # Set usage limits for agentic mode
         usage_limits = None
@@ -275,6 +295,14 @@ class AgenticReviewer(BaseModel):
         # Extract cost from usage
         cost = _estimate_cost(result.usage())
 
+        # Log review complete
+        if action_logger is not None:
+            action_logger.log(item_id, "review_complete", {"cost": cost})
+
+        # Save checkpoint per-item
+        if checkpoint_manager is not None:
+            checkpoint_manager.save_item_result(round_id, self.name, item_id, response_dict, cost)
+
         return response_dict, cost
 
     async def review_items(
@@ -285,6 +313,8 @@ class AgenticReviewer(BaseModel):
         working_dir: Optional[Path] = None,
         memory_store: Optional[Any] = None,
         flag_store: Optional[Any] = None,
+        action_logger: Optional[Any] = None,
+        checkpoint_manager: Optional[Any] = None,
     ) -> Tuple[List[Dict[str, Any]], float]:
         """Review multiple items concurrently.
 
@@ -295,6 +325,8 @@ class AgenticReviewer(BaseModel):
             working_dir: Working directory for state files.
             memory_store: Shared MemoryStore for cross-item memory.
             flag_store: Shared FlagStore for cross-item flagging.
+            action_logger: ActionLogger instance for structured logging.
+            checkpoint_manager: CheckpointManager for per-item saves.
 
         Returns:
             Tuple of (list_of_response_dicts, total_cost).
@@ -337,6 +369,8 @@ class AgenticReviewer(BaseModel):
                     flag_store=flag_store,
                     toolsets=skill_toolsets if skill_toolsets else None,
                     skill_descriptions=skill_descs if skill_descs else None,
+                    action_logger=action_logger,
+                    checkpoint_manager=checkpoint_manager,
                 )
 
         tasks = [_review_with_semaphore(text, iid) for text, iid in zip(text_inputs, item_ids)]

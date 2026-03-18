@@ -43,6 +43,7 @@ class AgenticWorkflow(pydantic.BaseModel):
     working_dir: Optional[Path] = None
     verbose: bool = True
     revisit_flagged: bool = True
+    resume: bool = False
     reviewer_costs: Dict[Tuple[str, str], float] = Field(default_factory=dict)
     total_cost: float = 0.0
 
@@ -166,123 +167,232 @@ class AgenticWorkflow(pydantic.BaseModel):
         df = data.copy()
         total_rounds = len(self.workflow_schema)
 
-        for round_num, task in enumerate(self.workflow_schema):
-            round_id = task["round"]
-            self._log(f"\n====== Starting review round {round_id} ({round_num + 1}/{total_rounds}) ======\n")
+        # Set up checkpoint manager if working_dir is configured
+        checkpoint_mgr = None
+        if self.working_dir is not None:
+            from lattereview.agentic.checkpoint.manager import CheckpointManager
 
-            reviewers = task["reviewers"] if isinstance(task["reviewers"], list) else [task["reviewers"]]
-            text_inputs = task["text_inputs"] if isinstance(task["text_inputs"], list) else [task["text_inputs"]]
-            filter_func: Callable = task.get("filter", lambda x: True)
+            checkpoint_mgr = CheckpointManager(self.working_dir)
 
-            # Validate columns exist
-            self._validate_columns(df, text_inputs, round_id)
+            if self.resume and checkpoint_mgr.can_resume():
+                state = checkpoint_mgr.load_for_resume(self.workflow_schema)
+                self._log(f"Resuming from prior run (status was: {state.status})")
+                self.total_cost = state.total_cost
+            else:
+                checkpoint_mgr.initialize(self.workflow_schema)
 
-            # Apply filter
-            mask = df.apply(filter_func, axis=1)
-            if not mask.any():
-                self._log(f"Skipping round {round_id} — no eligible rows")
-                continue
+        try:
+            for round_num, task in enumerate(self.workflow_schema):
+                round_id = task["round"]
+                self._log(f"\n====== Starting review round {round_id} ({round_num + 1}/{total_rounds}) ======\n")
 
-            eligible_indices = df[mask].index.tolist()
-            self._log(f"Processing {len(eligible_indices)} eligible rows")
+                # On resume, check if this round already has a snapshot and all reviewers are done
+                if checkpoint_mgr is not None and self.resume:
+                    snapshot = checkpoint_mgr.load_dataframe_snapshot(round_id)
+                    if snapshot is not None:
+                        # Check if all reviewers in this round are fully completed
+                        reviewers = task["reviewers"] if isinstance(task["reviewers"], list) else [task["reviewers"]]
+                        all_done = True
+                        for reviewer in reviewers:
+                            completed = checkpoint_mgr.get_completed_items(round_id, reviewer.name)
+                            # We need to check against eligible items, but since we have a snapshot
+                            # we know the round was fully processed
+                            if not completed:
+                                all_done = False
+                                break
+                        if all_done:
+                            self._log(f"Round {round_id} already completed — loading snapshot")
+                            df = snapshot
+                            continue
 
-            # Build text inputs for eligible rows
-            text_input_strings = []
-            for idx in eligible_indices:
-                row = df.loc[idx]
-                text_input_string = self._format_text_input(row, text_inputs)
-                text_input_string = f"Review Task ID: {round_id}-{idx}\n{text_input_string}"
-                text_input_strings.append(text_input_string)
+                reviewers = task["reviewers"] if isinstance(task["reviewers"], list) else [task["reviewers"]]
+                text_inputs = task["text_inputs"] if isinstance(task["text_inputs"], list) else [task["text_inputs"]]
+                filter_func: Callable = task.get("filter", lambda x: True)
 
-            # Process each reviewer
-            for reviewer in reviewers:
-                output_fields = list(reviewer.output_type.model_fields.keys())
-                response_cols = [f"round-{round_id}_{reviewer.name}_{field}" for field in output_fields]
-                output_col = f"round-{round_id}_{reviewer.name}_output"
+                # Validate columns exist
+                self._validate_columns(df, text_inputs, round_id)
 
-                # Initialize columns
-                if output_col not in df.columns:
-                    df[output_col] = None
-                for col in response_cols:
-                    if col not in df.columns:
-                        df[col] = None
+                # Apply filter
+                mask = df.apply(filter_func, axis=1)
+                if not mask.any():
+                    self._log(f"Skipping round {round_id} — no eligible rows")
+                    continue
 
-                # Run batch review
-                self._log(f"Running reviewer: {reviewer.name}")
-                item_ids = [f"{round_id}-{idx}" for idx in eligible_indices]
+                eligible_indices = df[mask].index.tolist()
+                self._log(f"Processing {len(eligible_indices)} eligible rows")
 
-                # Set up shared memory store for this reviewer/round if working_dir exists
-                memory_store = None
-                if self.working_dir is not None and reviewer.is_agentic:
-                    from lattereview.agentic.memory.store import MemoryStore
+                # Build text inputs for eligible rows
+                text_input_strings = []
+                for idx in eligible_indices:
+                    row = df.loc[idx]
+                    text_input_string = self._format_text_input(row, text_inputs)
+                    text_input_string = f"Review Task ID: {round_id}-{idx}\n{text_input_string}"
+                    text_input_strings.append(text_input_string)
 
-                    memory_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "memory"
-                    memory_store = MemoryStore(memory_dir)
-                    await memory_store.initialize()
+                # Process each reviewer
+                for rev_num, reviewer in enumerate(reviewers):
+                    # Update checkpoint state position
+                    if checkpoint_mgr is not None and checkpoint_mgr.state is not None:
+                        checkpoint_mgr.state.current_round_index = round_num
+                        checkpoint_mgr.state.current_reviewer_index = rev_num
+                        checkpoint_mgr.save_run_state()
 
-                # Set up shared flag store for this reviewer/round if working_dir exists
-                flag_store = None
-                if self.working_dir is not None and reviewer.is_agentic:
-                    from lattereview.agentic.flags.store import FlagStore
+                    output_fields = list(reviewer.output_type.model_fields.keys())
+                    response_cols = [f"round-{round_id}_{reviewer.name}_{field}" for field in output_fields]
+                    output_col = f"round-{round_id}_{reviewer.name}_output"
 
-                    flags_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "flags"
-                    flag_store = FlagStore(flags_dir)
-                    await flag_store.initialize()
+                    # Initialize columns
+                    if output_col not in df.columns:
+                        df[output_col] = None
+                    for col in response_cols:
+                        if col not in df.columns:
+                            df[col] = None
 
-                responses, review_cost = await reviewer.review_items(
-                    text_inputs=text_input_strings,
-                    item_ids=item_ids,
-                    round_id=round_id,
-                    working_dir=self.working_dir,
-                    memory_store=memory_store,
-                    flag_store=flag_store,
-                )
+                    # Determine which items to skip on resume
+                    completed_ids = set()
+                    if checkpoint_mgr is not None and self.resume:
+                        completed_ids = set(checkpoint_mgr.get_completed_items(round_id, reviewer.name))
+                        if completed_ids:
+                            self._log(f"Resuming {reviewer.name}: {len(completed_ids)} items already completed")
+                            # Reload saved results into DataFrame
+                            for item_id in completed_ids:
+                                saved = checkpoint_mgr.load_item_result(round_id, reviewer.name, item_id)
+                                if saved is not None:
+                                    resp = saved["result"]
+                                    # Extract index from item_id (format: "round_id-idx")
+                                    try:
+                                        idx = int(item_id.split("-")[-1])
+                                    except (ValueError, IndexError):
+                                        continue
+                                    if idx in df.index:
+                                        df.at[idx, output_col] = resp
+                                        for field_name in output_fields:
+                                            col_name = f"round-{round_id}_{reviewer.name}_{field_name}"
+                                            df.at[idx, col_name] = resp.get(field_name)
 
-                # Track costs (tuple key matches v1 convention)
-                cost_key = (round_id, reviewer.name)
-                self.reviewer_costs[cost_key] = review_cost
-                self.total_cost += review_cost
+                    # Filter to only pending items
+                    item_ids = [f"{round_id}-{idx}" for idx in eligible_indices]
+                    pending_indices = []
+                    pending_texts = []
+                    pending_ids = []
+                    for idx, text, iid in zip(eligible_indices, text_input_strings, item_ids):
+                        if iid not in completed_ids:
+                            pending_indices.append(idx)
+                            pending_texts.append(text)
+                            pending_ids.append(iid)
 
-                if len(responses) != len(eligible_indices):
-                    raise AgenticWorkflowError(
-                        f"Reviewer {reviewer.name} returned {len(responses)} outputs "
-                        f"for {len(eligible_indices)} inputs"
-                    )
-
-                # Populate DataFrame columns
-                successful = 0
-                failed = 0
-                for i, (resp, idx) in enumerate(zip(responses, eligible_indices)):
-                    # Store full output dict (not string) for downstream filter access
-                    df.at[idx, output_col] = resp
-
-                    has_error = "_error" in resp and resp["_error"] is not None
-                    if has_error:
-                        failed += 1
+                    if not pending_texts:
+                        self._log(f"All items already completed for {reviewer.name}")
                     else:
-                        successful += 1
+                        # Run batch review
+                        self._log(f"Running reviewer: {reviewer.name} ({len(pending_texts)} items)")
 
-                    # Store individual fields
-                    for field_name in output_fields:
-                        col_name = f"round-{round_id}_{reviewer.name}_{field_name}"
-                        df.at[idx, col_name] = resp.get(field_name)
+                        # Set up shared memory store for this reviewer/round if working_dir exists
+                        memory_store = None
+                        if self.working_dir is not None and reviewer.is_agentic:
+                            from lattereview.agentic.memory.store import MemoryStore
 
-                self._log(f"Reviewer {reviewer.name}: {successful} successful, {failed} failed")
-                self._log(f"Columns after {reviewer.name}: {df.columns.tolist()}")
+                            memory_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "memory"
+                            memory_store = MemoryStore(memory_dir)
+                            await memory_store.initialize()
 
-                # Revisit flagged items
-                if flag_store is not None and self.revisit_flagged:
-                    df = await self._revisit_flagged_items(
-                        df=df,
-                        reviewer=reviewer,
-                        flag_store=flag_store,
-                        memory_store=memory_store,
-                        round_id=round_id,
-                        text_inputs=text_inputs,
-                        eligible_indices=eligible_indices,
-                        output_fields=output_fields,
-                        output_col=output_col,
-                    )
+                        # Set up shared flag store for this reviewer/round if working_dir exists
+                        flag_store = None
+                        if self.working_dir is not None and reviewer.is_agentic:
+                            from lattereview.agentic.flags.store import FlagStore
+
+                            flags_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "flags"
+                            flag_store = FlagStore(flags_dir)
+                            await flag_store.initialize()
+
+                        # Set up action logger if working_dir exists
+                        action_logger = None
+                        if self.working_dir is not None:
+                            from lattereview.agentic.logging.action_log import ActionLogger
+
+                            logs_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "logs"
+                            action_logger = ActionLogger(logs_dir)
+
+                        responses, review_cost = await reviewer.review_items(
+                            text_inputs=pending_texts,
+                            item_ids=pending_ids,
+                            round_id=round_id,
+                            working_dir=self.working_dir,
+                            memory_store=memory_store,
+                            flag_store=flag_store,
+                            action_logger=action_logger,
+                            checkpoint_manager=checkpoint_mgr,
+                        )
+
+                        # Track costs (tuple key matches v1 convention)
+                        cost_key = (round_id, reviewer.name)
+                        self.reviewer_costs[cost_key] = self.reviewer_costs.get(cost_key, 0.0) + review_cost
+                        self.total_cost += review_cost
+
+                        if len(responses) != len(pending_indices):
+                            raise AgenticWorkflowError(
+                                f"Reviewer {reviewer.name} returned {len(responses)} outputs "
+                                f"for {len(pending_indices)} inputs"
+                            )
+
+                        # Populate DataFrame columns
+                        successful = 0
+                        failed = 0
+                        for i, (resp, idx) in enumerate(zip(responses, pending_indices)):
+                            # Store full output dict (not string) for downstream filter access
+                            df.at[idx, output_col] = resp
+
+                            has_error = "_error" in resp and resp["_error"] is not None
+                            if has_error:
+                                failed += 1
+                            else:
+                                successful += 1
+
+                            # Store individual fields
+                            for field_name in output_fields:
+                                col_name = f"round-{round_id}_{reviewer.name}_{field_name}"
+                                df.at[idx, col_name] = resp.get(field_name)
+
+                        self._log(f"Reviewer {reviewer.name}: {successful} successful, {failed} failed")
+
+                    self._log(f"Columns after {reviewer.name}: {df.columns.tolist()}")
+
+                    # Revisit flagged items
+                    if self.working_dir is not None and reviewer.is_agentic and self.revisit_flagged:
+                        from lattereview.agentic.flags.store import FlagStore
+
+                        flags_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "flags"
+                        if flags_dir.exists():
+                            flag_store_revisit = FlagStore(flags_dir)
+                            await flag_store_revisit.initialize()
+                            df = await self._revisit_flagged_items(
+                                df=df,
+                                reviewer=reviewer,
+                                flag_store=flag_store_revisit,
+                                memory_store=(
+                                    memory_store if self.working_dir is not None and reviewer.is_agentic else None
+                                ),
+                                round_id=round_id,
+                                text_inputs=text_inputs,
+                                eligible_indices=eligible_indices,
+                                output_fields=output_fields,
+                                output_col=output_col,
+                            )
+
+                # Save DataFrame snapshot after each round
+                if checkpoint_mgr is not None:
+                    checkpoint_mgr.save_dataframe_snapshot(df, round_id)
+                    self._log(f"Saved snapshot after round {round_id}")
+
+            # Save final snapshot and mark completed
+            if checkpoint_mgr is not None:
+                checkpoint_mgr.save_final_dataframe(df)
+                checkpoint_mgr.mark_completed()
+
+        except Exception:
+            if checkpoint_mgr is not None:
+                checkpoint_mgr.mark_failed()
+            raise
 
         self._log(f"\nWorkflow complete. Total cost: ${self.total_cost:.4f}")
         return df

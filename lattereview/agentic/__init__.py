@@ -13,15 +13,22 @@ from lattereview.agentic.workflow import AgenticWorkflow, AgenticWorkflowError
 from lattereview.agentic.skills import SkillRegistry, SkillManifest
 from lattereview.agentic.memory import MemoryStore, MemoryIndex
 from lattereview.agentic.flags import FlagStore
+from lattereview.agentic.helpers import HelperAgentManager
+from lattereview.agentic.checkpoint import CheckpointManager, RunState, compute_schema_hash
+from lattereview.agentic.logging import ActionLogger
 
 __all__ = [
+    "ActionLogger",
     "AgenticReviewer",
     "AgenticWorkflow",
     "AgenticWorkflowError",
+    "CheckpointManager",
     "FlagStore",
+    "HelperAgentManager",
     "MemoryIndex",
     "MemoryStore",
     "ReviewDeps",
+    "RunState",
     "SkillManifest",
     "SkillRegistry",
     "ScoringOutput",
@@ -30,4 +37,5 @@ __all__ = [
     "build_dynamic_output_model",
     "build_system_prompt",
     "build_task_prompt",
+    "compute_schema_hash",
 ]
