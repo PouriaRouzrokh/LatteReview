@@ -321,6 +321,9 @@ class AgenticReviewer(BaseModel):
             flag_store = FlagStore(flags_dir)
             await flag_store.initialize()
 
+        # Pre-build skill toolsets once for the whole batch
+        skill_toolsets, skill_descs = self._setup_skills()
+
         semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
         async def _review_with_semaphore(text: str, item_id: str) -> Tuple[Dict[str, Any], float]:
@@ -332,6 +335,8 @@ class AgenticReviewer(BaseModel):
                     working_dir=working_dir,
                     memory_store=memory_store,
                     flag_store=flag_store,
+                    toolsets=skill_toolsets if skill_toolsets else None,
+                    skill_descriptions=skill_descs if skill_descs else None,
                 )
 
         tasks = [_review_with_semaphore(text, iid) for text, iid in zip(text_inputs, item_ids)]

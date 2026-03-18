@@ -122,22 +122,25 @@ class MemoryStore:
             memory_id: The memory ID to delete.
 
         Returns:
-            True if deleted, False if not found.
+            True if deleted (file removed and/or index entry removed), False if not found.
         """
         async with self._lock:
+            file_deleted = False
             mem_path = self._dir / f"{memory_id}.md"
             if mem_path.exists():
                 mem_path.unlink()
+                file_deleted = True
 
             # Remove from index (call internal to avoid double-lock)
             if not self._index._loaded:
                 await self._index.load()
             before = len(self._index._entries)
             self._index._entries = [e for e in self._index._entries if e["id"] != memory_id]
-            if len(self._index._entries) < before:
+            index_removed = len(self._index._entries) < before
+            if index_removed:
                 await self._index.save()
-                return True
-            return False
+
+            return file_deleted or index_removed
 
     async def list_memories(self) -> List[Dict[str, str]]:
         """List all memory entries (id, title, brief).
@@ -145,9 +148,10 @@ class MemoryStore:
         Returns:
             List of dicts with id, title, and brief fields.
         """
-        if not self._index._loaded:
-            await self._index.load()
-        return self._index.entries
+        async with self._lock:
+            if not self._index._loaded:
+                await self._index.load()
+            return self._index.entries
 
     async def get_summaries(self) -> List[Dict[str, str]]:
         """Get memory summaries for system prompt injection.
@@ -159,6 +163,7 @@ class MemoryStore:
 
     async def count(self) -> int:
         """Return the number of stored memories."""
-        if not self._index._loaded:
-            await self._index.load()
-        return len(self._index)
+        async with self._lock:
+            if not self._index._loaded:
+                await self._index.load()
+            return len(self._index)

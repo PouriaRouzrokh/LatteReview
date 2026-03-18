@@ -315,10 +315,12 @@ class TestDataLoading:
         )
         with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
             f.write("Title\nPaper 1\nPaper 2\n")
-            f.flush()
-            result = await wf(f.name)
-        os.unlink(f.name)
-        assert len(result) == 2
+            tmp_name = f.name
+        try:
+            result = await wf(tmp_name)
+            assert len(result) == 2
+        finally:
+            os.unlink(tmp_name)
 
     @pytest.mark.asyncio
     async def test_invalid_data_type(self, test_reviewer):

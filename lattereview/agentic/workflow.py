@@ -75,9 +75,14 @@ class AgenticWorkflow(pydantic.BaseModel):
                         f"Round '{round_id}': reviewer must be AgenticReviewer, got {type(reviewer).__name__}"
                     )
 
-            # text_inputs required
+            # text_inputs required and must be a string or list of strings
             if "text_inputs" not in task:
                 raise AgenticWorkflowError(f"Schema entry {i} (round '{round_id}') missing 'text_inputs' key")
+            ti = task["text_inputs"]
+            if not isinstance(ti, (str, list)):
+                raise AgenticWorkflowError(
+                    f"Round '{round_id}': 'text_inputs' must be a string or list of strings, got {type(ti).__name__}"
+                )
 
             # filter must be callable if provided
             if "filter" in task and not callable(task["filter"]):
@@ -324,7 +329,9 @@ class AgenticWorkflow(pydantic.BaseModel):
                 f"Review Task ID: {flag_item_id}\n"
                 f"NOTE: This item was previously flagged for revisit.\n"
                 f"Previous flag reason: {flag['reason']}\n"
-                f"Please re-assess with your updated knowledge.\n\n"
+                f"Please re-assess with your updated knowledge. If you can now "
+                f"make a confident assessment, call resolve_current_flag to mark "
+                f"the flag as resolved.\n\n"
                 f"{text_input_string}"
             )
 
@@ -342,6 +349,11 @@ class AgenticWorkflow(pydantic.BaseModel):
                 cost_key = (round_id, reviewer.name)
                 self.reviewer_costs[cost_key] = self.reviewer_costs.get(cost_key, 0.0) + revisit_cost
                 self.total_cost += revisit_cost
+
+                # Auto-resolve the flag if the revisit produced output without error
+                has_error = "_error" in resp and resp["_error"] is not None
+                if not has_error:
+                    await flag_store.resolve_flag(flag_item_id)
 
                 # Update DataFrame with revisit results
                 df.at[idx, output_col] = resp

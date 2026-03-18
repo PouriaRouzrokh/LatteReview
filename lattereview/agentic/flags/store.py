@@ -114,21 +114,23 @@ class FlagStore:
         Returns:
             List of dicts with item_id and reason fields.
         """
-        if not self._loaded:
-            await self._load()
-        return [{"item_id": e["item_id"], "reason": e["reason"]} for e in self._entries if not e["resolved"]]
+        async with self._lock:
+            if not self._loaded:
+                await self._load()
+            return [{"item_id": e["item_id"], "reason": e["reason"]} for e in self._entries if not e["resolved"]]
 
     async def get_flag(self, item_id: str) -> Optional[Dict]:
         """Get the flag entry for a specific item.
 
         Returns the most recent unresolved flag, or None if not found.
         """
-        if not self._loaded:
-            await self._load()
-        for entry in reversed(self._entries):
-            if entry["item_id"] == item_id and not entry["resolved"]:
-                return dict(entry)
-        return None
+        async with self._lock:
+            if not self._loaded:
+                await self._load()
+            for entry in reversed(self._entries):
+                if entry["item_id"] == item_id and not entry["resolved"]:
+                    return dict(entry)
+            return None
 
     async def list_flags(self) -> List[Dict]:
         """List all flag entries (both resolved and unresolved).
@@ -136,9 +138,10 @@ class FlagStore:
         Returns:
             List of all flag dicts.
         """
-        if not self._loaded:
-            await self._load()
-        return list(self._entries)
+        async with self._lock:
+            if not self._loaded:
+                await self._load()
+            return list(self._entries)
 
     async def count(self, unresolved_only: bool = False) -> int:
         """Return the number of flags.
@@ -146,8 +149,9 @@ class FlagStore:
         Args:
             unresolved_only: If True, count only unresolved flags.
         """
-        if not self._loaded:
-            await self._load()
-        if unresolved_only:
-            return sum(1 for e in self._entries if not e["resolved"])
-        return len(self._entries)
+        async with self._lock:
+            if not self._loaded:
+                await self._load()
+            if unresolved_only:
+                return sum(1 for e in self._entries if not e["resolved"])
+            return len(self._entries)

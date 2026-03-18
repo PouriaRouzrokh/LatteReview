@@ -1,6 +1,9 @@
-"""Content search tools — regex and keyword search within review item text."""
+"""Content search tools — regex and keyword search within review item text.
 
-from __future__ import annotations
+NOTE: Do NOT use ``from __future__ import annotations`` here.
+It turns type hints into strings and breaks Pydantic AI's runtime
+resolution of ``RunContext[ReviewDeps]``.
+"""
 
 import re
 
