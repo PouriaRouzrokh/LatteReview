@@ -205,11 +205,21 @@ class AgenticWorkflow(pydantic.BaseModel):
                 self._log(f"Running reviewer: {reviewer.name}")
                 item_ids = [f"{round_id}-{idx}" for idx in eligible_indices]
 
+                # Set up shared memory store for this reviewer/round if working_dir exists
+                memory_store = None
+                if self.working_dir is not None and reviewer.is_agentic:
+                    from lattereview.agentic.memory.store import MemoryStore
+
+                    memory_dir = self.working_dir / f"round_{round_id}" / f"agent_{reviewer.name}" / "memory"
+                    memory_store = MemoryStore(memory_dir)
+                    await memory_store.initialize()
+
                 responses, review_cost = await reviewer.review_items(
                     text_inputs=text_input_strings,
                     item_ids=item_ids,
                     round_id=round_id,
                     working_dir=self.working_dir,
+                    memory_store=memory_store,
                 )
 
                 # Track costs (tuple key matches v1 convention)

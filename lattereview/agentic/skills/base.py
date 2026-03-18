@@ -7,7 +7,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
-
 # Anthropic Agent Skills spec naming rules
 _SKILL_NAME_PATTERN = re.compile(r"^[a-z0-9][a-z0-9\-]{0,63}$")
 _RESERVED_WORDS = {"anthropic", "claude"}

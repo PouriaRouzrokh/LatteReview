@@ -1,6 +1,6 @@
 # LatteReview Technical Snapshot
 
-**Date:** 2026-03-18 (updated after RFD-3)
+**Date:** 2026-03-18 (updated after RFD-4)
 **Version:** 1.1.1 (v2 in development on `dev/v2` branch)
 **Python:** >=3.12
 **License:** CC BY-NC 4.0
@@ -19,8 +19,8 @@ LatteReview is a literature review framework for LLM-powered document screening,
 | RFD-1: Core AgenticReviewer | COMPLETE | 46 unit + 6 live |
 | RFD-2: AgenticWorkflow | COMPLETE | 29 unit + 2 live |
 | RFD-3: Skills System + Registry | COMPLETE | 43 unit + 1 live |
-| RFD-4: Memory System | **NEXT** | — |
-| RFD-5: Flagging + Revisit | Planned | — |
+| RFD-4: Memory System | COMPLETE | 44 unit + 2 live |
+| RFD-5: Flagging + Revisit | **NEXT** | — |
 | RFD-6: Helper Agents | Planned | — |
 | RFD-7: Checkpoint/Resume | Planned | — |
 | RFD-8: Search Skills Bundle | Planned | — |
@@ -28,12 +28,12 @@ LatteReview is a literature review framework for LLM-powered document screening,
 | RFD-10: Backward Compatibility | Planned | — |
 | RFD-11: Docs + Tutorials | Planned | — |
 
-**Total tests:** 118 unit + 9 live = 127 (all passing)
+**Total tests:** 162 unit + 11 live = 173 (all passing)
 
 ### v2 Code Location
 All v2 code lives under `lattereview/agentic/`. v1 code is untouched.
 
-### What's Built (RFD-1 through RFD-3)
+### What's Built (RFD-1 through RFD-4)
 
 #### RFD-1: Core AgenticReviewer
 - `lattereview/agentic/reviewer.py` — `AgenticReviewer` class wrapping Pydantic AI `Agent`
@@ -59,13 +59,21 @@ All v2 code lives under `lattereview/agentic/`. v1 code is untouched.
 - **Integration**: `AgenticReviewer._setup_skills()` auto-wires skills into `review_item()`
 - **Key gotcha**: Do NOT use `from __future__ import annotations` in modules that define Pydantic AI tool functions — it breaks runtime type resolution for `RunContext[ReviewDeps]`
 
+#### RFD-4: Memory System
+- `lattereview/agentic/memory/index.py` — `MemoryIndex` (file-backed `_index.json` with asyncio.Lock)
+- `lattereview/agentic/memory/store.py` — `MemoryStore` (wraps MemoryIndex + `mem_XXX.md` files, max_memories=50)
+- `lattereview/agentic/memory/__init__.py` — Exports MemoryStore, MemoryIndex
+- `lattereview/agentic/skills/builtin/managing-memory/` — Skill with 5 tools (save, load, list, load_multiple, delete)
+- **Integration**: `review_item()` auto-creates MemoryStore from working_dir; `review_items()` shares store across items; `AgenticWorkflow` creates per-agent/round stores
+- **Storage**: `working_dir/round_{ID}/agent_{NAME}/memory/{_index.json, mem_001.md, ...}`
+- **System prompt**: Memory summaries (id + brief) injected into "# Your Memories" section
+
 ### Empty Directory Structure (ready for future RFDs)
 ```
 lattereview/agentic/
-├── skills/builtin/{managing-memory,discussing-with-helpers,flagging-items,
+├── skills/builtin/{discussing-with-helpers,flagging-items,
 │                   searching-google,searching-duckduckgo,searching-pubmed,
-│                   searching-semantic-scholar,searching-arxiv}/  (empty, awaiting RFD-4-8)
-├── memory/     (empty __init__.py, awaiting RFD-4)
+│                   searching-semantic-scholar,searching-arxiv}/  (empty, awaiting RFD-5-8)
 ├── flags/      (empty __init__.py, awaiting RFD-5)
 ├── helpers/    (empty __init__.py, awaiting RFD-6)
 ├── checkpoint/ (empty __init__.py, awaiting RFD-7)

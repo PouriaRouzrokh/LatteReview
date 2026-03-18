@@ -11,11 +11,14 @@ from lattereview.agentic.output_models import (
 from lattereview.agentic.prompts import build_system_prompt, build_task_prompt
 from lattereview.agentic.workflow import AgenticWorkflow, AgenticWorkflowError
 from lattereview.agentic.skills import SkillRegistry, SkillManifest
+from lattereview.agentic.memory import MemoryStore, MemoryIndex
 
 __all__ = [
     "AgenticReviewer",
     "AgenticWorkflow",
     "AgenticWorkflowError",
+    "MemoryIndex",
+    "MemoryStore",
     "ReviewDeps",
     "SkillManifest",
     "SkillRegistry",

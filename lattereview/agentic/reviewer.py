@@ -170,6 +170,7 @@ class AgenticReviewer(BaseModel):
         round_id: str = "A",
         working_dir: Optional[Path] = None,
         memory_summaries: Optional[List[Dict[str, str]]] = None,
+        memory_store: Optional[Any] = None,
         skill_descriptions: Optional[List[Dict[str, str]]] = None,
         toolsets: Optional[list] = None,
     ) -> Tuple[Dict[str, Any], float]:
@@ -181,6 +182,7 @@ class AgenticReviewer(BaseModel):
             round_id: Current review round identifier.
             working_dir: Working directory for state files.
             memory_summaries: Pre-loaded memory summaries for the system prompt.
+            memory_store: MemoryStore instance for memory tools.
             skill_descriptions: Enabled skill descriptions for the system prompt.
             toolsets: Pydantic AI FunctionToolset objects to register.
 
@@ -195,6 +197,20 @@ class AgenticReviewer(BaseModel):
             toolsets = skill_toolsets
         if skill_descriptions is None:
             skill_descriptions = skill_descs if skill_descs else None
+
+        # Set up memory store if working_dir provided and agentic mode
+        if memory_store is None and working_dir is not None and self.is_agentic:
+            from lattereview.agentic.memory.store import MemoryStore
+
+            memory_dir = working_dir / f"round_{round_id}" / f"agent_{self.name}" / "memory"
+            memory_store = MemoryStore(memory_dir)
+            await memory_store.initialize()
+
+        # Load memory summaries from store if not provided
+        if memory_summaries is None and memory_store is not None:
+            summaries = await memory_store.get_summaries()
+            if summaries:
+                memory_summaries = summaries
 
         # Build system prompt
         system_prompt_str = self._build_system_prompt(
@@ -217,6 +233,7 @@ class AgenticReviewer(BaseModel):
             max_iterations=self.max_iterations,
             agentic_effort=self.agentic_effort,
             working_dir=working_dir,
+            memory_store=memory_store,
         )
 
         # Set usage limits for agentic mode
@@ -245,6 +262,7 @@ class AgenticReviewer(BaseModel):
         item_ids: Optional[List[str]] = None,
         round_id: str = "A",
         working_dir: Optional[Path] = None,
+        memory_store: Optional[Any] = None,
     ) -> Tuple[List[Dict[str, Any]], float]:
         """Review multiple items concurrently.
 
@@ -253,6 +271,7 @@ class AgenticReviewer(BaseModel):
             item_ids: Optional list of item identifiers. Defaults to "0", "1", ...
             round_id: Current review round identifier.
             working_dir: Working directory for state files.
+            memory_store: Shared MemoryStore for cross-item memory.
 
         Returns:
             Tuple of (list_of_response_dicts, total_cost).
@@ -263,6 +282,14 @@ class AgenticReviewer(BaseModel):
         if len(text_inputs) != len(item_ids):
             raise ValueError(f"text_inputs ({len(text_inputs)}) and item_ids ({len(item_ids)}) must have same length")
 
+        # Create shared memory store if working_dir provided and agentic mode
+        if memory_store is None and working_dir is not None and self.is_agentic:
+            from lattereview.agentic.memory.store import MemoryStore
+
+            memory_dir = working_dir / f"round_{round_id}" / f"agent_{self.name}" / "memory"
+            memory_store = MemoryStore(memory_dir)
+            await memory_store.initialize()
+
         semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 
         async def _review_with_semaphore(text: str, item_id: str) -> Tuple[Dict[str, Any], float]:
@@ -272,6 +299,7 @@ class AgenticReviewer(BaseModel):
                     item_id=item_id,
                     round_id=round_id,
                     working_dir=working_dir,
+                    memory_store=memory_store,
                 )
 
         tasks = [_review_with_semaphore(text, iid) for text, iid in zip(text_inputs, item_ids)]
