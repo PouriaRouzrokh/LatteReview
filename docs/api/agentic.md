@@ -15,6 +15,37 @@ from lattereview.agentic import (
 
 ---
 
+## Choosing Between Agentic and Non-Agentic Mode
+
+Every reviewer in the v2 API supports both modes, controlled by `max_iterations`:
+
+- **`max_iterations=1`** (non-agentic) -- single LLM call, no tools. Fast and cheap. Equivalent to v1.
+- **`max_iterations > 1`** (agentic) -- the reviewer can loop, call skill tools, build memory, flag items, and consult helpers before producing output.
+
+!!! warning "Agentic mode is not always better"
+    Enabling skills and higher iteration counts adds cost and latency. For tasks where all the information the model needs is already in the input text, agentic mode can actually **hurt** performance by making unnecessary tool calls.
+
+    **Examples of tasks that do NOT benefit from agentic mode:**
+
+    - Extracting imaging modality from an abstract that explicitly states "we used cardiac MRI"
+    - Identifying study design when the abstract says "randomized controlled trial"
+    - Simple binary screening where the inclusion criteria can be assessed directly from the title and abstract
+
+    In these cases, giving the agent a `searching-duckduckgo` or `searching-content` skill causes it to search for information already present in the text. This wastes tokens, increases cost, and may introduce noise from irrelevant search results -- unless you are using a very capable model that exercises good judgment about when to call tools.
+
+    **Examples of tasks that DO benefit from agentic mode:**
+
+    - Verifying whether a study was published in a high-impact journal (requires web search)
+    - Checking if a claimed result has been replicated or retracted (requires literature search)
+    - Building expertise across a large batch (memory helps the reviewer learn domain patterns)
+    - Flagging borderline items for human review instead of making uncertain decisions
+
+    **Rule of thumb:** Start with `max_iterations=1`. If you see errors caused by missing context that's not in the input text, enable agentic mode with the specific skills the reviewer needs.
+
+See the [tutorial notebooks](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials_agentic) and [evaluation results](https://github.com/PouriaRouzrokh/LatteReview/tree/main/evaluation) for concrete comparisons of agentic vs non-agentic performance.
+
+---
+
 ## AgenticReviewer
 
 The base reviewer class for the v2 agentic framework. All preset reviewer types inherit from this class. Use it directly when you need full control over prompts and output models.

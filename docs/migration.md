@@ -209,6 +209,14 @@ results = asyncio.run(workflow(data))
 results.to_csv("results.csv", index=False)
 ```
 
+## A Note on Agentic vs Non-Agentic Mode
+
+When migrating from v1, the simplest path is to use v2 with `max_iterations=1` — this gives you identical behavior to v1 with the new, cleaner API. You do **not** need to enable agentic features for every workflow.
+
+Enable agentic mode (higher `max_iterations`, skills) only when your task genuinely benefits from it — for example, when the reviewer needs to search for information not present in the input text, or when cross-item memory would help the reviewer learn patterns. For straightforward tasks like extracting study metadata from abstracts, non-agentic mode is faster, cheaper, and often equally accurate. Giving an agent search tools on a task that doesn't need them can actually hurt performance by introducing unnecessary tool calls and noise.
+
+See the [Quick Start guide](quickstart.md#when-to-use-agentic-mode) for detailed guidance and the [evaluation results](https://github.com/PouriaRouzrokh/LatteReview/tree/main/evaluation) for empirical comparisons.
+
 ## v2-Only Features
 
 The following features are only available in the v2 agentic API:
