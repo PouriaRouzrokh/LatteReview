@@ -7,7 +7,6 @@
 [![View on arXiv](https://img.shields.io/badge/arXiv-View%20Paper-orange)](https://arxiv.org/abs/2501.05468)
 [![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor%20me-GitHub%20Sponsors-pink.svg)](https://github.com/sponsors/PouriaRouzrokh)
 [![Support me on Ko-fi](https://img.shields.io/badge/Support%20me-Ko--fi-orange.svg?logo=ko-fi&logoColor=white)](http://ko-fi.com/pouriarouzrokh)
-[![Website](https://img.shields.io/badge/Website-pouriarouzrokh.com-blue.svg)](https://pouriarouzrokh.com)
 
 <p><img src="docs/images/robot.png" width="400"></p>
 
@@ -287,6 +286,9 @@ Former Data Scientist @Mayo Clinic AI Lab<br>
 </a>
 <a href="mailto:po.rouzrokh@gmail.com">
   <img src="https://img.shields.io/badge/Email-Contact-red" alt="Email" />
+</a>
+<a href="https://pouriarouzrokh.com">
+  <img src="https://img.shields.io/badge/Website-pouriarouzrokh.com-blue" alt="Website" />
 </a>
 </td>
 </tr>
