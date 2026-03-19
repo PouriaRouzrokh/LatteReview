@@ -66,6 +66,8 @@ class AgenticReviewer(BaseModel):
     # Skills
     skills: List[str] = Field(default_factory=list)
     custom_skill_paths: List[Path] = Field(default_factory=list)
+    include_memory: bool = True
+    include_flagging: bool = True
 
     # Helpers
     helpers: List["AgenticReviewer"] = Field(default_factory=list)
@@ -87,6 +89,15 @@ class AgenticReviewer(BaseModel):
             warnings.warn(
                 f"max_iterations={self.max_iterations} provides very limited agentic functionality. "
                 f"Consider using max_iterations=1 (non-agentic) or >= 5 (full agentic).",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        if self.is_agentic and not self.skills and not self.include_memory and not self.include_flagging:
+            warnings.warn(
+                "Agentic mode is enabled (max_iterations > 1) but no skills are available. "
+                "The agent has no tools to use. Either add skills, enable include_memory/include_flagging, "
+                "or set max_iterations=1 for non-agentic mode.",
                 UserWarning,
                 stacklevel=2,
             )
@@ -157,8 +168,15 @@ class AgenticReviewer(BaseModel):
 
         from lattereview.agentic.skills import SkillRegistry
 
-        # Merge default agentic skills with user-specified skills (deduplicated)
-        all_skills = list(dict.fromkeys(DEFAULT_AGENTIC_SKILLS + self.skills))
+        # Build default skills based on flags
+        defaults = []
+        if self.include_memory:
+            defaults.append("managing-memory")
+        if self.include_flagging:
+            defaults.append("flagging-items")
+
+        # Merge defaults with user-specified skills (deduplicated, order-preserving)
+        all_skills = list(dict.fromkeys(defaults + self.skills))
 
         registry = SkillRegistry()
         registry.discover(*self.custom_skill_paths)
