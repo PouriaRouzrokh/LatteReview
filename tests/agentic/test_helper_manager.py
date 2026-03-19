@@ -259,7 +259,7 @@ class TestReviewerHelperIntegration:
         assert reviewer.helper_max_iterations == 5
 
     @pytest.mark.asyncio
-    async def test_review_item_creates_helper_manager(self):
+    async def test_review_item_creates_helper_manager(self, tmp_path):
         """review_item creates HelperAgentManager when helpers are configured."""
         from pydantic_ai.models.test import TestModel
 
@@ -278,6 +278,7 @@ class TestReviewerHelperIntegration:
         response, cost = await reviewer.review_item(
             item_text="A study on machine learning.",
             item_id="test_001",
+            working_dir=tmp_path,
         )
         assert "reasoning" in response
 
@@ -365,7 +366,7 @@ class TestDiscussingWithHelpersSkill:
 
 class TestDiscussWithHelperTool:
     @pytest.mark.asyncio
-    async def test_reviewer_with_discussion_skill_and_helpers(self):
+    async def test_reviewer_with_discussion_skill_and_helpers(self, tmp_path):
         """Reviewer with both discussion skill and helpers can review items."""
         from pydantic_ai.models.test import TestModel
 
@@ -384,6 +385,7 @@ class TestDiscussWithHelperTool:
         # Should work — the discussion skill is wired to the helper manager
         response, cost = await reviewer.review_item(
             item_text="A clinical trial on a new drug.",
+            working_dir=tmp_path,
         )
         assert "reasoning" in response
 

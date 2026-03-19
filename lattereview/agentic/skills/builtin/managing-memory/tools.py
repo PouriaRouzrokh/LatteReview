@@ -8,7 +8,7 @@ from lattereview.agentic.deps import ReviewDeps
 toolset = FunctionToolset()
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def save_memory(
     ctx: RunContext[ReviewDeps],
     title: str,
@@ -17,8 +17,9 @@ async def save_memory(
 ) -> str:
     """Save a new memory for future reference across review items.
 
-    Use this to record generalizable patterns, insights, and lessons learned.
-    Do NOT save raw item data or per-item specifics.
+    SAVE: Generalizable patterns and insights (e.g., 'Radiomics != deep learning',
+    'Studies without control groups scored low'). DO NOT SAVE: Per-item facts or
+    information already stated in the review instructions.
 
     Args:
         ctx: Run context with dependencies.
@@ -40,9 +41,12 @@ async def save_memory(
     return f"Memory saved as {result}: {title}"
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def load_memory(ctx: RunContext[ReviewDeps], memory_id: str) -> str:
     """Load the full content of a specific memory.
+
+    Use when a memory listed in your context is relevant to the current item
+    and you need the full details to inform your assessment.
 
     Args:
         ctx: Run context with dependencies.
@@ -54,12 +58,12 @@ async def load_memory(ctx: RunContext[ReviewDeps], memory_id: str) -> str:
 
     content = await store.load(memory_id)
     if content is None:
-        raise ModelRetry(f"Memory '{memory_id}' not found. Use list_memories to see available memories.")
+        return f"Memory '{memory_id}' not found. Use list_memories to see available memories."
 
     return content
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def list_memories(ctx: RunContext[ReviewDeps]) -> str:
     """List all saved memories with their IDs, titles, and briefs.
 
@@ -82,7 +86,7 @@ async def list_memories(ctx: RunContext[ReviewDeps]) -> str:
     return "\n".join(lines)
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def load_multiple_memories(ctx: RunContext[ReviewDeps], memory_ids: str) -> str:
     """Load multiple memories at once.
 
@@ -110,7 +114,7 @@ async def load_multiple_memories(ctx: RunContext[ReviewDeps], memory_ids: str) -
     return "\n\n".join(lines)
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def delete_memory(ctx: RunContext[ReviewDeps], memory_id: str) -> str:
     """Delete a memory that is no longer useful.
 
@@ -127,4 +131,4 @@ async def delete_memory(ctx: RunContext[ReviewDeps], memory_id: str) -> str:
     if deleted:
         return f"Memory '{memory_id}' deleted."
     else:
-        raise ModelRetry(f"Memory '{memory_id}' not found. Use list_memories to see available memories.")
+        return f"Memory '{memory_id}' not found. Use list_memories to see available memories."

@@ -8,13 +8,14 @@ from lattereview.agentic.deps import ReviewDeps
 toolset = FunctionToolset()
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def flag_for_revisit(ctx: RunContext[ReviewDeps], reason: str) -> str:
     """Flag the current item for revisiting at the end of the round.
 
-    Use when you cannot confidently assess the item due to missing information,
-    ambiguity, or other issues. The item will be re-reviewed later with updated
-    context from your memories and prior reviews.
+    FLAG WHEN: The abstract is missing critical information needed for assessment
+    (e.g., no methods section, key outcome data absent). DO NOT FLAG: Items that
+    are simply low quality — score them low instead. The item will be re-reviewed
+    later with updated context from your memories and prior reviews.
 
     Args:
         ctx: Run context with dependencies.
@@ -30,7 +31,7 @@ async def flag_for_revisit(ctx: RunContext[ReviewDeps], reason: str) -> str:
     return result
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def list_flagged_items(ctx: RunContext[ReviewDeps]) -> str:
     """List all flagged items with their reasons and resolution status.
 
@@ -54,7 +55,7 @@ async def list_flagged_items(ctx: RunContext[ReviewDeps]) -> str:
     return "\n".join(lines)
 
 
-@toolset.tool
+@toolset.tool(retries=3)
 async def resolve_current_flag(ctx: RunContext[ReviewDeps]) -> str:
     """Mark the current item's flag as resolved.
 

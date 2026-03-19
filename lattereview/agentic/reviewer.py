@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 # Default task prompt template
 DEFAULT_TASK_PROMPT = "Review the following item and provide your assessment:\n\n${item}$"
 
+# Skills automatically enabled in agentic mode (max_iterations > 1)
+DEFAULT_AGENTIC_SKILLS = ["managing-memory", "flagging-items"]
+
 
 class AgenticReviewer(BaseModel):
     """An agentic literature reviewer powered by Pydantic AI.
@@ -96,7 +99,6 @@ class AgenticReviewer(BaseModel):
     def _build_system_prompt(
         self,
         memory_summaries: Optional[List[Dict[str, str]]] = None,
-        skill_descriptions: Optional[List[Dict[str, str]]] = None,
         flag_summaries: Optional[List[Dict[str, str]]] = None,
     ) -> str:
         """Build the complete system prompt for this reviewer."""
@@ -107,7 +109,6 @@ class AgenticReviewer(BaseModel):
             output_type=self.output_type,
             max_iterations=self.max_iterations,
             agentic_effort=self.agentic_effort,
-            enabled_skill_descriptions=skill_descriptions,
             memory_summaries=memory_summaries,
             flag_summaries=flag_summaries,
         )
@@ -144,24 +145,27 @@ class AgenticReviewer(BaseModel):
     def _setup_skills(self) -> tuple:
         """Set up skill registry, returning (toolsets, descriptions).
 
+        In agentic mode, DEFAULT_AGENTIC_SKILLS (managing-memory, flagging-items)
+        are always included. User-specified skills are merged on top.
+
         Returns:
             Tuple of (toolsets_list, skill_descriptions_list).
-            Both are empty lists if no skills are configured or non-agentic mode.
+            Both are empty lists in non-agentic mode.
         """
-        if not self.is_agentic or not self.skills:
+        if not self.is_agentic:
             return [], []
 
         from lattereview.agentic.skills import SkillRegistry
 
+        # Merge default agentic skills with user-specified skills (deduplicated)
+        all_skills = list(dict.fromkeys(DEFAULT_AGENTIC_SKILLS + self.skills))
+
         registry = SkillRegistry()
         registry.discover(*self.custom_skill_paths)
-        registry.enable(self.skills)
+        registry.enable(all_skills)
 
         toolsets = registry.get_enabled_toolsets()
         descriptions = registry.get_enabled_descriptions()
-
-        # Add the meta-tool for L3 progressive disclosure
-        toolsets.append(registry.build_meta_toolset())
 
         return toolsets, descriptions
 
@@ -174,7 +178,6 @@ class AgenticReviewer(BaseModel):
         memory_summaries: Optional[List[Dict[str, str]]] = None,
         memory_store: Optional[Any] = None,
         flag_store: Optional[Any] = None,
-        skill_descriptions: Optional[List[Dict[str, str]]] = None,
         toolsets: Optional[list] = None,
         action_logger: Optional[Any] = None,
         checkpoint_manager: Optional[Any] = None,
@@ -189,7 +192,6 @@ class AgenticReviewer(BaseModel):
             memory_summaries: Pre-loaded memory summaries for the system prompt.
             memory_store: MemoryStore instance for memory tools.
             flag_store: FlagStore instance for flagging tools.
-            skill_descriptions: Enabled skill descriptions for the system prompt.
             toolsets: Pydantic AI FunctionToolset objects to register.
             action_logger: ActionLogger instance for structured logging.
             checkpoint_manager: CheckpointManager for per-item saves.
@@ -200,11 +202,9 @@ class AgenticReviewer(BaseModel):
             cost is the estimated cost in USD (0.0 if unavailable).
         """
         # Set up skills from self.skills config if not provided externally
-        skill_toolsets, skill_descs = self._setup_skills()
+        skill_toolsets, _skill_descs = self._setup_skills()
         if toolsets is None:
             toolsets = skill_toolsets
-        if skill_descriptions is None:
-            skill_descriptions = skill_descs if skill_descs else None
 
         # Set up memory store if working_dir provided and agentic mode
         if memory_store is None and working_dir is not None and self.is_agentic:
@@ -238,7 +238,6 @@ class AgenticReviewer(BaseModel):
         # Build system prompt
         system_prompt_str = self._build_system_prompt(
             memory_summaries=memory_summaries,
-            skill_descriptions=skill_descriptions,
             flag_summaries=flag_summaries,
         )
 
@@ -393,7 +392,6 @@ class AgenticReviewer(BaseModel):
                     memory_store=memory_store,
                     flag_store=flag_store,
                     toolsets=skill_toolsets if skill_toolsets else None,
-                    skill_descriptions=skill_descs if skill_descs else None,
                     action_logger=action_logger,
                     checkpoint_manager=checkpoint_manager,
                 )

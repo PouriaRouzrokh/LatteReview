@@ -401,6 +401,7 @@ class TestReviewerFlagIntegration:
             item_id="1",
             round_id="A",
             flag_store=store,
+            working_dir=tmp_path,
         )
 
         assert result is not None

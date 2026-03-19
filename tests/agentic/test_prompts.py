@@ -59,7 +59,7 @@ class TestBuildSystemPrompt:
             )
             assert "Tool Usage Guidance" in prompt
 
-    def test_low_effort_contains_sparingly(self):
+    def test_low_effort_contains_insufficient(self):
         prompt = build_system_prompt(
             name="R",
             backstory="",
@@ -68,7 +68,7 @@ class TestBuildSystemPrompt:
             max_iterations=10,
             agentic_effort="low",
         )
-        assert "sparingly" in prompt
+        assert "insufficient" in prompt
 
     def test_high_effort_contains_proactively(self):
         prompt = build_system_prompt(
@@ -92,22 +92,16 @@ class TestBuildSystemPrompt:
         )
         assert "limited budget" in prompt
 
-    def test_skill_descriptions_in_prompt(self):
-        skills = [
-            {"name": "searching-pubmed", "description": "Searches PubMed for articles."},
-            {"name": "managing-memory", "description": "Manages agent memory."},
-        ]
+    def test_skill_descriptions_not_in_prompt(self):
+        """Skill descriptions are no longer injected into the system prompt."""
         prompt = build_system_prompt(
             name="R",
             backstory="",
             system_prompt="",
             output_type=ScoringOutput,
             max_iterations=10,
-            enabled_skill_descriptions=skills,
         )
-        assert "Available Skills" in prompt
-        assert "searching-pubmed" in prompt
-        assert "managing-memory" in prompt
+        assert "Available Skills" not in prompt
 
     def test_memory_summaries_in_prompt(self):
         memories = [
@@ -127,18 +121,16 @@ class TestBuildSystemPrompt:
         assert "RCTs generally scored higher" in prompt
         assert "load_memory" in prompt
 
-    def test_non_agentic_ignores_skills_and_memories(self):
-        """Skills and memories should NOT appear in non-agentic mode."""
+    def test_non_agentic_ignores_memories(self):
+        """Memories should NOT appear in non-agentic mode."""
         prompt = build_system_prompt(
             name="R",
             backstory="",
             system_prompt="",
             output_type=ScoringOutput,
             max_iterations=1,
-            enabled_skill_descriptions=[{"name": "x", "description": "y"}],
             memory_summaries=[{"id": "m1", "brief": "something"}],
         )
-        assert "Available Skills" not in prompt
         assert "Your Memories" not in prompt
 
     def test_output_schema_describes_fields(self):

@@ -15,7 +15,6 @@ def build_system_prompt(
     output_type: Type[BaseModel],
     max_iterations: int,
     agentic_effort: str = "medium",
-    enabled_skill_descriptions: Optional[List[Dict[str, str]]] = None,
     memory_summaries: Optional[List[Dict[str, str]]] = None,
     flag_summaries: Optional[List[Dict[str, str]]] = None,
 ) -> str:
@@ -23,7 +22,7 @@ def build_system_prompt(
 
     In non-agentic mode (max_iterations=1), produces a minimal prompt focused
     on structured output. In agentic mode, adds tool usage guidance, memory
-    context, flag context, and skill descriptions.
+    context, and flag context.
 
     Args:
         name: Agent name/identity.
@@ -32,7 +31,6 @@ def build_system_prompt(
         output_type: The Pydantic model defining expected output schema.
         max_iterations: Iteration budget (1 = non-agentic).
         agentic_effort: Tool usage guidance level (low/medium/high).
-        enabled_skill_descriptions: List of {"name": ..., "description": ...} for enabled skills.
         memory_summaries: List of {"id": ..., "brief": ...} for loaded memories.
         flag_summaries: List of {"item_id": ..., "reason": ...} for unresolved flags.
 
@@ -57,9 +55,6 @@ def build_system_prompt(
     # Agentic sections (only when max_iterations > 1)
     if max_iterations > 1:
         sections.append(_build_effort_guidance(agentic_effort, max_iterations))
-
-        if enabled_skill_descriptions:
-            sections.append(_build_skill_section(enabled_skill_descriptions))
 
         if memory_summaries:
             sections.append(_build_memory_section(memory_summaries))
@@ -109,21 +104,30 @@ def _build_effort_guidance(effort: str, max_iterations: int) -> str:
 
     if effort == "low":
         body = (
-            "Use tools sparingly. Only call a tool when the information is clearly "
-            "necessary to produce an accurate response. Prefer to answer directly "
-            "when you have sufficient context from the item text alone."
+            "Only use tools when the item text alone is insufficient to produce an accurate "
+            "assessment. Most items should be answerable directly. Do NOT call tools reflexively."
         )
     elif effort == "high":
         body = (
-            "Use tools proactively and thoroughly. Search for additional context, "
-            "verify claims, consult your memories, and use all available skills "
-            "to produce the most well-informed and accurate response possible."
+            "Use tools proactively for the most informed assessment possible.\n"
+            "Recommended workflow for each item:\n"
+            "1. Check your memories for relevant patterns from prior items.\n"
+            "2. Read the item carefully for key terms related to the review criteria.\n"
+            "3. If uncertain about a term, method, or claim, search the web to verify.\n"
+            "4. Save any generalizable insight as a memory (e.g., 'Radiomics != deep learning').\n"
+            "5. Flag the item only if critical information is genuinely missing.\n"
+            "6. Produce your final structured output."
         )
     else:  # medium (default)
         body = (
-            "Use tools when they would meaningfully improve your response quality. "
-            "Search for context when the item is ambiguous or when verification "
-            "would strengthen your confidence. Don't over-research straightforward items."
+            "Use tools when they would meaningfully improve your response quality.\n"
+            "Suggested workflow:\n"
+            "1. Read the item and form an initial assessment.\n"
+            "2. If uncertain, re-read the item for key terms or search the web for context.\n"
+            "3. If you discover a generalizable insight, save it as a memory.\n"
+            "4. If you truly cannot assess the item, flag it for revisiting.\n"
+            "5. Produce your final structured output.\n"
+            "Don't over-research straightforward items."
         )
 
     budget = f"You have a budget of {max_iterations} iterations for this review."

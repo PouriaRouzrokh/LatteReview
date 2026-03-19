@@ -455,6 +455,7 @@ class TestReviewerMemoryIntegration:
             item_id="1",
             round_id="A",
             memory_store=store,
+            working_dir=tmp_path,
         )
 
         assert result is not None

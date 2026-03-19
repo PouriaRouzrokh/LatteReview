@@ -706,12 +706,13 @@ class TestReviewerSearchSkillsIntegration:
             skills=["searching-duckduckgo", "searching-pubmed"],
         )
         toolsets, descs = r._setup_skills()
-        # 2 skill toolsets + 1 meta toolset
-        assert len(toolsets) == 3
-        assert len(descs) == 2
+        # 2 user skills + 2 default skills (managing-memory, flagging-items)
+        assert len(toolsets) == 4
         desc_names = {d["name"] for d in descs}
         assert "searching-duckduckgo" in desc_names
         assert "searching-pubmed" in desc_names
+        assert "managing-memory" in desc_names
+        assert "flagging-items" in desc_names
 
     def test_reviewer_with_all_search_skills(self):
         """All 5 search skills can be enabled together."""
@@ -727,12 +728,12 @@ class TestReviewerSearchSkillsIntegration:
             ],
         )
         toolsets, descs = r._setup_skills()
-        # 5 skill toolsets + 1 meta toolset
-        assert len(toolsets) == 6
-        assert len(descs) == 5
+        # 5 user skills + 2 default skills
+        assert len(toolsets) == 7
+        assert len(descs) == 7
 
     @pytest.mark.asyncio
-    async def test_review_item_with_search_skill(self):
+    async def test_review_item_with_search_skill(self, tmp_path):
         """review_item works with search skills enabled (TestModel, uses searching-content)."""
         r = AgenticReviewer(
             model=TestModel(),
@@ -743,26 +744,20 @@ class TestReviewerSearchSkillsIntegration:
         response, cost = await r.review_item(
             item_text="A study about CRISPR gene editing.",
             item_id="search_test",
+            working_dir=tmp_path,
         )
         assert "reasoning" in response
         assert "score" in response
 
-    def test_search_skill_descriptions_in_prompt(self):
-        """Search skill descriptions appear in system prompt."""
+    def test_search_skill_descriptions_not_in_prompt(self):
+        """Skill descriptions are no longer injected into the system prompt."""
         r = AgenticReviewer(
             model=TestModel(),
             max_iterations=5,
             skills=["searching-pubmed", "searching-arxiv"],
         )
-        prompt = r._build_system_prompt(
-            skill_descriptions=[
-                {"name": "searching-pubmed", "description": "Searches PubMed for biomedical literature."},
-                {"name": "searching-arxiv", "description": "Searches arXiv for preprints."},
-            ],
-        )
-        assert "searching-pubmed" in prompt
-        assert "searching-arxiv" in prompt
-        assert "Available Skills" in prompt
+        prompt = r._build_system_prompt()
+        assert "Available Skills" not in prompt
 
 
 # ---------------------------------------------------------------------------

@@ -389,23 +389,28 @@ class TestReviewerSkillsIntegration:
             skills=["searching-content"],
         )
         toolsets, descs = r._setup_skills()
-        # Should have: searching-content toolset + meta toolset
-        assert len(toolsets) == 2
-        assert len(descs) == 1
-        assert descs[0]["name"] == "searching-content"
+        # Should have: 2 default skills (managing-memory, flagging-items) + searching-content
+        assert len(toolsets) == 3
+        desc_names = {d["name"] for d in descs}
+        assert "searching-content" in desc_names
+        assert "managing-memory" in desc_names
+        assert "flagging-items" in desc_names
 
-    def test_reviewer_no_skills_empty(self):
-        """Agentic reviewer without skills returns empty."""
+    def test_reviewer_no_skills_has_defaults(self):
+        """Agentic reviewer without user skills still gets default skills."""
         r = AgenticReviewer(
             model=TestModel(),
             max_iterations=5,
         )
         toolsets, descs = r._setup_skills()
-        assert toolsets == []
-        assert descs == []
+        # Should have 2 default skills: managing-memory, flagging-items
+        assert len(toolsets) == 2
+        desc_names = {d["name"] for d in descs}
+        assert "managing-memory" in desc_names
+        assert "flagging-items" in desc_names
 
     @pytest.mark.asyncio
-    async def test_review_item_with_skills(self):
+    async def test_review_item_with_skills(self, tmp_path):
         """review_item with skills configured should work end-to-end with TestModel."""
         r = AgenticReviewer(
             model=TestModel(),
@@ -416,23 +421,21 @@ class TestReviewerSkillsIntegration:
         response, cost = await r.review_item(
             item_text="A study about machine learning in healthcare.",
             item_id="skill_test",
+            working_dir=tmp_path,
         )
         assert "reasoning" in response
         assert "score" in response
 
     @pytest.mark.asyncio
-    async def test_review_item_skill_descriptions_in_prompt(self):
-        """Skills should inject descriptions into the system prompt."""
+    async def test_review_item_skill_descriptions_not_in_prompt(self):
+        """Skill descriptions are no longer injected into the system prompt."""
         r = AgenticReviewer(
             model=TestModel(),
             max_iterations=5,
             skills=["searching-content"],
         )
-        prompt = r._build_system_prompt(
-            skill_descriptions=[{"name": "searching-content", "description": "Searches text."}],
-        )
-        assert "searching-content" in prompt
-        assert "Available Skills" in prompt
+        prompt = r._build_system_prompt()
+        assert "Available Skills" not in prompt
 
 
 # ---------------------------------------------------------------------------

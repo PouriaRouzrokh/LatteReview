@@ -17,6 +17,9 @@ toolset = FunctionToolset()
 async def duckduckgo_search(ctx: RunContext[ReviewDeps], query: str, max_results: int = 5) -> str:
     """Search DuckDuckGo for web results.
 
+    Use to verify unfamiliar terms, methods, or claims — e.g., check if a specific
+    technique qualifies under inclusion criteria, or look up a journal/dataset.
+
     Args:
         ctx: Run context with dependencies.
         query: The search query string.

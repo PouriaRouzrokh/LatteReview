@@ -23,6 +23,10 @@ async def regex_search(ctx: RunContext[ReviewDeps], pattern: str) -> str:
     """Search the item text with a Python regex pattern.
 
     Returns all matches with surrounding context. Case-insensitive.
+    Only use for long documents where you cannot read the full text in context.
+    If the item text is short (e.g., title + abstract), read it directly instead.
+    Examples: p-values (r'p\\s*[<>=]\\s*0\\.\\d+'), sample sizes (r'n\\s*=\\s*\\d+'),
+    methodology terms (r'randomi[sz]ed|cohort|cross-sectional').
 
     Args:
         ctx: Run context with dependencies.
@@ -56,6 +60,9 @@ async def keyword_search(ctx: RunContext[ReviewDeps], keywords: str) -> str:
     """Search for keywords in the item text.
 
     Returns sentences containing any of the specified keywords. Case-insensitive.
+    Only use for long documents where you cannot read the full text in context.
+    If the item text is short (e.g., title + abstract), read it directly instead.
+    Examples: 'sample size, participants, enrolled' or 'deep learning, CNN, neural network'.
 
     Args:
         ctx: Run context with dependencies.

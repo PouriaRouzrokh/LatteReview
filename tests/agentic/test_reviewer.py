@@ -139,15 +139,15 @@ class TestReviewItem:
         assert "relevance" in response
 
     @pytest.mark.asyncio
-    async def test_review_item_agentic_mode(self):
-        """Test that agentic mode works with TestModel (no tools, just iterates)."""
+    async def test_review_item_agentic_mode(self, tmp_path):
+        """Test that agentic mode works with TestModel (default skills need working_dir)."""
         from pydantic_ai.models.test import TestModel
 
         r = AgenticReviewer(
             model=TestModel(),
             max_iterations=5,
         )
-        response, cost = await r.review_item(item_text="test item")
+        response, cost = await r.review_item(item_text="test item", working_dir=tmp_path)
         assert "reasoning" in response
 
 
