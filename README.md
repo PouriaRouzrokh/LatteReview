@@ -16,6 +16,8 @@
 
 ## What's New in v2
 
+<p><img src="docs/images/v2_architecture.png" width="800"></p>
+
 v2 transforms reviewers from one-shot LLM calls into **agentic entities** that think, search, remember, consult experts, and self-correct:
 
 - **Agentic reasoning loops** -- reviewers iterate up to `max_iterations` times, using tools and refining their reasoning before committing a final answer. Control effort with `agentic_effort` (low/medium/high).
