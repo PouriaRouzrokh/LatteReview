@@ -295,9 +295,34 @@ class AgenticReviewer(BaseModel):
         # Extract cost from usage
         cost = _estimate_cost(result.usage())
 
-        # Log review complete
+        # Log review complete with usage stats
         if action_logger is not None:
-            action_logger.log(item_id, "review_complete", {"cost": cost})
+            usage = result.usage()
+            # Count tool calls from message history
+            tool_call_count = 0
+            request_count = 0
+            try:
+                for msg in result.all_messages():
+                    msg_kind = getattr(msg, "kind", "")
+                    if msg_kind == "request":
+                        request_count += 1
+                    for part in getattr(msg, "parts", []):
+                        part_kind = getattr(part, "part_kind", "")
+                        if part_kind == "tool-call":
+                            tool_call_count += 1
+            except Exception:
+                pass  # Don't fail logging on message inspection errors
+
+            action_logger.log(
+                item_id,
+                "review_complete",
+                {
+                    "cost": cost,
+                    "requests": request_count,
+                    "tool_calls": tool_call_count,
+                    "total_tokens": getattr(usage, "total_tokens", None),
+                },
+            )
 
         # Save checkpoint per-item
         if checkpoint_manager is not None:
