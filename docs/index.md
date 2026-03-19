@@ -29,6 +29,9 @@ LatteReview v2 introduces a fully redesigned **agentic framework** built on [Pyd
 
 The v1 API remains fully functional but emits deprecation warnings. See the [Migration Guide](migration.md) for details on upgrading.
 
+!!! tip "Not every task needs agentic mode"
+    Agentic capabilities shine when the task requires information beyond the input text (e.g., verifying claims via search, building cross-item expertise). For simple extraction tasks where all the information is in the abstract, non-agentic mode (`max_iterations=1`) is faster, cheaper, and often equally accurate. See the [Quick Start guide](quickstart.md#when-to-use-agentic-mode) for detailed guidance.
+
 ## Features
 
 - Multi-agent review system with customizable roles and expertise levels for each reviewer

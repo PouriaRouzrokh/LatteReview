@@ -221,6 +221,27 @@ results = asyncio.run(workflow("articles.xlsx"))
 
 ---
 
+## When to Use Agentic Mode (and When Not To)
+
+Agentic capabilities are powerful but not always beneficial. The agentic loop adds cost and latency, and for some tasks it can actually **hurt** performance.
+
+**Use agentic mode** (`max_iterations > 1`, with skills) when:
+- The task requires information **beyond** what's in the input text (e.g., checking journal impact, verifying publication dates, finding related work)
+- The reviewer needs to **build expertise** across a batch (e.g., learning domain-specific patterns via memory)
+- Borderline items benefit from **external verification** (e.g., searching PubMed to check if a methodology is well-established)
+- You want a **second opinion** from a helper agent on difficult cases
+
+**Use non-agentic mode** (`max_iterations=1`, no skills) when:
+- All the information needed is already in the title and abstract (e.g., identifying imaging modality, extracting sample size, determining study type)
+- The task is straightforward classification that a single LLM call can handle well
+- Cost efficiency matters more than marginal accuracy gains
+
+With skills enabled on a task that doesn't need them, the agent may call tools unnecessarily -- searching for information already present in the abstract, or running content search on a short text that the model has already fully read. This wastes tokens, increases cost, and can even introduce noise. Unless you're using a very capable model that exercises good judgment about when to use tools, default to non-agentic mode for simple extraction tasks.
+
+See the [tutorial notebooks](tutorials_agentic/) and [evaluation results](evaluation/) for concrete examples of when agentic mode helps and when it doesn't.
+
+---
+
 ## Supported Providers
 
 | Provider | Model String | Example |

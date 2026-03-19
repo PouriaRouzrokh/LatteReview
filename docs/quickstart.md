@@ -119,6 +119,33 @@ result, cost = asyncio.run(reviewer.review_item("A study on deep learning for re
 
 ---
 
+## When to Use Agentic Mode
+
+!!! warning "Agentic mode is not always the right choice"
+    Enabling skills and increasing `max_iterations` adds cost and latency. For some tasks, it can actually **reduce** accuracy by introducing unnecessary tool calls.
+
+**Use agentic mode** when the task requires information beyond the input text:
+
+- Verifying claims against external sources (publication date, journal reputation, replication status)
+- Building cross-item expertise via persistent memory (learning domain patterns across a batch)
+- Flagging borderline cases that need human attention
+- Getting a second opinion from a helper agent on difficult items
+
+**Use non-agentic mode** (`max_iterations=1`) when all the information is already in the text:
+
+- Extracting imaging modality from an abstract that explicitly states it
+- Identifying study design when it's described in the methods
+- Classifying articles by organ/disease when the title makes it obvious
+- Simple inclusion/exclusion where criteria can be assessed from the abstract alone
+
+**Why this matters:** When you give an agent search tools on a task that doesn't need them, the agent may search for information that's already in the abstract, or run content search on a short text that the model has already fully parsed. This wastes tokens, increases cost, and can introduce noise from irrelevant search results. Unless you're using a very capable model that exercises good judgment about when to call tools, default to `max_iterations=1` for straightforward extraction or classification tasks.
+
+**Rule of thumb:** Start with non-agentic mode. If you find the model is making errors because it lacks context that's not in the input text, then enable agentic mode with the specific skills it needs.
+
+See the [tutorial notebooks](https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials_agentic) and [evaluation results](https://github.com/PouriaRouzrokh/LatteReview/tree/main/evaluation) for concrete comparisons.
+
+---
+
 !!! note "v1 API"
     The v1 API documented below still works but emits deprecation warnings. See the [Migration Guide](migration.md) for how to upgrade to v2.
 
