@@ -17,15 +17,17 @@ async def save_memory(
 ) -> str:
     """Save a new memory for future reference across review items.
 
-    SAVE: Generalizable patterns and insights (e.g., 'Radiomics != deep learning',
-    'Studies without control groups scored low'). DO NOT SAVE: Per-item facts or
-    information already stated in the review instructions.
+    SAVE: Generalizable patterns and insights that apply across multiple items.
+    Maintain balanced perspectives — don't accumulate only one type of conclusion.
+    DO NOT SAVE: Per-item facts, info already in the review instructions, or
+    vague one-liners — make content detailed enough to be actionable on future items.
 
     Args:
         ctx: Run context with dependencies.
-        title: Short descriptive title (e.g., "Small sample size pattern").
+        title: Short descriptive title (e.g., "External validation terminology").
         brief: One-line summary for quick scanning.
-        content: Full memory content in markdown.
+        content: Detailed explanation with examples — at least 2-3 sentences
+            describing the pattern, when it applies, and when it does not.
     """
     store = ctx.deps.memory_store
     if store is None:
