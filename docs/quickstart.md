@@ -109,9 +109,10 @@ reviewer = ScoringReviewer(
     name="Researcher",
     scoring_task="Rate the methodological quality of this study",
     scoring_set=[1, 2, 3, 4, 5],
-    skills=["searching-pubmed", "searching-semantic-scholar", "managing-memory"],
+    skills=["searching-pubmed", "searching-semantic-scholar"],
     max_iterations=3,  # Allow multiple agentic steps for thorough research
     agentic_effort="high",  # Controls how aggressively the reviewer uses tools
+    # Note: managing-memory and flagging-items are auto-included in agentic mode
 )
 
 result, cost = asyncio.run(reviewer.review_item("A study on deep learning for retinal disease detection..."))

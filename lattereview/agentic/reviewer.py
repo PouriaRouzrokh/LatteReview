@@ -378,7 +378,7 @@ class AgenticReviewer(BaseModel):
             await flag_store.initialize()
 
         # Pre-build skill toolsets once for the whole batch
-        skill_toolsets, skill_descs = self._setup_skills()
+        skill_toolsets, _skill_descs = self._setup_skills()
 
         semaphore = asyncio.Semaphore(self.max_concurrent_requests)
 

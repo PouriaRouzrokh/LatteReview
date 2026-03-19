@@ -140,14 +140,6 @@ def _build_effort_guidance(effort: str, max_iterations: int) -> str:
     return f"{header}\n{body}\n\n{budget}"
 
 
-def _build_skill_section(skill_descriptions: List[Dict[str, str]]) -> str:
-    """Build the enabled skills section for the system prompt."""
-    lines = ["# Available Skills"]
-    for skill in skill_descriptions:
-        lines.append(f"- **{skill['name']}**: {skill['description']}")
-    return "\n".join(lines)
-
-
 def _build_memory_section(memory_summaries: List[Dict[str, str]]) -> str:
     """Build the memory context section for the system prompt."""
     lines = [f"# Your Memories ({len(memory_summaries)} total)"]

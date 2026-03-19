@@ -230,7 +230,7 @@ reviewer = ScoringReviewer(
     model="openai:gpt-5.4-mini",
     name="Researcher",
     scoring_task="Rate the methodological quality",
-    skills=["searching-pubmed", "managing-memory", "flagging-items"],
+    skills=["searching-pubmed"],  # managing-memory and flagging-items are auto-included
 )
 ```
 
