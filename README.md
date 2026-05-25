@@ -152,7 +152,7 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
 - [x] Draft the package full documentation
 - [x] Enable agents to return a percentage of certainty
 - [x] Enable agents to be grounded in static references (text provided by the user)
-- [x] Enable agents to be grounded in dynamic references (i.e., recieve a function that outputs a text based on the input text. This function could, e.g., be a RAG function.)
+- [x] Enable agents to be grounded in dynamic references (i.e., receive a function that outputs a text based on the input text. This function could, e.g., be a RAG function.)
 - [x] Support for image-based inputs and multimodal analysis
 - [x] Development of `AbstractionReviewer` class for automated paper summarization
 - [x] Showcase how `AbstractionReviewer` class could be used to analyse the literature around a certain topic.
