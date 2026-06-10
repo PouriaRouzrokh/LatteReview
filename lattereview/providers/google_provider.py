@@ -16,7 +16,7 @@ from .base_provider import BaseProvider, ProviderError, ClientCreationError, Res
 class GoogleProvider(BaseProvider):
     provider: str = "Google"
     api_key: str = None
-    model: str = "gemini-2.5-pro-preview-05-06"
+    model: str = "gemini-2.5-pro"
     response_format_class: Optional[Any] = None
 
     def __init__(self, **data: Any) -> None:

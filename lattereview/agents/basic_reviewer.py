@@ -91,15 +91,13 @@ class BasicReviewer(BaseModel):
     def _build_system_prompt(self) -> str:
         """Build the system prompt for the agent."""
         try:
-            return self._clean_text(
-                f"""
+            return self._clean_text(f"""
                 Your name is: <<{self.name}>> 
                 Your backstory is: <<{self.backstory}>>.
                 Your task is to review input itmes with the following description: <<{self.input_description}>>.
                 Your final output should have the following keys: \
                     {", ".join(f"{k} ({v})" for k, v in self.response_format.items())}.
-                """
-            )
+                """)
         except Exception as e:
             raise AgentError(f"Error building system prompt: {str(e)}")
 
@@ -232,11 +230,13 @@ class BasicReviewer(BaseModel):
             # Sort by original index and separate response and cost
             initial_results.sort(key=lambda x: x[0])  # Sort by index
             results = []
+            total_cost = 0.0
 
             for i, response, input_prompt, cost in initial_results:
                 if isinstance(cost, dict):
                     cost = cost["total_cost"]
                 self.cost_so_far += cost
+                total_cost += cost
                 results.append(response)
                 self.memory.append(
                     {
@@ -248,7 +248,7 @@ class BasicReviewer(BaseModel):
                     }
                 )
 
-            return results, cost
+            return results, total_cost
         except Exception as e:
             raise AgentError(f"Error reviewing items: {str(e)}")
 
@@ -257,6 +257,7 @@ class BasicReviewer(BaseModel):
     ) -> tuple[Dict[str, Any], Dict[str, float]]:
         """Review a single item asynchronously with error handling."""
         num_tried = 0
+        last_error = None
         while num_tried < self.max_retries:
             try:
                 input_prompt = self._process_prompt(self.formatted_prompt, {"item": text_input_string})
@@ -273,6 +274,10 @@ class BasicReviewer(BaseModel):
                 response, cost = await self.provider.get_json_response(input_prompt, image_path_list, **self.model_args)
                 return response, input_prompt, cost
             except Exception as e:
+                last_error = e
                 num_tried += 1
                 self._log(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.max_retries}")
-        raise AgentError("Error reviewing item!")
+        raise AgentError(
+            f"Failed to review item after {self.max_retries} attempt(s) "
+            f"with model <{getattr(self.provider, 'model', 'unknown')}>. Last error: {last_error}"
+        )

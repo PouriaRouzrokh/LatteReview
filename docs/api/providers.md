@@ -144,7 +144,7 @@ from lattereview.providers import OpenAIProvider
 provider = OpenAIProvider(model="gpt-4o")
 
 # Initialize with Gemini model
-provider = OpenAIProvider(model="gemini/gemini-1.5-flash")
+provider = OpenAIProvider(model="gemini/gemini-2.5-flash")
 
 # Initialize with OpenRouter
 provider = OpenAIProvider(
@@ -201,7 +201,7 @@ Implementation for Google's Gemini API, supporting the latest Gemini models incl
 class GoogleProvider(BaseProvider):
     provider: str = "Google"
     api_key: Optional[str] = None
-    model: str = "gemini-2.5-pro-preview-05-06"
+    model: str = "gemini-2.5-pro"
     response_format: Optional[Dict[str, Any]] = None
     response_format_class: Optional[Any] = None
     last_response: Optional[Any] = None
@@ -225,7 +225,7 @@ from lattereview.providers import GoogleProvider
 provider = GoogleProvider()
 
 # Or specify a different model
-provider = GoogleProvider(model="gemini-2.5-flash-preview-04-17")
+provider = GoogleProvider(model="gemini-2.5-flash")
 
 # Get a text response
 response, cost = await provider.get_response("What is the capital of France?")

@@ -41,6 +41,16 @@ class LiteLLMProvider(BaseProvider):
         except Exception as e:
             raise ProviderError(f"Error setting response format: {str(e)}")
 
+    def _safe_completion_cost(self, response: Any) -> float:
+        """Calculate the completion cost, returning 0.0 when the model is missing from
+        LiteLLM's pricing map (e.g., proxied or newly released models) so that a
+        successful review is never discarded over cost bookkeeping."""
+        try:
+            return completion_cost(completion_response=response)
+        except Exception as e:
+            print(f"Warning: could not calculate cost for model <{self.model}>: {str(e)}. Reporting cost as 0.")
+            return 0.0
+
     async def get_response(
         self,
         input_prompt: str,
@@ -53,7 +63,7 @@ class LiteLLMProvider(BaseProvider):
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
             response = await self._fetch_response(message_list, kwargs)
             txt_response = self._extract_content(response)
-            cost = completion_cost(completion_response=response)
+            cost = self._safe_completion_cost(response)
 
             return txt_response, cost
         except Exception as e:
@@ -76,14 +86,31 @@ class LiteLLMProvider(BaseProvider):
             # Pass response format directly to acompletion
             kwargs["response_format"] = self.response_format_class
 
-            response = await self._fetch_response(message_list, kwargs)
+            try:
+                response = await self._fetch_response(message_list, kwargs)
+            except Exception as e:
+                # Some providers (e.g., DeepSeek) no longer accept json_schema response
+                # formats. Retry in basic JSON mode with an explicit JSON instruction
+                # (providers like DeepSeek require the word "json" in the prompt).
+                if "response_format" not in str(e):
+                    raise
+                fallback_kwargs = {**kwargs, "response_format": {"type": "json_object"}}
+                json_keys = ", ".join(self.response_format_class.model_fields.keys())
+                fallback_messages = message_list + [
+                    {
+                        "role": "user",
+                        "content": f"Return your response as a valid JSON object with these keys: {json_keys}.",
+                    }
+                ]
+                response = await self._fetch_response(fallback_messages, fallback_kwargs)
+
             txt_response = self._extract_content(response)
 
             # Parse the response as JSON if it's a string
             if isinstance(txt_response, str):
                 txt_response = json.loads(txt_response)
 
-            cost = completion_cost(completion_response=response)
+            cost = self._safe_completion_cost(response)
 
             return txt_response, cost
         except Exception as e:

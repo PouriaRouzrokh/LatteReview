@@ -79,7 +79,7 @@ reviewer1 = TitleAbstractReviewer(
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-1.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-2.5-flash"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="Relevant to artificial intelligence in radiology.",
@@ -174,7 +174,7 @@ reviewer1 = TitleAbstractReviewer(
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-1.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-2.5-flash"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="Relevant to artificial intelligence in radiology.",

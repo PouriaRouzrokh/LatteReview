@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+## [1.1.2] - 2026-6-10
+
+### Fixed
+
+- Surfaced the real underlying error when an item review fails after all retries. Previously every failure (retired model, rejected response format, etc.) collapsed into the unhelpful `Error running workflow: Error running workflow: Error reviewing items: Error reviewing item!` message.
+- Cost calculation failures in `LiteLLMProvider` no longer crash reviews. Models missing from LiteLLM's pricing map (e.g., Groq and OpenRouter models) now report a cost of 0 with a warning instead of discarding the successful review.
+- `LiteLLMProvider.get_json_response` now falls back to basic JSON mode (`json_object`) when a provider rejects `json_schema` response formats (e.g., DeepSeek).
+- `ReviewWorkflow` schema validation now actually runs (the old `__post_init__` hook was never invoked under Pydantic v2) and produces clear messages when a round is missing required keys or has an invalid reviewer.
+- `BasicReviewer.review_items` now returns the total cost of all items in the batch instead of only the last item's cost, so per-reviewer costs reported by `ReviewWorkflow` are correct.
+- `ReviewWorkflowError` messages are no longer double-wrapped.
+
+### Changed
+
+- Replaced retired Gemini models in defaults, README, docs, and tutorials: `gemini-1.5-flash` → `gemini-2.5-flash`, `gemini-2.5-pro-preview-05-06` → `gemini-2.5-pro`, `gemini-2.5-flash-preview-04-17` → `gemini-2.5-flash`. Google has retired the Gemini 1.x/2.0 models and the 2.5 preview aliases, which caused workflows following the previous documentation to fail with 404 errors.
+
 ## [1.1.1] - 2026-1-7
 
 ### Fixed

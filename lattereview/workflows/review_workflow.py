@@ -4,12 +4,13 @@ import pandas as pd
 import pydantic
 from typing import List, Dict, Any, Union
 
-from ..agents.scoring_reviewer import ScoringReviewer
+from ..agents.basic_reviewer import BasicReviewer
 from ..utils.data_handler import ris_to_dataframe
 
 
 class ReviewWorkflowError(Exception):
     """Base exception for workflow-related errors."""
+
     pass
 
 
@@ -20,45 +21,28 @@ class ReviewWorkflow(pydantic.BaseModel):
     total_cost: float = 0.0
     verbose: bool = True
 
-    def __post_init__(self, __context):
-        """Initialize after Pydantic model initialization."""
-        try:
-            for review_task in self.workflow_schema:
-                # Validate reviewers
-                reviewers = (
-                    review_task["reviewers"]
-                    if isinstance(review_task["reviewers"], list)
-                    else [review_task["reviewers"]]
-                )
-                for reviewer in reviewers:
-                    if not isinstance(reviewer, ScoringReviewer):
-                        raise ReviewWorkflowError(f"Invalid reviewer: {reviewer}")
+    def model_post_init(self, __context) -> None:
+        """Validate the workflow schema after Pydantic model initialization."""
+        for i, review_task in enumerate(self.workflow_schema):
+            if not isinstance(review_task, dict):
+                raise ReviewWorkflowError(f"Workflow schema entry {i} must be a dict, got {type(review_task)}")
 
-                # Validate text_input columns
-                text_inputs = (
-                    review_task["text_inputs"]
-                    if isinstance(review_task["text_inputs"], list)
-                    else [review_task["text_inputs"]]
-                )
-                for text_input in text_inputs:
-                    if text_input not in __context["data"].columns:
-                        reviewer_name = text_input.split("_")[1]
-                        reviewer = next(reviewer for reviewer in reviewers if reviewer.name == reviewer_name)
-                        assert reviewer is not None, f"Reviewer {reviewer_name} not found in provided inputs"
-                        response_keywords = (
-                            reviewer.response_format.keys()
-                        )  # e.g., ["_output", "_score", "_reasoning", "_certainty"]
-                        assert text_input.split("_")[-1] in response_keywords, f"Invalid input: {text_input}"
+            for required_key in ("round", "reviewers", "text_inputs"):
+                if required_key not in review_task:
+                    raise ReviewWorkflowError(
+                        f"Workflow schema entry {i} is missing the required '{required_key}' key. "
+                        f"Each review round must define 'round', 'reviewers', and 'text_inputs'."
+                    )
 
-                # Validate image_input columns
-                image_inputs = review_task.get("image_inputs", [])
-                image_inputs = image_inputs if isinstance(image_inputs, list) else [image_inputs]
-                for image_input in image_inputs:
-                    if image_input not in __context["data"].columns:
-                        raise ReviewWorkflowError(f"Invalid image input: {image_input}")
-
-        except Exception as e:
-            raise ReviewWorkflowError(f"Error initializing Review Workflow: {e}")
+            reviewers = (
+                review_task["reviewers"] if isinstance(review_task["reviewers"], list) else [review_task["reviewers"]]
+            )
+            for reviewer in reviewers:
+                if not isinstance(reviewer, BasicReviewer):
+                    raise ReviewWorkflowError(
+                        f"Invalid reviewer in round {review_task['round']}: {reviewer}. "
+                        f"Reviewers must be agent instances (e.g., TitleAbstractReviewer, ScoringReviewer)."
+                    )
 
     async def __call__(self, data: Union[pd.DataFrame, Dict[str, Any], str]) -> pd.DataFrame:
         """Run the workflow.
@@ -102,6 +86,8 @@ class ReviewWorkflow(pydantic.BaseModel):
                     )
             else:
                 raise ReviewWorkflowError(f"Invalid data type: {type(data)}. Must be DataFrame, dict, or file path.")
+        except ReviewWorkflowError:
+            raise
         except Exception as e:
             raise ReviewWorkflowError(f"Error running workflow: {e}")
 
@@ -139,21 +125,21 @@ class ReviewWorkflow(pydantic.BaseModel):
                 processed_output = output
             else:
                 processed_output = json.loads(output)
-            
+
             # Validate that all required keys are present
             missing_keys = []
             for key in response_keywords:
                 if key not in processed_output:
                     missing_keys.append(key)
-            
+
             if missing_keys:
                 self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} missing keys: {missing_keys}")
                 # Fill missing keys with None
                 for key in missing_keys:
                     processed_output[key] = None
-            
+
             return processed_output, True
-            
+
         except json.JSONDecodeError as e:
             self._log(f"Warning: Row {idx} - Reviewer {reviewer_name} - JSON decode error: {e}")
             self._log(f"         Raw output: {str(output)[:200]}...")
@@ -257,14 +243,16 @@ class ReviewWorkflow(pydantic.BaseModel):
                             output, idx, reviewer.name, response_keywords
                         )
                         processed_outputs.append(processed_output)
-                        
+
                         if parse_success:
                             successful_parses += 1
                         else:
                             failed_parses += 1
 
                     # Log parsing statistics
-                    self._log(f"Reviewer {reviewer.name}: {successful_parses} successful, {failed_parses} failed parses")
+                    self._log(
+                        f"Reviewer {reviewer.name}: {successful_parses} successful, {failed_parses} failed parses"
+                    )
 
                     # Update dataframe with validated outputs
                     output_dict = dict(zip(eligible_indices, outputs))  # Store original outputs
@@ -278,10 +266,10 @@ class ReviewWorkflow(pydantic.BaseModel):
                             for processed_output in processed_outputs:
                                 # This should always work now since we ensure all keys exist
                                 response_values.append(processed_output.get(response_keyword, None))
-                            
+
                             response_dict = dict(zip(eligible_indices, response_values))
                             df.loc[eligible_indices, response_col] = pd.Series(response_dict)
-                            
+
                         except Exception as e:
                             self._log(f"Error updating column {response_col}: {e}")
                             # Fill with None values as fallback
@@ -290,9 +278,11 @@ class ReviewWorkflow(pydantic.BaseModel):
                     self._log(
                         f"The following columns are present in the dataframe at the end of {reviewer.name}'s review in round {round_id}: {df.columns.tolist()}"
                     )
-            
+
             return df
 
+        except ReviewWorkflowError:
+            raise
         except Exception as e:
             raise ReviewWorkflowError(f"Error running workflow: {e}")
 
