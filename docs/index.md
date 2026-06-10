@@ -1,7 +1,7 @@
 # LatteReview 🤖☕
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
@@ -46,7 +46,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) file for details.
+This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License - see the [LICENSE](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) file for details.
 
 ## 👨‍💻 Authors
 

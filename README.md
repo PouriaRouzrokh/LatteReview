@@ -1,7 +1,7 @@
 # LatteReview 🤖☕
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
@@ -50,6 +50,8 @@ LatteReview enables you to create custom literature review workflows with multip
 
 Please refer to the [Quick Start](./docs/quickstart.md) page and [Documentation](https://pouriarouzrokh.github.io/LatteReview/) page for detailed instructions.
 
+The example below is fully self-contained: set your API keys, install the package, and run it as-is. It uses one OpenAI and one Gemini model, so it needs `OPENAI_API_KEY` and `GEMINI_API_KEY` (in a `.env` file or exported in your shell). You can swap in any LiteLLM-supported model — see [Model Support](#-model-support).
+
 ```python
 from lattereview.providers import LiteLLMProvider
 from lattereview.agents import TitleAbstractReviewer
@@ -58,7 +60,7 @@ import pandas as pd
 import asyncio
 from dotenv import load_dotenv
 
-# Load environment variables from the .env file in the root directory of your project
+# Load environment variables (e.g., OPENAI_API_KEY, GEMINI_API_KEY) from a .env file
 load_dotenv()
 
 # First Reviewer: Conservative approach
@@ -109,8 +111,21 @@ workflow = ReviewWorkflow(
     ]
 )
 
-# Load and process your data
-data = pd.read_excel("articles.xlsx")  # Must have 'title' and 'abstract' columns
+# Prepare your data: a DataFrame (or .csv/.xlsx/.ris file path) with 'title' and 'abstract' columns
+data = pd.DataFrame(
+    {
+        "title": [
+            "Deep learning for automated detection of pneumonia on chest radiographs",
+            "Effects of mindfulness meditation on stress levels in college students",
+        ],
+        "abstract": [
+            "We developed a convolutional neural network to detect pneumonia on chest X-rays.",
+            "A randomized trial of mindfulness training in 200 undergraduates reduced stress.",
+        ],
+    }
+)
+# Or load from a file: data = pd.read_excel("articles.xlsx")
+
 results = asyncio.run(workflow(data))  # Returns a pandas DataFrame with all original and output columns
 
 # Save results
@@ -161,7 +176,7 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
 - [x] Evaluating LatteReview.
 - [x] Writing the white paper for the package and public launch
 - [x] Addign support for `RIS` files.
-- [ ] Adding support for Deepseek R1 models (and models w/o structured output capablity in general).
+- [x] Adding support for models without structured-output (json_schema) capability via an automatic JSON-mode fallback (e.g., DeepSeek).
 - [ ] Development of a no-code web application
 - [ ] (for v>) Adding conformal prediction tool for calibrating agents on their certainty scores
 - [ ] (for v>2.0.0) Adding a dialogue tool for enabling agents to seek external help (from helper agents or parallel reviewer agents) during review.
@@ -212,8 +227,8 @@ If you find LatteReview helpful in your research or work, consider supporting it
 
 ## 📜 License
 
-This work is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License.  
-To view a copy of this license, visit [LICENSE](http://creativecommons.org/licenses/by-nc/4.0/).
+This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License (see the [LICENSE](./LICENSE) file).
+To view a copy of this license, visit [creativecommons.org/licenses/by-nc-nd/4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/).
 
 ## 🤝 Contributing
 

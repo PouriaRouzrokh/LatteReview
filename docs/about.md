@@ -24,7 +24,7 @@ If you find LatteReview helpful in your research or work, consider supporting it
 
 ## 📜 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License - see the [LICENSE](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) file for details.
 
 ## 🤝 Contributing
 
@@ -35,5 +35,12 @@ We welcome contributions! Please feel free to submit a Pull Request.
 If you use LatteReview in your research, please cite our paper:
 
 ```bibtex
-# Preprint citation to be added
+@misc{rouzrokh2025lattereview,
+    title={LatteReview: A Multi-Agent Framework for Systematic Review Automation Using Large Language Models},
+    author={Pouria Rouzrokh and Moein Shariatnia},
+    year={2025},
+    eprint={2501.05468},
+    archivePrefix={arXiv},
+    primaryClass={cs.CL}
+}
 ```

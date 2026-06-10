@@ -143,12 +143,12 @@ from lattereview.providers import OpenAIProvider
 # Initialize with OpenAI model
 provider = OpenAIProvider(model="gpt-4o")
 
-# Initialize with Gemini model
-provider = OpenAIProvider(model="gemini/gemini-2.5-flash")
+# Initialize with Gemini model (no "gemini/" prefix here; that prefix is only for LiteLLMProvider)
+provider = OpenAIProvider(model="gemini-2.5-flash")
 
 # Initialize with OpenRouter
 provider = OpenAIProvider(
-    model="anthropic/claude-3-opus",
+    model="anthropic/claude-sonnet-4-6",
     api_key="your_openrouter_key",
     base_url="https://openrouter.ai/api/v1"
 )
@@ -169,7 +169,7 @@ OpenRouter provides access to a wide variety of language models through a unifie
 2. Set the following configuration:
    - `base_url`: "https://openrouter.ai/api/v1"
    - `api_key`: Your OpenRouter API key
-   - `model`: Any model available on OpenRouter (e.g., "anthropic/claude-3-opus", "meta-llama/llama-2-70b", etc.)
+   - `model`: Any model available on OpenRouter (e.g., "anthropic/claude-sonnet-4-6", "meta-llama/llama-3.3-70b-instruct", etc.)
 
 This gives you access to models from:
 
@@ -183,11 +183,13 @@ Example:
 
 ```python
 provider = OpenAIProvider(
-    model="mistral/mistral-large",
+    model="mistralai/mistral-large-2512",
     api_key="your_openrouter_key",
     base_url="https://openrouter.ai/api/v1"
 )
 ```
+
+Alternatively, `LiteLLMProvider` (recommended) reaches OpenRouter models directly with an `OPENROUTER_API_KEY` environment variable and an `openrouter/` model prefix, e.g. `LiteLLMProvider(model="openrouter/openai/gpt-4o-mini")`.
 
 ## GoogleProvider
 

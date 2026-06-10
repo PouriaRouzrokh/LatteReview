@@ -11,7 +11,10 @@ To use LatteReview with different LLM engines (OpenAI, Anthropic, Google, etc.),
 
 ```text
 # .env file - Example keys (add only what you need)
+# The complete example at the bottom of this page uses OpenAI and Gemini models,
+# so it needs OPENAI_API_KEY and GEMINI_API_KEY.
 OPENAI_API_KEY=your-openai-key
+GEMINI_API_KEY=your-gemini-key
 ANTHROPIC_API_KEY=your-anthropic-key
 ```
 
@@ -121,10 +124,11 @@ workflow = ReviewWorkflow(
         {
             "round": 'B',               # Second round
             "reviewers": [expert],
-            # Access both original columns and previous reviewers' outputs
-            "text_inputs": ["title", "abstract", "round-A_reviewer1_output", "round-A_reviewer2_output"],
+            # Access both original columns and previous reviewers' outputs.
+            # Note: column names use each reviewer's `name` (here "Alice" and "Bob"), not the variable name.
+            "text_inputs": ["title", "abstract", "round-A_Alice_output", "round-A_Bob_output"],
             # Optional filter to review only certain cases
-            "filter": lambda row: row["round-A_reviewer1_evaluation"] != row["round-A_reviewer2_evaluation"]
+            "filter": lambda row: row["round-A_Alice_evaluation"] != row["round-A_Bob_evaluation"]
         }
     ]
 )

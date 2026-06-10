@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Replaced retired Gemini models in defaults, README, docs, and tutorials: `gemini-1.5-flash` → `gemini-2.5-flash`, `gemini-2.5-pro-preview-05-06` → `gemini-2.5-pro`, `gemini-2.5-flash-preview-04-17` → `gemini-2.5-flash`. Google has retired the Gemini 1.x/2.0 models and the 2.5 preview aliases, which caused workflows following the previous documentation to fail with 404 errors.
+- Cleaned up packaging: `pyproject.toml` is now the single source of metadata (removed `setup.py`). Runtime dependencies no longer include development tools (black, flake8, mkdocs, twine, opencv, etc.); they moved to the `[dev]`, `[docs]`, and `[all]` extras that the installation guide already documented. `requires-python` is back to `>=3.9` as documented.
+- Documentation accuracy pass: fixed the quickstart round-B example to use the reviewers' names in column references (`round-A_Alice_output`, not `round-A_reviewer1_output`), corrected the `OpenAIProvider` Gemini example (no `gemini/` prefix outside LiteLLM), refreshed OpenRouter model examples, aligned all license references with the CC BY-NC-ND 4.0 LICENSE file, documented required API-key environment variables, and made the README quick-start example self-contained and runnable as-is.
 
 ## [1.1.1] - 2026-1-7
 

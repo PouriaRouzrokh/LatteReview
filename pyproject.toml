@@ -1,42 +1,75 @@
 [project]
 name = "lattereview"
 version = "1.1.2"
-description = "Add your description here"
+description = "A framework for multi-agent literature review workflows using large language models"
 readme = "README.md"
-requires-python = ">=3.12"
+authors = [{ name = "Pouria Rouzrokh", email = "po.rouzrokh@gmail.com" }]
+keywords = [
+    "review",
+    "workflow",
+    "machine learning",
+    "AI",
+    "RIS",
+    "literature",
+    "systematic review",
+    "multi-agent",
+    "abstract review",
+    "title review",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.9"
 dependencies = [
+    "litellm>=1.55.2",
+    "nest-asyncio>=1.6.0",
+    "ollama>=0.4.4",
+    "openai>=1.57.4",
+    "google-genai>=1.15.0",
+    "openpyxl>=3.1.5",
+    "pandas>=2.2.2",
+    "pydantic>=2.10.3",
+    "python-dotenv>=1.0.1",
+    "tokencost>=0.1.17",
+    "tqdm>=4.67.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/PouriaRouzrokh/LatteReview"
+Documentation = "https://pouriarouzrokh.github.io/LatteReview"
+Repository = "https://github.com/PouriaRouzrokh/LatteReview"
+
+[project.optional-dependencies]
+dev = [
     "black>=24.10.0",
     "build>=1.2.2.post1",
     "flake8>=7.1.1",
-    "google>=3.0.0",
-    "google-genai>=1.15.0",
     "ipykernel>=6.29.5",
-    "litellm>=1.55.2",
     "matplotlib>=3.9.4",
+    "pillow>=11.0.0",
+    "twine>=6.1.0",
+]
+docs = [
     "mkdocs>=1.6.1",
     "mkdocs-gen-files>=0.5.0",
     "mkdocs-literate-nav>=0.6.2",
     "mkdocs-material>=9.6.12",
     "mkdocstrings>=0.29.1",
     "mkdocstrings-python>=1.16.10",
-    "nest-asyncio>=1.6.0",
-    "ollama>=0.4.4",
-    "openai>=1.57.4",
-    "opencv-python>=4.10.0.84",
-    "openpyxl>=3.1.5",
-    "pandas>=2.2.2",
-    "pillow>=11.0.0",
-    "pydantic>=2.10.3",
-    "python-dotenv>=1.0.1",
-    "setuptools>=80.0.0",
-    "tokencost>=0.1.17",
-    "tqdm>=4.67.1",
-    "twine>=6.1.0",
 ]
+all = ["lattereview[dev,docs]"]
 
 [build-system]
 requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["lattereview*"]
 
 [tool.black]
 line-length = 120

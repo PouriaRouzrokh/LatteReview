@@ -46,11 +46,14 @@ After obtaining the source code through either option, you can install it using 
 # Basic installation
 pip install .
 
-# Install from specific versions of dependencies mentioned in requirements.txt
-pip install -r requirements.txt
-
-# Development installation (all optional dependencies)
+# Development installation (editable, with all optional dependencies)
 pip install -e ".[all]"
+```
+
+You can also install directly from GitHub without cloning:
+
+```bash
+pip install "git+https://github.com/PouriaRouzrokh/LatteReview.git"
 ```
 
 ## Verify Installation
@@ -66,9 +69,14 @@ print(lattereview.__version__)
 - Core dependencies (automatically installed):
   - litellm (>=1.55.2)
   - openai (>=1.57.4)
-  - pandas (>=2.2.3)
+  - google-genai (>=1.15.0)
+  - pandas (>=2.2.2)
   - pydantic (>=2.10.3)
-  - And others as specified in `setup.py`
+  - And others as specified in `pyproject.toml`
+
+## Set Up API Keys
+
+To call hosted LLMs you need API keys for the providers you plan to use (e.g., `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`). See [Step 1 of the Quick Start guide](quickstart.md#step-1-set-up-api-keys) for the details. No keys are needed for local models served through Ollama.
 
 ## Troubleshooting
 
