@@ -25,6 +25,8 @@ A framework for multi-agent review workflows using large language models.
 
 Nothing changes for existing LLM reviewers. Read [Decision Models](decision_models.md) for how Jev differs from LLM reviewers and how to use it well.
 
+Try it in the notebooks: [Screening, scoring and extraction with Jev](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) · [Hybrid Jev + LLM review with measurements](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb).
+
 ## What Was New in v1.2.0
 
 - **Current models**: tested with OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). Older models such as `gpt-4o-mini` and `gemini-2.5-flash` keep working.

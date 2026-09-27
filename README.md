@@ -27,6 +27,40 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - **Thresholds for a target recall**: `suggest_threshold` fits a probability cutoff on labeled data.
 - **Hybrid workflows**: let Jev screen everything and send only uncertain articles to an LLM ([tutorial](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb)).
 
+A Jev + LLM pipeline in a few lines: Jev screens every article, and only the articles it is unsure about go to an LLM (set `TYPESAFE_API_KEY` and `OPENAI_API_KEY`):
+
+```python
+import asyncio
+import pandas as pd
+from lattereview.providers import SystemOneProvider, OpenAIProvider
+from lattereview.agents import DecisionTitleAbstractReviewer, TitleAbstractReviewer
+from lattereview.workflows import ReviewWorkflow
+
+inclusion = {1: "The study must involve CT scans.", 2: "The study must use deep learning."}
+exclusion = {1: "The study must not include PET scans."}
+
+jev = DecisionTitleAbstractReviewer(
+    provider=SystemOneProvider(),  # TypeSafe's jev-latest; or SystemOneProvider(backend="openrouter")
+    name="Jev", inclusion_criteria=inclusion, exclusion_criteria=exclusion,
+)
+llm = TitleAbstractReviewer(
+    provider=OpenAIProvider(model="gpt-6-luna"),
+    name="LLM", inclusion_criteria=str(inclusion), exclusion_criteria=str(exclusion),
+)
+
+workflow = ReviewWorkflow(workflow_schema=[
+    {"round": "A", "reviewers": [jev], "text_inputs": ["title", "abstract"]},
+    {"round": "B", "reviewers": [llm], "text_inputs": ["title", "abstract"],
+     "filter": lambda row: 0.1 <= row["round-A_Jev_include_probability"] < 0.9},  # only uncertain articles
+])
+results = asyncio.run(workflow(pd.read_csv("articles.csv")))  # columns: title, abstract
+```
+
+Try it in the notebooks:
+[Screening, scoring and extraction with Jev](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) ·
+[Hybrid Jev + LLM review with measurements](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb) ·
+[Decision Models docs](https://pouriarouzrokh.github.io/LatteReview/decision_models/).
+
 Nothing changes for existing LLM reviewers. See the [CHANGELOG](./CHANGELOG.md) for the full list.
 
 ## What Was New in v1.2.0
