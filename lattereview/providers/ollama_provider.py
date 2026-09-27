@@ -7,11 +7,14 @@ from ollama import AsyncClient
 from pydantic import BaseModel, create_model
 from .base_provider import BaseProvider, ProviderError, ClientCreationError, ResponseError, InvalidResponseFormatError
 
+# Keyword arguments that AsyncClient.chat accepts directly; other model_args go into Ollama's model `options`.
+CHAT_ARGS = ("tools", "think", "format", "options", "keep_alive", "logprobs", "top_logprobs")
+
 
 class OllamaProvider(BaseProvider):
     provider: str = "Ollama"
     client: Optional[AsyncClient] = None
-    model: str = "llama3.2-vision:latest"  # Default model
+    model: str = "qwen3.8:27b"  # Default model
     response_format_class: Optional[Any] = None
     invalid_keywords: List[str] = ["temperature", "max_tokens"]
     host: str = "http://localhost:11434"  # Default Ollama API endpoint
@@ -25,13 +28,30 @@ class OllamaProvider(BaseProvider):
             raise ClientCreationError(f"Failed to initialize Ollama: {str(e)}")
 
     def _clean_kwargs(self, kwargs: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Remove invalid keywords from kwargs."""
+        """Turn model_args into AsyncClient.chat arguments.
+
+        Keywords in invalid_keywords are dropped, `reasoning_effort` becomes Ollama's `think` setting, and any
+        other keyword that chat() does not take (e.g., `top_p`, `seed`, `num_ctx`) is passed in the model `options`.
+        """
         if kwargs is None:
             return {}
 
-        cleaned_kwargs = kwargs.copy()
-        for keyword in self.invalid_keywords:
-            cleaned_kwargs.pop(keyword, None)
+        cleaned_kwargs = {}
+        options = dict(kwargs.get("options") or {})
+        for key, value in kwargs.items():
+            if key in self.invalid_keywords or key == "options":
+                continue
+            if key in CHAT_ARGS:
+                cleaned_kwargs[key] = value
+            elif key == "reasoning_effort":
+                if value in ("none", "minimal"):
+                    cleaned_kwargs.setdefault("think", False)
+                else:
+                    cleaned_kwargs.setdefault("think", value if value in ("low", "medium", "high") else "high")
+            else:
+                options[key] = value
+        if options:
+            cleaned_kwargs["options"] = options
         return cleaned_kwargs
 
     def set_response_format(self, response_format: Dict[str, Any]) -> None:
@@ -104,9 +124,9 @@ class OllamaProvider(BaseProvider):
             #         f"Please provide your response as a JSON object following this schema:\n{schema_str}"
             #     )
 
-            # Set format parameter to 'json'
+            # Constrain the output to the response format's JSON schema
             cleaned_kwargs = self._clean_kwargs(kwargs)
-            cleaned_kwargs["format"] = "json"
+            cleaned_kwargs["format"] = self.response_format_class.model_json_schema()
 
             response = await self._fetch_response(message_list, cleaned_kwargs)
             txt_response = self._extract_content(response)
@@ -159,7 +179,7 @@ class OllamaProvider(BaseProvider):
             cleaned_kwargs = self._clean_kwargs(kwargs)
             cleaned_kwargs["stream"] = True
 
-            async for part in self.client.chat(model=self.model, messages=message_list, **cleaned_kwargs):
+            async for part in await self.client.chat(model=self.model, messages=message_list, **cleaned_kwargs):
                 yield part.message.content
         except Exception as e:
             raise ResponseError(f"Error streaming response: {str(e)}")
@@ -177,7 +197,10 @@ class OllamaProvider(BaseProvider):
     async def close(self) -> None:
         """Close the client session."""
         if self.client:
-            await self.client.aclose()
+            if hasattr(self.client, "close"):
+                await self.client.close()
+            else:  # ollama<0.6.2 has no AsyncClient.close()
+                await self.client._client.aclose()
 
     def _check_basemodel_class(self, arg):
         """Check if the argument is a Pydantic BaseModel class."""

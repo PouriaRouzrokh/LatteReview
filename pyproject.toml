@@ -28,7 +28,7 @@ requires-python = ">=3.10"
 dependencies = [
     "litellm>=1.94.0",
     "nest-asyncio>=1.6.0",
-    "ollama>=0.4.4",
+    "ollama>=0.5.3",
     "openai>=1.57.4",
     "google-genai>=1.51.0",
     "openpyxl>=3.1.5",

@@ -43,7 +43,8 @@ Models tested with real API calls for v1.2.0:
 | `OpenAIProvider` | `gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.5`, `gpt-4o-mini` |
 | `OpenAIProvider` (Gemini endpoint) | `gemini-3.8-flash` |
 | `GoogleProvider` | `gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-2.5-pro`, `gemini-2.5-flash` |
-| `LiteLLMProvider` | `gpt-6-astra`, `gpt-6-luna`, `gpt-4o-mini`, `o4-mini`, `anthropic/claude-opus-5-5`, `anthropic/claude-opus-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-fable-5-1`, `gemini/gemini-3.8-flash`, `groq/openai/gpt-oss-120b`, `deepseek/deepseek-flash`, `openrouter/qwen/qwen3.8-27b` |
+| `OllamaProvider` (local, Apple M5, 32 GB) | `qwen3.8:27b` |
+| `LiteLLMProvider` | `gpt-6-astra`, `gpt-6-luna`, `gpt-4o-mini`, `o4-mini`, `anthropic/claude-opus-5-5`, `anthropic/claude-opus-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-fable-5-1`, `gemini/gemini-3.8-flash`, `groq/openai/gpt-oss-120b`, `deepseek/deepseek-flash`, `openrouter/qwen/qwen3.8-27b`, `ollama_chat/qwen3.8:27b` |
 
 ## BaseProvider
 
@@ -311,7 +312,7 @@ provider.set_response_format(Person)
 
 ### Description
 
-Implementation for local Ollama models, supporting both chat and streaming responses. The updated version handles image inputs for advanced tasks.
+Implementation for local Ollama models, supporting both chat and streaming responses and image inputs. The default model, `qwen3.8:27b`, is a 27B multimodal reasoning model (an 18 GB download) that runs well on an Apple Silicon Mac with 32 GB of memory. Pull it first with `ollama pull qwen3.8:27b`, or pass any other model you have pulled.
 
 ### Class Definition
 
@@ -319,7 +320,7 @@ Implementation for local Ollama models, supporting both chat and streaming respo
 class OllamaProvider(BaseProvider):
     provider: str = "Ollama"
     client: Optional[AsyncClient] = None
-    model: str = "llama3.2-vision:latest"
+    model: str = "qwen3.8:27b"
     response_format_class: Optional[Any] = None
     invalid_keywords: List[str] = ["temperature", "max_tokens"]
     host: str = "http://localhost:11434"
@@ -331,6 +332,8 @@ class OllamaProvider(BaseProvider):
 - Streaming capability
 - Free cost tracking (local models)
 - Image input processing
+- Structured JSON output constrained to the reviewer's schema
+- `model_args` mapping: `reasoning_effort` becomes Ollama's `think` setting (`"none"` turns thinking off; `"low"`, `"medium"` and `"high"` set its level), keywords that `AsyncClient.chat` accepts (`think`, `format`, `options`, `keep_alive`, ...) are passed as they are, and other keys (e.g., `top_p`, `seed`, `num_ctx`) go into the model `options`. `temperature` and `max_tokens` are ignored (see `invalid_keywords`).
 - Connection management
 
 ### Usage Example
@@ -340,7 +343,7 @@ from lattereview.providers import OllamaProvider
 
 # Initialize provider
 provider = OllamaProvider(
-    model="llama3.2-vision:latest",
+    model="qwen3.8:27b",
     host="http://localhost:11434"
 )
 
@@ -352,7 +355,7 @@ provider.set_response_format({"answer": str, "confidence": float})
 response, cost = await provider.get_json_response("What is the capital of France?", [])
 
 # Stream response
-async for chunk in provider.get_response("Tell me a story", [], stream=True):
+async for chunk in await provider.get_response("Tell me a story", [], stream=True):
     print(chunk, end="")
 
 # Clean up

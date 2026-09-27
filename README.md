@@ -13,7 +13,7 @@
 
 ---
 
-🚨 **NEW in v1.2.0**: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), while older models keep working unchanged. See [Model compatibility](#-model-support).
+🚨 **NEW in v1.2.0**: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), plus local models like Qwen 3.8 through Ollama, while older models keep working unchanged. See [What's New](#-whats-new-in-v120) below and [Model compatibility](#-model-support).
 
 ---
 
@@ -23,7 +23,8 @@ LatteReview is a powerful Python package designed to automate academic literatur
 
 - **Current models**: tested with OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). Older models such as `gpt-4o-mini` and `gemini-2.5-flash` keep working.
 - **No more rejected-parameter errors**: if a model rejects a setting in `model_args` (e.g., `temperature` on GPT-6 or Claude 5, or `max_tokens` on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.
-- **New default models**: `OpenAIProvider` and `LiteLLMProvider` default to `gpt-6-luna`, and `GoogleProvider` to `gemini-3.8-flash`. Pass `model=` to choose another.
+- **New default models**: `OpenAIProvider` and `LiteLLMProvider` default to `gpt-6-luna`, `GoogleProvider` to `gemini-3.8-flash`, and `OllamaProvider` to `qwen3.8:27b`. Pass `model=` to choose another.
+- **Better local models**: `OllamaProvider` constrains answers to the reviewer's JSON schema, maps `reasoning_effort` to Ollama's `think` setting, passes other `model_args` (e.g., `top_p`) as model options instead of failing, and `close()` works again. Tested with `qwen3.8:27b` on a 32 GB Apple Silicon Mac.
 - **More accurate costs**: computed from the token usage each API reports, including hidden reasoning tokens.
 - **Python 3.10 or later** is now required. On Python 3.9, `pip` installs 1.1.1.
 
@@ -151,7 +152,7 @@ LatteReview offers flexible model integration through multiple providers:
 - **GoogleProvider**: Direct integration with Gemini through Google's `google-genai` SDK
 - **OllamaProvider**: Optimized for local models via Ollama
 
-If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `llama3.2-vision:latest`. For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option.
+If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `qwen3.8:27b` (run `ollama pull qwen3.8:27b` first). For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option.
 
 Note: Models should support async operations and structured JSON outputs for optimal performance.
 

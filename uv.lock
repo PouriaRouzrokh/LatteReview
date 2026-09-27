@@ -2265,7 +2265,7 @@ requires-dist = [
     { name = "mkdocstrings", marker = "extra == 'docs'", specifier = ">=0.29.1" },
     { name = "mkdocstrings-python", marker = "extra == 'docs'", specifier = ">=1.16.10" },
     { name = "nest-asyncio", specifier = ">=1.6.0" },
-    { name = "ollama", specifier = ">=0.4.4" },
+    { name = "ollama", specifier = ">=0.5.3" },
     { name = "openai", specifier = ">=1.57.4" },
     { name = "openpyxl", specifier = ">=3.1.5" },
     { name = "pandas", specifier = ">=2.2.2" },

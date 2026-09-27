@@ -29,14 +29,18 @@ This release makes LatteReview work with the newest OpenAI, Anthropic and Google
 - Image inputs are sent with standard MIME types (`image/jpeg` for `.jpg` files). Claude rejected the previous `image/jpg`.
 - `OpenAIProvider` uses `client.chat.completions.parse` when available and falls back to `client.beta.chat.completions.parse` on older `openai` releases (the `beta` path no longer exists in `openai` 3.x).
 - Cost warnings are printed once per model instead of once per reviewed item.
+- `OllamaProvider` no longer fails on `model_args` other than `temperature`/`max_tokens`: `reasoning_effort` maps to Ollama's `think` setting, and other keys (e.g., `top_p`, `seed`) are passed as model `options` instead of crashing `AsyncClient.chat`.
+- `OllamaProvider` requests output that follows the reviewer's JSON schema instead of generic JSON mode.
+- `OllamaProvider.close()` works again (it called a method the `ollama` client does not have).
+- `OllamaProvider` streaming (`get_response(..., stream=True)`) works; it iterated over the unawaited `chat()` coroutine. The docs' streaming example now shows the required `await`.
 
 ### Changed
 
 - Python 3.10 or later is now required (`requires-python>=3.10`). Current releases of LiteLLM, `openai` and `google-genai` no longer support Python 3.9; Python 3.9 users keep getting LatteReview 1.1.1 from `pip`.
-- Dependency floors raised: `litellm>=1.94.0` (native Claude structured outputs) and `google-genai>=1.51.0` (Gemini 3 `thinking_level`).
+- Dependency floors raised: `litellm>=1.94.0` (native Claude structured outputs), `google-genai>=1.51.0` (Gemini 3 `thinking_level`) and `ollama>=0.5.3` (`think` levels).
 - README, documentation and all tutorial notebooks now use current models and were re-executed with saved outputs. Examples use `reasoning_effort` instead of `max_tokens`/`temperature` for reasoning models. The `evaluation/` notebooks are unchanged records of the original evaluation runs.
 - Fixed tutorial bugs found while re-running them: a misspelled CSV path in the literature-analysis tutorial, a wrong column name in the scoring tutorial, and image generation that could give two target colors the same digit.
-- **Default models updated** to current cost-efficient workhorse models: `OpenAIProvider` and `LiteLLMProvider` now default to `gpt-6-luna` (was `gpt-4o-mini`), and `GoogleProvider` defaults to `gemini-3.8-flash` (was `gemini-2.5-pro`, which Google now limits to accounts that have used it before). This changes the model, and so the cost and results, for code that relies on the default; pass `model=` explicitly to keep the old one. `OllamaProvider` keeps `llama3.2-vision:latest`, since local models must already be pulled.
+- **Default models updated** to current cost-efficient workhorse models: `OpenAIProvider` and `LiteLLMProvider` now default to `gpt-6-luna` (was `gpt-4o-mini`), `GoogleProvider` defaults to `gemini-3.8-flash` (was `gemini-2.5-pro`, which Google now limits to accounts that have used it before), and `OllamaProvider` defaults to `qwen3.8:27b` (was `llama3.2-vision:latest`; run `ollama pull qwen3.8:27b` first). This changes the model, and so the cost and results, for code that relies on the default; pass `model=` explicitly to keep the old one.
 
 ## [1.1.2] - 2026-6-10 (never published to PyPI; included in 1.2.0)
 
