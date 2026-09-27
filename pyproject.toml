@@ -1,6 +1,6 @@
 [project]
 name = "lattereview"
-version = "1.2.0"
+version = "1.3.0"
 description = "A framework for multi-agent literature review workflows using large language models"
 readme = "README.md"
 authors = [{ name = "Pouria Rouzrokh", email = "po.rouzrokh@gmail.com" }]
@@ -31,6 +31,7 @@ dependencies = [
     "ollama>=0.5.3",
     "openai>=1.57.4",
     "google-genai>=1.51.0",
+    "httpx>=0.27.0",
     "openpyxl>=3.1.5",
     "pandas>=2.2.2",
     "pydantic>=2.10.3",
@@ -52,6 +53,8 @@ dev = [
     "ipykernel>=6.29.5",
     "matplotlib>=3.9.4",
     "pillow>=11.0.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
     "twine>=6.1.0",
 ]
 docs = [
@@ -70,6 +73,13 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 include = ["lattereview*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["live: makes real API calls (skipped by default; run with -m live)"]
+addopts = "-m 'not live'"
 
 [tool.black]
 line-length = 120

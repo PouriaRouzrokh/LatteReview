@@ -1,0 +1,124 @@
+{
+  "_note": "Real /v1/systemone responses recorded on 2026-09-27 for the questions in REQUEST_QUESTIONS (tests/conftest.py).",
+  "typesafe": {
+    "model": "jev-1.13.0",
+    "answers": {
+      "dl": {
+        "type": "noul",
+        "noul": 0.99
+      },
+      "mod": {
+        "type": "choice",
+        "choice": "XR",
+        "confidence": 1.0,
+        "probabilities": {
+          "CT": 0.0,
+          "XR": 1.0,
+          "MRI": 0.0,
+          "US": 0.0
+        }
+      },
+      "q": {
+        "type": "score",
+        "score": 2.0,
+        "confidence": 1.0,
+        "legend": {
+          "0": "none",
+          "1": "internal only",
+          "2": "external"
+        },
+        "probabilities": {
+          "0": 0.0,
+          "1": 0.0,
+          "2": 1.0
+        }
+      },
+      "plain": {
+        "type": "noul",
+        "noul": 0.01
+      }
+    },
+    "usage": {
+      "input_tokens": 478,
+      "output_tokens": 91
+    }
+  },
+  "openrouter": {
+    "model": "typesafe/jev-1.13-20260917",
+    "answers": {
+      "dl": {
+        "type": "noul",
+        "noul": 0.99
+      },
+      "mod": {
+        "type": "choice",
+        "choice": "XR",
+        "probabilities": {
+          "MRI": 0,
+          "XR": 1,
+          "CT": 0,
+          "US": 0
+        },
+        "confidence": 1
+      },
+      "q": {
+        "type": "score",
+        "score": 2,
+        "legend": {
+          "0": "none",
+          "1": "internal only",
+          "2": "external"
+        },
+        "probabilities": {
+          "0": 0,
+          "1": 0,
+          "2": 1
+        },
+        "confidence": 1
+      },
+      "plain": {
+        "type": "noul",
+        "noul": 0.02
+      }
+    },
+    "usage": {
+      "input_tokens": 478,
+      "output_tokens": 91,
+      "cost": 2.0076e-05
+    },
+    "id": "gen-dec-1790542932-rhhoX7zdh18MZ2Ij1oQe",
+    "provider": "TypeSafe"
+  },
+  "typesafe_401": {
+    "detail": {
+      "error_type": "authentication_error",
+      "message": "Cannot authenticate with the server. Please check your API key and try again."
+    }
+  },
+  "fastapi_422": {
+    "detail": [
+      {
+        "type": "dict_type",
+        "loc": [
+          "body",
+          "questions",
+          "a",
+          "choice",
+          "criteria"
+        ],
+        "msg": "Input should be a valid dictionary",
+        "input": [
+          "CT",
+          "MRI",
+          "XR"
+        ]
+      }
+    ]
+  },
+  "openrouter_400": {
+    "error": {
+      "message": "Invalid discriminator value. Expected 'noul' | 'choice' | 'score'",
+      "code": 400
+    }
+  }
+}

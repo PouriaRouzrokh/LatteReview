@@ -16,6 +16,7 @@ To use LatteReview with different LLM engines (OpenAI, Anthropic, Google, etc.),
 OPENAI_API_KEY=your-openai-key
 GEMINI_API_KEY=your-gemini-key
 ANTHROPIC_API_KEY=your-anthropic-key
+TYPESAFE_API_KEY=your-typesafe-key      # for decision reviewers (Jev)
 ```
 
 - Load it in your code:
@@ -225,3 +226,32 @@ results = asyncio.run(workflow(data))  # Returns a pandas DataFrame with all ori
 # Save results
 results.to_csv("review_results.csv", index=False)
 ```
+
+## Screening with a Decision Model (Jev)
+
+Decision reviewers use a System One decision model such as TypeSafe's Jev instead of an LLM. They return probabilities
+instead of generated text, cost about $0.06 per 1,000 abstracts, and work in the same workflows:
+
+```python
+from lattereview.providers import SystemOneProvider
+from lattereview.agents import DecisionTitleAbstractReviewer
+from lattereview.workflows import ReviewWorkflow
+
+jev = DecisionTitleAbstractReviewer(
+    provider=SystemOneProvider(),  # needs TYPESAFE_API_KEY; or SystemOneProvider(backend="openrouter")
+    name="Jev",
+    inclusion_criteria={1: "The study must involve CT scans.", 2: "The study must use deep learning."},
+    exclusion_criteria={1: "The study must not include PET scans."},
+)
+
+workflow = ReviewWorkflow(workflow_schema=[
+    {"round": "A", "reviewers": [jev], "text_inputs": ["title", "abstract"]},
+])
+results = asyncio.run(workflow(data))
+# Columns: round-A_Jev_evaluation (1-5), round-A_Jev_include_probability, round-A_Jev_confidence,
+#          round-A_Jev_criteria (per-criterion probabilities), round-A_Jev_reasoning (generated from the probabilities)
+```
+
+Rank articles by `include_probability`, or fit a cutoff for a target recall with `lattereview.utils.suggest_threshold`
+on labeled data; a cutoff of 0.5 can be too strict for long criteria. See [Decision Models](decision_models.md) for
+details.
