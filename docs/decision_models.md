@@ -31,7 +31,7 @@ such as `gpt-6-luna` (about $0.13), and one to two orders of magnitude less than
 | Prompting | prompt templates, `examples`, `model_args` | typed questions only; `examples`, `reasoning`, `model_args` and prompt templates raise an error |
 | Cost per 1,000 abstracts | about $0.13 (`gpt-6-luna`) to several dollars (`gpt-6-sol`, `gpt-6-astra`) | about $0.05-0.07 |
 | Latency per article | one to several seconds | about 0.2 seconds (about 16 articles per second at the default pace) |
-| Deterministic | not guaranteed | TypeSafe: identical requests give identical answers |
+| Repeatability | answers can change between runs | confident answers repeat; uncertain ones vary between identical requests (we saw 0.62-0.84 for one article) |
 
 Decision reviewers are `BasicReviewer` subclasses, so they work in any `ReviewWorkflow`, next to LLM reviewers, with
 the usual `round-{R}_{name}_{key}` columns, filters, cost tracking and memory. `backstory` is accepted but ignored.
@@ -194,6 +194,9 @@ suggest_threshold(labeled_df, "round-A_Jev_include_probability", "label", target
 # {'threshold': 0.08, 'recall': 0.96, 'precision': 0.41, 'n_included': 212, 'wss': 0.52}
 ```
 
+Articles close to the cutoff can land on either side of it when re-run, because uncertain answers vary slightly
+between identical requests.
+
 `wss` is the work saved over sampling: the fraction of articles you would not need to read at that cutoff, minus the
 recall given up.
 
@@ -288,8 +291,11 @@ The local models ran on an Apple M5 with 32 GB of memory.
 - **Kev-4B** ranks almost as well, but its probabilities are much less extreme and its confidence values are lower.
   A cutoff or an uncertain band tuned on Jev would route almost every article to the LLM with Kev. Fit thresholds
   per backend.
-- **Response details differ.** TypeSafe returns identical answers for identical requests; OpenRouter's can differ
-  by about 0.01. OpenRouter reports the cost in the response. OpenJev returns probabilities with four decimals and
+- **Answers are not fully deterministic** on any backend we tried. Confident answers (probabilities near 0 or 1)
+  repeat, but uncertain ones vary between identical requests: six identical requests for one borderline article
+  returned an include probability of 0.62-0.84 on TypeSafe and 0.60-0.88 on OpenRouter. Save your results instead of
+  re-running, and expect articles near a cutoff to land on either side of it.
+- **Response details differ.** OpenRouter reports the cost in the response. OpenJev returns probabilities with four decimals and
   counts tokens differently (its prompt template makes requests look 2-4 times larger). TypeSafe requires a `model`;
   local servers use their own default when it is omitted. Missing fields (a missing `confidence`, `legend` or
   `choice`) are handled by `SystemOneProvider`, so reviewers see the same answer format everywhere.
