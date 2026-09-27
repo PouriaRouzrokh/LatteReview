@@ -13,9 +13,19 @@
 
 A framework for multi-agent review workflows using large language models.
 
-🚨 **NEW in v1.2.0**: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), plus local models like Qwen 3.8 through Ollama, while older models keep working unchanged. See [What's New](#whats-new-in-v120) below and [Model compatibility](api/providers.md#model-compatibility).
+🚨 **NEW in v1.3.0**: Screen with **decision models** such as TypeSafe's **Jev**: probabilities instead of generated text, in about 0.2 seconds per article, next to your LLM reviewers in the same workflow. See [What's New](#whats-new-in-v130) below and [Decision Models](decision_models.md).
 
-## 🆕 What's New in v1.2.0
+## 🆕 What's New in v1.3.0
+
+- **Decision reviewers with Jev**: LatteReview can now review with System One decision models such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. `DecisionTitleAbstractReviewer`, `DecisionScoringReviewer` and the generic `DecisionReviewer` work in any `ReviewWorkflow`, next to LLM reviewers.
+- **One provider, any backend**: `SystemOneProvider` works with TypeSafe and OpenRouter, and with any other `/v1/systemone` server via `base_url`, including a self-hosted OpenJev model.
+- **Evaluated at full scale**: on all 11,793 articles of LatteReview's evaluation datasets, Jev ranked articles better than the v1 LLM reviewers on every dataset (mean AUC 0.88 vs 0.83), for about $0.06 per 1,000 articles. See the [evaluation](decision_models.md#evaluation), including where Jev falls short.
+- **Thresholds for a target recall**: `suggest_threshold` fits a probability cutoff on labeled data.
+- **Hybrid workflows**: let Jev screen everything and send only uncertain articles to an LLM.
+
+Nothing changes for existing LLM reviewers. Read [Decision Models](decision_models.md) for how Jev differs from LLM reviewers and how to use it well.
+
+## What Was New in v1.2.0
 
 - **Current models**: tested with OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). Older models such as `gpt-4o-mini` and `gemini-2.5-flash` keep working.
 - **No more rejected-parameter errors**: if a model rejects a setting in `model_args` (e.g., `temperature` on GPT-6 or Claude 5, or `max_tokens` on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.
@@ -46,6 +56,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - Robust cost tracking and memory management systems
 - Extensible architecture supporting custom review workflow implementation
 - **NEW**: Support for RIS (Research Information Systems) file format for academic literature review
+- **NEW**: Decision-model reviewers (TypeSafe's Jev, or a self-hosted OpenJev) that return probabilities for fast, cheap screening
 
 ## Quick Links
 

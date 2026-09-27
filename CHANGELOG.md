@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+## [1.3.0] - 2026-9-27
+
+This release adds reviewers that use System One **decision models**, such as TypeSafe's Jev, instead of LLMs. Existing LLM reviewers, providers and defaults are unchanged.
+
+### Added
+
+- `SystemOneProvider` (`lattereview.providers`): a client for the `/v1/systemone` protocol. Named backends `typesafe` (default; `TYPESAFE_API_KEY`, `jev-latest`) and `openrouter` (`OPENROUTER_API_KEY`, `~typesafe/jev-latest`), or any other server via `base_url` (e.g., a self-hosted OpenJev). Answers from every backend are normalized into one `DecisionResult`. Transient errors (429, 529, 5xx, timeouts) are retried with exponential backoff, honoring `Retry-After`; requests are paced to `requests_per_minute` (1,000 by default for the named backends, below Jev's limit of 1,200). Costs come from the reported usage.
+- Question types `Noul` (yes/no), `Choice` and `Score` (`lattereview.providers`).
+- `DecisionReviewer`, `DecisionTitleAbstractReviewer` and `DecisionScoringReviewer` (`lattereview.agents`): `BasicReviewer` subclasses that work in `ReviewWorkflow` unchanged. `DecisionTitleAbstractReviewer` returns `evaluation` (1-5, as `TitleAbstractReviewer`), `include_probability`, `confidence`, per-criterion probabilities, and a reasoning summary generated from the probabilities. `DecisionScoringReviewer` returns `score`, `certainty` (0-100, as `ScoringReviewer`) and `probabilities`.
+- `suggest_threshold` (`lattereview.utils`): the highest probability cutoff that reaches a target recall on labeled data, with its recall, precision and work saved over sampling.
+- A new docs page, [Decision Models](https://pouriarouzrokh.github.io/LatteReview/decision_models/), explaining how decision reviewers differ from LLM reviewers, with backends, self-hosting and evaluation results.
+- `evaluation/decision_evaluation.ipynb`: Jev evaluated on all 11,793 articles of the custom and SYNERGY evaluation datasets and compared with the stored v1 LLM decisions.
+- Tutorials: `decision_review_jev` (screening, scoring and categorical extraction with Jev) and `hybrid_review_jev_llm` (Jev screens everything, an LLM reviews the uncertain articles).
+- A `pytest` test suite (`tests/`): unit tests with mocked HTTP, and live tests (`pytest -m live`) that run against every configured backend.
+
+### Changed
+
+- `httpx>=0.27.0` is now a direct dependency (it was already installed through other dependencies). `pytest` and `pytest-asyncio` were added to the `dev` extra.
+- `.env_sample` lists `OPENROUTER_API_KEY` and `TYPESAFE_API_KEY`.
+
 ## [1.2.0] - 2026-9-27
 
 This release makes LatteReview work with the newest OpenAI, Anthropic and Google models while keeping older models working unchanged. It also includes all changes from 1.1.2, which was never published to PyPI; they are listed below under 1.1.2.

@@ -13,13 +13,23 @@
 
 ---
 
-🚨 **NEW in v1.2.0**: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), plus local models like Qwen 3.8 through Ollama, while older models keep working unchanged. See [What's New](#-whats-new-in-v120) below and [Model compatibility](#-model-support).
+🚨 **NEW in v1.3.0**: Screen with **decision models** such as TypeSafe's **Jev**: probabilities instead of generated text, in about 0.2 seconds per article, next to your LLM reviewers in the same workflow. See [What's New](#-whats-new-in-v130) and [Jev vs LLM reviewers](#-decision-models-jev).
 
 ---
 
 LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
 
-## 🆕 What's New in v1.2.0
+## 🆕 What's New in v1.3.0
+
+- **Decision reviewers with Jev**: LatteReview can now review with System One decision models such as TypeSafe's [Jev](https://pouriarouzrokh.github.io/LatteReview/decision_models/), which answer typed questions with probabilities instead of generating text. `DecisionTitleAbstractReviewer`, `DecisionScoringReviewer` and the generic `DecisionReviewer` work in any `ReviewWorkflow`, next to LLM reviewers.
+- **One provider, any backend**: `SystemOneProvider` works with TypeSafe and OpenRouter, and with any other `/v1/systemone` server via `base_url`, including a self-hosted OpenJev model on your own machine.
+- **Evaluated at full scale**: on all 11,793 articles of LatteReview's evaluation datasets, Jev ranked articles better than the v1 LLM reviewers on every dataset (mean AUC 0.88 vs 0.83), for about $0.06 per 1,000 articles. See the [evaluation](https://pouriarouzrokh.github.io/LatteReview/decision_models/#evaluation), including where Jev falls short.
+- **Thresholds for a target recall**: `suggest_threshold` fits a probability cutoff on labeled data.
+- **Hybrid workflows**: let Jev screen everything and send only uncertain articles to an LLM ([tutorial](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb)).
+
+Nothing changes for existing LLM reviewers. See the [CHANGELOG](./CHANGELOG.md) for the full list.
+
+## What Was New in v1.2.0
 
 - **Current models**: tested with OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). Older models such as `gpt-4o-mini` and `gemini-2.5-flash` keep working.
 - **No more rejected-parameter errors**: if a model rejects a setting in `model_args` (e.g., `temperature` on GPT-6 or Claude 5, or `max_tokens` on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.
@@ -27,8 +37,6 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - **Better local models**: `OllamaProvider` constrains answers to the reviewer's JSON schema, maps `reasoning_effort` to Ollama's `think` setting, passes other `model_args` (e.g., `top_p`) as model options instead of failing, and `close()` works again. Tested with `qwen3.8:27b` on a 32 GB Apple Silicon Mac.
 - **More accurate costs**: computed from the token usage each API reports, including hidden reasoning tokens.
 - **Python 3.10 or later** is now required. On Python 3.9, `pip` installs 1.1.1.
-
-See the [CHANGELOG](./CHANGELOG.md) for the full list.
 
 ## 🎯 Key Features
 
@@ -41,6 +49,7 @@ See the [CHANGELOG](./CHANGELOG.md) for the full list.
 - Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
 - Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
 - Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, DeepSeek, OpenRouter, and local models via Ollama
+- **NEW**: Decision-model reviewers (TypeSafe's Jev, or a self-hosted OpenJev) that return probabilities for fast, cheap screening
 - High-performance asynchronous processing for efficient batch reviews
 - Standardized output format featuring detailed scoring metrics and reasoning transparency
 - Robust cost tracking and memory management systems
@@ -143,6 +152,26 @@ results = asyncio.run(workflow(data))  # Returns a pandas DataFrame with all ori
 results.to_csv("review_results.csv", index=False)
 ```
 
+### 🎯 Decision Models (Jev)
+
+Decision reviewers use a System One decision model instead of an LLM. Set `TYPESAFE_API_KEY` (or use `SystemOneProvider(backend="openrouter")` with `OPENROUTER_API_KEY`):
+
+```python
+from lattereview.providers import SystemOneProvider
+from lattereview.agents import DecisionTitleAbstractReviewer
+
+jev = DecisionTitleAbstractReviewer(
+    provider=SystemOneProvider(),  # TypeSafe's jev-latest
+    name="Jev",
+    inclusion_criteria={1: "The study must involve CT scans.", 2: "The study must use deep learning."},
+    exclusion_criteria={1: "The study must not include PET scans."},
+)
+# Use it in a ReviewWorkflow like any reviewer. Columns: evaluation (1-5), include_probability,
+# confidence, criteria (per-criterion probabilities) and reasoning (generated from the probabilities).
+```
+
+**Jev vs LLM reviewers.** An LLM reviewer writes its answer and a reasoning; Jev writes nothing and returns a probability for every allowed answer, so its answers are always on-schema and can be thresholded for a target recall. It is fast (about 0.2 s per article) and cheap (about $0.06 per 1,000 abstracts), and in our evaluation it ranked articles better than the v1 LLM reviewers. But it reads text only, has no written reasoning, does not do multi-step reasoning, and its default 0.5 cutoff is too strict for long, multi-part criteria: rank by `include_probability` or fit a cutoff with `suggest_threshold`. A good pattern is to let Jev screen everything and send only uncertain articles to an LLM. Read [Decision Models](https://pouriarouzrokh.github.io/LatteReview/decision_models/) for how it works, backends, self-hosting and the full evaluation.
+
 ## 🔌 Model Support
 
 LatteReview offers flexible model integration through multiple providers:
@@ -151,6 +180,7 @@ LatteReview offers flexible model integration through multiple providers:
 - **OpenAIProvider**: Direct integration with OpenAI and Gemini APIs
 - **GoogleProvider**: Direct integration with Gemini through Google's `google-genai` SDK
 - **OllamaProvider**: Optimized for local models via Ollama
+- **SystemOneProvider** (new): System One decision models such as Jev, via TypeSafe, OpenRouter, or any `/v1/systemone` server (e.g., a self-hosted OpenJev)
 
 If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `qwen3.8:27b` (run `ollama pull qwen3.8:27b` first). For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option.
 
@@ -180,6 +210,9 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
     🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/custom_reviewer/abstraction_review_literature_analysis.ipynb) How to Customize the AbstractReviewer Agent for Your Needs
     🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/base_functionalities/base_functionalities.ipynb) Chat with the agents and other base functionalities
     🔸[3.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/abstraction_review_literature_analysis/abstraction_review_literature_analysis.ipynb): Combination of differnet agents for a comprehensive literature review
+✅ Decision Reviewers (Jev):
+    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) Screening, scoring and categorical extraction with Jev
+    🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb) Hybrid review: Jev screens everything, an LLM handles the uncertain articles
 
 ## 🛣️ Roadmap for Future Features
 
@@ -198,6 +231,7 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
 - [x] Addign support for `RIS` files.
 - [x] Adding support for models without structured-output (json_schema) capability via an automatic JSON-mode fallback (e.g., DeepSeek).
 - [x] Supporting the newest reasoning models (GPT-6, Claude 5, Gemini 3.x) with automatic handling of parameters they reject.
+- [x] Supporting System One decision models (Jev) for fast, probability-based screening, including hybrid Jev + LLM workflows.
 - [ ] Development of a no-code web application
 - [ ] (for v>) Adding conformal prediction tool for calibrating agents on their certainty scores
 - [ ] (for v>2.0.0) Adding a dialogue tool for enabling agents to seek external help (from helper agents or parallel reviewer agents) during review.

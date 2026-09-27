@@ -11,6 +11,7 @@ The providers module includes:
 - `OllamaProvider`: Implementation for local Ollama models
 - `LiteLLMProvider`: Implementation using LiteLLM for unified API access
 - `GoogleProvider`: Implementation for Google's Gemini API (including Gemini Pro and Flash models)
+- `SystemOneProvider` (new in v1.3.0): Client for System One **decision models** such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. It is used by the decision reviewers; see [Decision Models](../decision_models.md).
 
 ** You can use any of the models offered by the providers above as far as they support structured outputs. **
 
@@ -403,6 +404,73 @@ response, cost = await provider.get_response("What is the capital of the country
 provider.set_response_format({"answer": str, "confidence": float})
 response, cost = await provider.get_json_response("What is the capital of France?", [])
 ```
+
+## SystemOneProvider
+
+### Description
+
+`SystemOneProvider` (new in v1.3.0) talks to System One decision models over the `/v1/systemone` protocol. Unlike the LLM providers above, it does not send prompts or parse JSON text: it sends a text **state** and typed **questions** in one request and returns a probability for every allowed answer. It is not a `BaseProvider` subclass, and it is used by `DecisionReviewer`, `DecisionTitleAbstractReviewer` and `DecisionScoringReviewer`. See [Decision Models](../decision_models.md) for the concepts, evaluation results and self-hosting.
+
+### Class Definition
+
+```python
+class SystemOneProvider(pydantic.BaseModel):
+    backend: Literal["typesafe", "openrouter"] = "typesafe"
+    base_url: Optional[str] = None                 # any other /v1/systemone server; overrides backend
+    api_key: Optional[str] = None                  # else TYPESAFE_API_KEY / OPENROUTER_API_KEY; optional for base_url
+    model: Optional[str] = None                    # else "jev-latest" / "~typesafe/jev-latest"; the server default for base_url
+    timeout: float = 60.0
+    max_retries: int = 3                           # retries 429, 529, 5xx and timeouts, honoring Retry-After
+    requests_per_minute: Optional[float] = None    # 1,000 for the named backends, unlimited for base_url, 0 = off
+    input_price_per_million: Optional[float] = None  # 0.042 for the named backends, 0 for base_url
+
+    async def decide(self, state, questions) -> DecisionResult: ...
+    async def aclose(self) -> None: ...
+```
+
+### Questions and answers
+
+- `Noul(instructions, true=None, false=None)`: a yes/no question.
+- `Choice(instructions, options)`: `options` is a dict of option → description, or a list of option names.
+- `Score(instructions, levels)`: 2-10 ordered levels, lowest first.
+
+`instructions`, option descriptions and levels may also be JSON structures. The three classes are exported from `lattereview.providers`.
+
+`decide()` returns a `DecisionResult` with `answers` (question ID → `Answer`), `model` (as reported by the server), `input_tokens`, `cost` (reported by OpenRouter, otherwise input tokens × price) and `raw` (the untouched response). Each `Answer` is normalized the same way for every backend:
+
+| Field | noul | choice | score |
+| --- | --- | --- | --- |
+| `value` | probability of yes | chosen option | expected level (0-based, may be fractional) |
+| `label` | None | chosen option | label of the most likely level |
+| `level` | None | None | most likely level (0-based) |
+| `probabilities` | None | option → probability | level label → probability, in level order |
+| `confidence` | None (the probability itself shows certainty) | as reported, else None | as reported, else None |
+
+### Usage Example
+
+```python
+from lattereview.providers import SystemOneProvider, Noul, Choice, Score
+
+provider = SystemOneProvider()                                   # TypeSafe; needs TYPESAFE_API_KEY
+provider = SystemOneProvider(backend="openrouter")               # needs OPENROUTER_API_KEY
+provider = SystemOneProvider(base_url="http://localhost:3000")   # e.g., a local OpenJev server
+
+result = await provider.decide(
+    "Title: Deep learning for pneumonia detection on chest radiographs.\nAbstract: ...",
+    {
+        "deep_learning": Noul("Does the study use deep learning?"),
+        "modality": Choice("Which imaging modality is studied?", ["CT", "MRI", "X-ray"]),
+        "validation": Score("How strong is the validation?", ["none", "internal only", "external"]),
+    },
+)
+result.answers["modality"].value        # "X-ray"
+result.answers["validation"].label      # "external"
+result.cost, result.input_tokens
+```
+
+Ask all questions about an item in one request: the state is billed once, and each extra question adds only a few tokens.
+
+Errors raise `SystemOneResponseError` (a `ResponseError`) with the server's message, the HTTP `status_code`, and `retryable` (False for errors a retry cannot fix, such as 401 or 422). A missing API key raises `ClientCreationError`.
 
 ## Error Handling
 
