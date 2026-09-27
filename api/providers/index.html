@@ -1550,8 +1550,12 @@
 <td><code>gemini-3.8-flash</code>, <code>gemini-3.5-flash-lite</code>, <code>gemini-3.1-pro-preview</code>, <code>gemini-2.5-pro</code>, <code>gemini-2.5-flash</code></td>
 </tr>
 <tr>
+<td><code>OllamaProvider</code> (local, Apple M5, 32 GB)</td>
+<td><code>qwen3.8:27b</code></td>
+</tr>
+<tr>
 <td><code>LiteLLMProvider</code></td>
-<td><code>gpt-6-astra</code>, <code>gpt-6-luna</code>, <code>gpt-4o-mini</code>, <code>o4-mini</code>, <code>anthropic/claude-opus-5-5</code>, <code>anthropic/claude-opus-5</code>, <code>anthropic/claude-sonnet-5</code>, <code>anthropic/claude-haiku-4-5</code>, <code>anthropic/claude-fable-5-1</code>, <code>gemini/gemini-3.8-flash</code>, <code>groq/openai/gpt-oss-120b</code>, <code>deepseek/deepseek-flash</code>, <code>openrouter/qwen/qwen3.8-27b</code></td>
+<td><code>gpt-6-astra</code>, <code>gpt-6-luna</code>, <code>gpt-4o-mini</code>, <code>o4-mini</code>, <code>anthropic/claude-opus-5-5</code>, <code>anthropic/claude-opus-5</code>, <code>anthropic/claude-sonnet-5</code>, <code>anthropic/claude-haiku-4-5</code>, <code>anthropic/claude-fable-5-1</code>, <code>gemini/gemini-3.8-flash</code>, <code>groq/openai/gpt-oss-120b</code>, <code>deepseek/deepseek-flash</code>, <code>openrouter/qwen/qwen3.8-27b</code>, <code>ollama_chat/qwen3.8:27b</code></td>
 </tr>
 </tbody>
 </table>
@@ -1761,12 +1765,12 @@
 </code></pre></div>
 <h2 id="ollamaprovider">OllamaProvider<a class="headerlink" href="#ollamaprovider" title="Permanent link">&para;</a></h2>
 <h3 id="description_3">Description<a class="headerlink" href="#description_3" title="Permanent link">&para;</a></h3>
-<p>Implementation for local Ollama models, supporting both chat and streaming responses. The updated version handles image inputs for advanced tasks.</p>
+<p>Implementation for local Ollama models, supporting both chat and streaming responses and image inputs. The default model, <code>qwen3.8:27b</code>, is a 27B multimodal reasoning model (an 18 GB download) that runs well on an Apple Silicon Mac with 32 GB of memory. Pull it first with <code>ollama pull qwen3.8:27b</code>, or pass any other model you have pulled.</p>
 <h3 id="class-definition_3">Class Definition<a class="headerlink" href="#class-definition_3" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">OllamaProvider</span><span class="p">(</span><span class="n">BaseProvider</span><span class="p">):</span>
 <a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>    <span class="n">provider</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"Ollama"</span>
 <a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a>    <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AsyncClient</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"llama3.2-vision:latest"</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a>    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"qwen3.8:27b"</span>
 <a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="n">response_format_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 <a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="n">invalid_keywords</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"temperature"</span><span class="p">,</span> <span class="s2">"max_tokens"</span><span class="p">]</span>
 <a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="n">host</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"http://localhost:11434"</span>
@@ -1777,6 +1781,8 @@
 <li>Streaming capability</li>
 <li>Free cost tracking (local models)</li>
 <li>Image input processing</li>
+<li>Structured JSON output constrained to the reviewer's schema</li>
+<li><code>model_args</code> mapping: <code>reasoning_effort</code> becomes Ollama's <code>think</code> setting (<code>"none"</code> turns thinking off; <code>"low"</code>, <code>"medium"</code> and <code>"high"</code> set its level), keywords that <code>AsyncClient.chat</code> accepts (<code>think</code>, <code>format</code>, <code>options</code>, <code>keep_alive</code>, ...) are passed as they are, and other keys (e.g., <code>top_p</code>, <code>seed</code>, <code>num_ctx</code>) go into the model <code>options</code>. <code>temperature</code> and <code>max_tokens</code> are ignored (see <code>invalid_keywords</code>).</li>
 <li>Connection management</li>
 </ul>
 <h3 id="usage-example_2">Usage Example<a class="headerlink" href="#usage-example_2" title="Permanent link">&para;</a></h3>
@@ -1784,7 +1790,7 @@
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a>
 <a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="c1"># Initialize provider</span>
 <a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">OllamaProvider</span><span class="p">(</span>
-<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">"llama3.2-vision:latest"</span><span class="p">,</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">"qwen3.8:27b"</span><span class="p">,</span>
 <a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a>    <span class="n">host</span><span class="o">=</span><span class="s2">"http://localhost:11434"</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="p">)</span>
 <a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a>
@@ -1796,7 +1802,7 @@
 <a id="__codelineno-14-14" name="__codelineno-14-14" href="#__codelineno-14-14"></a><span class="n">response</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_json_response</span><span class="p">(</span><span class="s2">"What is the capital of France?"</span><span class="p">,</span> <span class="p">[])</span>
 <a id="__codelineno-14-15" name="__codelineno-14-15" href="#__codelineno-14-15"></a>
 <a id="__codelineno-14-16" name="__codelineno-14-16" href="#__codelineno-14-16"></a><span class="c1"># Stream response</span>
-<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="s2">"Tell me a story"</span><span class="p">,</span> <span class="p">[],</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<a id="__codelineno-14-17" name="__codelineno-14-17" href="#__codelineno-14-17"></a><span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="s2">"Tell me a story"</span><span class="p">,</span> <span class="p">[],</span> <span class="n">stream</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <a id="__codelineno-14-18" name="__codelineno-14-18" href="#__codelineno-14-18"></a>    <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">""</span><span class="p">)</span>
 <a id="__codelineno-14-19" name="__codelineno-14-19" href="#__codelineno-14-19"></a>
 <a id="__codelineno-14-20" name="__codelineno-14-20" href="#__codelineno-14-20"></a><span class="c1"># Clean up</span>

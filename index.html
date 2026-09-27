@@ -834,12 +834,13 @@
 <p><img src="images/robot.png" width="400"></p>
 
 <p>A framework for multi-agent review workflows using large language models.</p>
-<p>🚨 <strong>NEW in v1.2.0</strong>: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), while older models keep working unchanged. See <a href="api/providers/#model-compatibility">Model compatibility</a>.</p>
+<p>🚨 <strong>NEW in v1.2.0</strong>: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), plus local models like Qwen 3.8 through Ollama, while older models keep working unchanged. See <a href="#whats-new-in-v120">What's New</a> below and <a href="api/providers/#model-compatibility">Model compatibility</a>.</p>
 <h2 id="whats-new-in-v120">🆕 What's New in v1.2.0<a class="headerlink" href="#whats-new-in-v120" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Current models</strong>: tested with OpenAI GPT-6 (<code>gpt-6-astra</code>, <code>gpt-6-sol</code>, <code>gpt-6-luna</code>) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (<code>gemini-3.8-flash</code>, <code>gemini-3.5-flash-lite</code>). Older models such as <code>gpt-4o-mini</code> and <code>gemini-2.5-flash</code> keep working.</li>
 <li><strong>No more rejected-parameter errors</strong>: if a model rejects a setting in <code>model_args</code> (e.g., <code>temperature</code> on GPT-6 or Claude 5, or <code>max_tokens</code> on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.</li>
-<li><strong>New default models</strong>: <code>OpenAIProvider</code> and <code>LiteLLMProvider</code> default to <code>gpt-6-luna</code>, and <code>GoogleProvider</code> to <code>gemini-3.8-flash</code>. Pass <code>model=</code> to choose another.</li>
+<li><strong>New default models</strong>: <code>OpenAIProvider</code> and <code>LiteLLMProvider</code> default to <code>gpt-6-luna</code>, <code>GoogleProvider</code> to <code>gemini-3.8-flash</code>, and <code>OllamaProvider</code> to <code>qwen3.8:27b</code>. Pass <code>model=</code> to choose another.</li>
+<li><strong>Better local models</strong>: <code>OllamaProvider</code> constrains answers to the reviewer's JSON schema, maps <code>reasoning_effort</code> to Ollama's <code>think</code> setting, passes other <code>model_args</code> (e.g., <code>top_p</code>) as model options instead of failing, and <code>close()</code> works again. Tested with <code>qwen3.8:27b</code> on a 32 GB Apple Silicon Mac.</li>
 <li><strong>More accurate costs</strong>: computed from the token usage each API reports, including hidden reasoning tokens.</li>
 <li><strong>Python 3.10 or later</strong> is now required. On Python 3.9, <code>pip</code> installs 1.1.1.</li>
 </ul>
