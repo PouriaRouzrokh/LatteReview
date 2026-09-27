@@ -138,7 +138,9 @@ class DecisionReviewer(BasicReviewer):
             except Exception as e:
                 last_error = e
                 num_tried += 1
-                if isinstance(e, SystemOneResponseError) and not e.retryable:
+                # The provider already retried transient HTTP errors; retry only malformed responses (HTTP 200) and
+                # errors outside the request (e.g., an additional_context function), so retries do not multiply.
+                if isinstance(e, SystemOneResponseError) and e.status_code != 200:
                     break
                 self._log(f"Error reviewing item: {str(e)}. Retrying {num_tried}/{self.max_retries}")
         raise AgentError(

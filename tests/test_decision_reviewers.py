@@ -263,6 +263,23 @@ async def test_images_are_rejected(fake):
     assert backend.bodies == []
 
 
+async def test_exhausted_transient_errors_are_not_retried_again(make_provider):
+    """The provider retries 529s itself; the reviewer must not multiply those retries."""
+    provider, recorder = make_provider(httpx.Response(529, json={"detail": "overloaded"}), max_retries=1)
+    reviewer = DecisionReviewer(provider=provider, questions={"q": Noul("x")}, verbose=False)
+    with pytest.raises(AgentError, match="after 1 attempt"):
+        await reviewer.review_item("text")
+    assert len(recorder.requests) == 2
+
+
+async def test_malformed_responses_are_retried_by_the_reviewer(make_provider):
+    good = httpx.Response(200, json={"answers": {"q": {"type": "noul", "noul": 0.4}}})
+    provider, recorder = make_provider(httpx.Response(200, json={"answers": {}}), good)
+    reviewer = DecisionReviewer(provider=provider, questions={"q": Noul("x")}, verbose=False)
+    response, _, _ = await reviewer.review_item("text")
+    assert response["q"] == 0.4 and len(recorder.requests) == 2
+
+
 async def test_client_errors_are_not_retried_by_the_reviewer(fake):
     provider, backend = fake(status=401)
     reviewer = DecisionReviewer(provider=provider, questions={"q": Noul("x")}, verbose=False)

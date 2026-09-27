@@ -194,6 +194,8 @@ async def test_raw_dict_questions_and_structured_state(make_provider):
         {"answers": {"dl": {"type": "noul", "noul": 0.9}}},  # a question is missing
         {"result": {}},  # no answers at all
         {"answers": {"dl": {"type": "noul"}, "mod": {}, "q": {}, "plain": {}}},  # unreadable answers
+        {"answers": {"dl": {"type": "noul", "noul": 0.9}, "mod": {"type": "choice"}}},  # choice without an answer
+        {"answers": {"dl": {"type": "noul", "noul": 0.9}, "mod": {"choice": "CT"}, "q": {"type": "score"}}},  # score
     ],
 )
 async def test_malformed_responses(make_provider, response):

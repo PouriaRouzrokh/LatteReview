@@ -424,6 +424,8 @@ class SystemOneProvider(pydantic.BaseModel):
             choice = answer.get("choice")
             if choice is None and probabilities:
                 choice = max(probabilities, key=probabilities.get)
+            if choice is None:
+                raise ValueError("the answer has neither a choice nor probabilities")
             return Answer(type="choice", value=choice, label=choice, probabilities=probabilities, confidence=confidence)
 
         # Score: probabilities are keyed by level index ("0", "1", ...); re-key them by the question's level labels.
