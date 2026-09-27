@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
 [![View on arXiv](https://img.shields.io/badge/arXiv-View%20Paper-orange)](https://arxiv.org/abs/2501.05468)
@@ -13,11 +13,21 @@
 
 ---
 
-🚨 **NEW**: Now supports the Gemini 2.5 family of models using a new GoogleProvider class.
+🚨 **NEW in v1.2.0**: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), while older models keep working unchanged. See [Model compatibility](#-model-support).
 
 ---
 
 LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
+
+## 🆕 What's New in v1.2.0
+
+- **Current models**: tested with OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). Older models such as `gpt-4o-mini` and `gemini-2.5-flash` keep working.
+- **No more rejected-parameter errors**: if a model rejects a setting in `model_args` (e.g., `temperature` on GPT-6 or Claude 5, or `max_tokens` on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.
+- **New default models**: `OpenAIProvider` and `LiteLLMProvider` default to `gpt-6-luna`, and `GoogleProvider` to `gemini-3.8-flash`. Pass `model=` to choose another.
+- **More accurate costs**: computed from the token usage each API reports, including hidden reasoning tokens.
+- **Python 3.10 or later** is now required. On Python 3.9, `pip` installs 1.1.1.
+
+See the [CHANGELOG](./CHANGELOG.md) for the full list.
 
 ## 🎯 Key Features
 
@@ -29,7 +39,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - Enable reviewer agents to analyze peer feedback, cast votes, and propose corrections to other reviewers' assessments
 - Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
 - Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
-- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, and local models via Ollama
+- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, DeepSeek, OpenRouter, and local models via Ollama
 - High-performance asynchronous processing for efficient batch reviews
 - Standardized output format featuring detailed scoring metrics and reasoning transparency
 - Robust cost tracking and memory management systems
@@ -42,7 +52,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 pip install lattereview
 ```
 
-Please refer to the [installation guide](./docs/installation.md) for detailed instructions.
+LatteReview requires Python 3.10 or later. Please refer to the [installation guide](./docs/installation.md) for detailed instructions.
 
 ## 🚀 Quick Start and Documentation
 
@@ -65,27 +75,27 @@ load_dotenv()
 
 # First Reviewer: Conservative approach
 reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),
+    provider=LiteLLMProvider(model="gpt-6-luna"),
     name="Alice",
     backstory="a radiologist with expertise in systematic reviews",
     inclusion_criteria="The study must focus on applications of artificial intelligence in radiology.",
     exclusion_criteria="Exclude studies that are not peer-reviewed or not written in English.",
-    model_args={"temperature": 0.2},
+    model_args={"reasoning_effort": "low"},
 )
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-2.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-3.8-flash"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="The study must focus on applications of artificial intelligence in radiology.",
     exclusion_criteria="Exclude studies that are not peer-reviewed or not written in English.",
-    model_args={"temperature": 0.2},
+    model_args={"reasoning_effort": "low"},
 )
 
 # Expert Reviewer: Resolves disagreements
 expert = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="o3-mini"),
+    provider=LiteLLMProvider(model="gpt-6-sol"),
     name="Carol",
     backstory="a professor of AI in medical imaging",
     inclusion_criteria="The study must focus on applications of artificial intelligence in radiology.",
@@ -136,11 +146,20 @@ results.to_csv("review_results.csv", index=False)
 
 LatteReview offers flexible model integration through multiple providers:
 
-- **LiteLLMProvider** (Recommended): Supports OpenAI, Anthropic (Claude), Gemini, Groq, and more
+- **LiteLLMProvider** (Recommended): Supports OpenAI, Anthropic (Claude), Gemini, Groq, DeepSeek, OpenRouter, and more
 - **OpenAIProvider**: Direct integration with OpenAI and Gemini APIs
+- **GoogleProvider**: Direct integration with Gemini through Google's `google-genai` SDK
 - **OllamaProvider**: Optimized for local models via Ollama
 
+If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `llama3.2-vision:latest`. For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option.
+
 Note: Models should support async operations and structured JSON outputs for optimal performance.
+
+### Model compatibility
+
+Newer reasoning models reject some request parameters that older models accept. OpenAI's GPT-5/GPT-6 families and o-series models reject `max_tokens` (they use `max_completion_tokens`) and non-default `temperature`/`top_p`. Anthropic's Claude Opus 4.7+, Claude 5 and Fable models reject `temperature`, `top_p` and `top_k`. LatteReview handles this for you. If a model rejects a parameter in `model_args`, it is dropped (or `max_tokens` is sent as `max_completion_tokens`) with a one-time warning. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the token limit. Models that accept these parameters are called exactly as before, so existing code keeps working.
+
+For reasoning models, we recommend leaving out `max_tokens` and `temperature` and using `reasoning_effort` (e.g., `"low"` for screening, `"high"` for an expert reviewer) instead. See [Model compatibility](https://pouriarouzrokh.github.io/LatteReview/api/providers/#model-compatibility) in the docs for details.
 
 ## 📖 Documentation
 
@@ -177,6 +196,7 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
 - [x] Writing the white paper for the package and public launch
 - [x] Addign support for `RIS` files.
 - [x] Adding support for models without structured-output (json_schema) capability via an automatic JSON-mode fallback (e.g., DeepSeek).
+- [x] Supporting the newest reasoning models (GPT-6, Claude 5, Gemini 3.x) with automatic handling of parameters they reject.
 - [ ] Development of a no-code web application
 - [ ] (for v>) Adding conformal prediction tool for calibrating agents on their certainty scores
 - [ ] (for v>2.0.0) Adding a dialogue tool for enabling agents to seek external help (from helper agents or parallel reviewer agents) during review.

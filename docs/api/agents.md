@@ -47,7 +47,7 @@ class BasicReviewer(BaseModel):
 - **`prompt_path`**: Path to the template file for constructing prompts.
 - **`response_format`**: Dictionary defining the structure of expected responses.
 - **`provider`**: Language model provider instance (e.g., OpenAI, Ollama).
-- **`model_args`**: Arguments passed to the language model.
+- **`model_args`**: Arguments passed to the language model (e.g., `{"reasoning_effort": "low"}`). Parameters a model rejects are dropped with a warning; see [Model compatibility](providers.md#model-compatibility).
 - **`max_concurrent_requests`**: Limit for concurrent processing tasks.
 - **`name`**: Identifier for the agent.
 - **`backstory`**: Description of the agent's role.
@@ -244,7 +244,7 @@ from lattereview.providers import OpenAIProvider
 
 # Create a ScoringReviewer instance
 reviewer = ScoringReviewer(
-    provider=OpenAIProvider(model="gpt-4o"),
+    provider=OpenAIProvider(model="gpt-6-sol"),
     name="ContentQualityReviewer",
     scoring_task="Assess the quality of given content",
     scoring_set=[1, 2, 3, 4, 5],
@@ -264,7 +264,7 @@ from lattereview.providers import OpenAIProvider
 
 # Create a TitleAbstractReviewer instance
 reviewer = TitleAbstractReviewer(
-    provider=OpenAIProvider(model="gpt-4o"),
+    provider=OpenAIProvider(model="gpt-6-sol"),
     inclusion_criteria="Must be a peer-reviewed study",
     exclusion_criteria="Does not focus on AI in healthcare",
     reasoning="brief"

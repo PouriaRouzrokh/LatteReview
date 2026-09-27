@@ -9,7 +9,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
-## [1.1.2] - 2026-6-10
+## [1.2.0] - 2026-9-27
+
+This release makes LatteReview work with the newest OpenAI, Anthropic and Google models while keeping older models working unchanged. It also includes all changes from 1.1.2, which was never published to PyPI; they are listed below under 1.1.2.
+
+### Added
+
+- Support for current models, tested with real API calls: OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Opus 5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). See "Model compatibility" in the providers documentation.
+- Automatic handling of request parameters that newer models reject. When the API rejects a parameter in `model_args` (e.g., `temperature` on GPT-5/GPT-6 and Claude Opus 4.7+/Claude 5, or `max_tokens` on OpenAI reasoning models), `OpenAIProvider`, `LiteLLMProvider` and `GoogleProvider` drop it, or send `max_completion_tokens` instead of `max_tokens`, print a one-time warning, and retry. Models that accept these parameters are called exactly as before.
+- When a reasoning model runs out of tokens before finishing a structured answer (hidden reasoning counts against `max_tokens`), the call is retried once without the token limit, with a warning. Previously such items failed after all retries.
+- `GoogleProvider` passes Gemini's `thinking_config` from `model_args` (e.g., `{"thinking_level": "low"}` on Gemini 3.x).
+- `LiteLLMProvider` falls back to JSON mode when a model rejects the forced tool call that older LiteLLM releases use for structured output (Claude Opus 5.5 and Fable 5.1), and parses JSON wrapped in a markdown code fence.
+
+### Fixed
+
+- `OpenAIProvider` no longer fails reviews on models that `tokencost` does not know (e.g., all GPT-5.5+ and GPT-6 models). Costs are now computed from the token usage the API reports, including reasoning tokens, and priced with LiteLLM's model map. A model missing from every price map costs 0 with a warning instead of failing.
+- `GoogleProvider` costs now come from Gemini's reported usage (including thinking tokens) and current prices. The previous hard-coded rates were several times too high for current models, and each review made two extra `count_tokens` API calls.
+- `LiteLLMProvider` now reports costs for Groq models, whose responses name a model that is not in LiteLLM's price map.
+- Image inputs are sent with standard MIME types (`image/jpeg` for `.jpg` files). Claude rejected the previous `image/jpg`.
+- `OpenAIProvider` uses `client.chat.completions.parse` when available and falls back to `client.beta.chat.completions.parse` on older `openai` releases (the `beta` path no longer exists in `openai` 3.x).
+- Cost warnings are printed once per model instead of once per reviewed item.
+
+### Changed
+
+- Python 3.10 or later is now required (`requires-python>=3.10`). Current releases of LiteLLM, `openai` and `google-genai` no longer support Python 3.9; Python 3.9 users keep getting LatteReview 1.1.1 from `pip`.
+- Dependency floors raised: `litellm>=1.94.0` (native Claude structured outputs) and `google-genai>=1.51.0` (Gemini 3 `thinking_level`).
+- README, documentation and all tutorial notebooks now use current models and were re-executed with saved outputs. Examples use `reasoning_effort` instead of `max_tokens`/`temperature` for reasoning models. The `evaluation/` notebooks are unchanged records of the original evaluation runs.
+- Fixed tutorial bugs found while re-running them: a misspelled CSV path in the literature-analysis tutorial, a wrong column name in the scoring tutorial, and image generation that could give two target colors the same digit.
+- **Default models updated** to current cost-efficient workhorse models: `OpenAIProvider` and `LiteLLMProvider` now default to `gpt-6-luna` (was `gpt-4o-mini`), and `GoogleProvider` defaults to `gemini-3.8-flash` (was `gemini-2.5-pro`, which Google now limits to accounts that have used it before). This changes the model, and so the cost and results, for code that relies on the default; pass `model=` explicitly to keep the old one. `OllamaProvider` keeps `llama3.2-vision:latest`, since local models must already be pulled.
+
+## [1.1.2] - 2026-6-10 (never published to PyPI; included in 1.2.0)
 
 ### Fixed
 

@@ -14,6 +14,37 @@ The providers module includes:
 
 ** You can use any of the models offered by the providers above as far as they support structured outputs. **
 
+## Model compatibility
+
+Newer models, especially reasoning models, reject some request parameters that older models accept:
+
+| Models | Parameters they reject |
+| --- | --- |
+| OpenAI GPT-5 and GPT-6 families and o-series (e.g., `gpt-6-sol`, `gpt-5.5`, `o4-mini`) | `max_tokens` (renamed to `max_completion_tokens`); most also reject `temperature` other than 1 and `top_p` |
+| Anthropic Claude Opus 4.7+, Claude 5 and Fable (e.g., `claude-opus-5-5`, `claude-sonnet-5`, `claude-fable-5-1`) | `temperature`, `top_p`, `top_k` |
+| Google Gemini 3.x (e.g., `gemini-3.8-flash`) | None yet, but Google has deprecated `temperature`, `top_p` and `top_k` and recommends leaving them at their defaults |
+
+Since v1.2.0, LatteReview handles these differences for you:
+
+- **Rejected parameters are dropped.** If the API rejects a parameter in `model_args`, the provider drops it (or sends `max_completion_tokens` instead of `max_tokens`), prints a one-time warning, and retries. The adjustment applies to the rest of that provider's calls. Models that accept the parameter are called exactly as before, so code such as `model_args={"max_tokens": 200, "temperature": 0.1}` keeps working with new models; the rejected values are simply not applied.
+- **Token limits don't cut off answers.** Reasoning models count hidden reasoning tokens against `max_tokens`/`max_completion_tokens`/`max_output_tokens`, so a small limit can leave no room for the answer. If a structured answer is cut off by the limit, the call is retried once without it (with a warning), and the limit is not sent again for that provider.
+- **Claude returns structured output natively.** Through `LiteLLMProvider`, Claude models use Anthropic's native structured outputs. If a model rejects the forced tool call that older LiteLLM releases use instead (Claude Opus 5.5 and Fable 5.1 do), LatteReview falls back to JSON mode.
+
+Recommendations:
+
+- For reasoning models, leave out `max_tokens` and `temperature`. Use `reasoning_effort` to trade depth for speed and cost (e.g., `"low"` for screening, `"high"` for an expert reviewer). It works with `LiteLLMProvider` for OpenAI, Claude and Gemini models, and with `OpenAIProvider` for OpenAI models and Gemini (through Google's OpenAI-compatible endpoint). Models without reasoning (e.g., `gpt-4o-mini`) reject it, and it is dropped with a warning.
+- With `GoogleProvider`, use Gemini's own `thinking_config` instead: `{"thinking_level": "low"}` on Gemini 3.x or `{"thinking_budget": 0}` on Gemini 2.5 Flash. `GoogleProvider` passes only `temperature`, `top_p`, `top_k`, `max_output_tokens`, `safety_settings` and `thinking_config` to Gemini and ignores other keys (such as `max_tokens` and `reasoning_effort`).
+- Older models (e.g., `gpt-4o-mini`, `gemini-2.5-flash`, `claude-haiku-4-5`) keep accepting `temperature` and `max_tokens`.
+
+Models tested with real API calls for v1.2.0:
+
+| Provider path | Models |
+| --- | --- |
+| `OpenAIProvider` | `gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.5`, `gpt-4o-mini` |
+| `OpenAIProvider` (Gemini endpoint) | `gemini-3.8-flash` |
+| `GoogleProvider` | `gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-2.5-pro`, `gemini-2.5-flash` |
+| `LiteLLMProvider` | `gpt-6-astra`, `gpt-6-luna`, `gpt-4o-mini`, `o4-mini`, `anthropic/claude-opus-5-5`, `anthropic/claude-opus-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-fable-5-1`, `gemini/gemini-3.8-flash`, `groq/openai/gpt-oss-120b`, `deepseek/deepseek-flash`, `openrouter/qwen/qwen3.8-27b` |
+
 ## BaseProvider
 
 ### Description
@@ -32,6 +63,7 @@ class BaseProvider(pydantic.BaseModel):
     response_format: Optional[Any] = None
     last_response: Optional[Any] = None
     calculate_cost: bool = True  # Controls whether to calculate token costs
+    param_adjustments: Dict[str, Optional[str]] = {}  # Parameters the model rejected (see Model compatibility)
 ```
 
 ### Error Types
@@ -90,7 +122,7 @@ async def get_json_response(
 
 ### Cost Calculation
 
-All providers include built-in cost calculation for both input and output tokens (by default using the `tokencost` package, unless the provider offers unique solutions for cost calculation). This can be controlled using the `calculate_cost` parameter:
+All providers include built-in cost calculation for both input and output tokens. Costs are computed from the token usage the API reports, which includes hidden reasoning and thinking tokens, priced with LiteLLM's model price map. When the usage or the price is not available, the cost is estimated from the text with the `tokencost` package. A model missing from both price maps (e.g., one released after your LiteLLM version) is reported as costing 0, with a warning, instead of failing the review. This can be controlled using the `calculate_cost` parameter:
 
 ```python
 # Initialize provider with cost calculation disabled
@@ -121,7 +153,7 @@ class OpenAIProvider(BaseProvider):
     provider: str = "OpenAI"
     api_key: str = None
     base_url: str = None
-    model: str = "gpt-4o-mini"
+    model: str = "gpt-6-luna"
     response_format_class: Optional[Any] = None
 ```
 
@@ -141,10 +173,10 @@ class OpenAIProvider(BaseProvider):
 from lattereview.providers import OpenAIProvider
 
 # Initialize with OpenAI model
-provider = OpenAIProvider(model="gpt-4o")
+provider = OpenAIProvider(model="gpt-6-sol")
 
 # Initialize with Gemini model (no "gemini/" prefix here; that prefix is only for LiteLLMProvider)
-provider = OpenAIProvider(model="gemini-2.5-flash")
+provider = OpenAIProvider(model="gemini-3.8-flash")
 
 # Initialize with OpenRouter
 provider = OpenAIProvider(
@@ -195,7 +227,7 @@ Alternatively, `LiteLLMProvider` (recommended) reaches OpenRouter models directl
 
 ### Description
 
-Implementation for Google's Gemini API, supporting the latest Gemini models including Gemini 2.5 Pro and Flash. This provider enables direct integration with Google's AI models, handling both text and multimodal inputs, as well as structured JSON responses.
+Implementation for Google's Gemini API, supporting the Gemini 3.x and 2.5 models (e.g., `gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-2.5-pro`). This provider enables direct integration with Google's AI models, handling both text and multimodal inputs, as well as structured JSON responses.
 
 ### Class Definition
 
@@ -203,7 +235,7 @@ Implementation for Google's Gemini API, supporting the latest Gemini models incl
 class GoogleProvider(BaseProvider):
     provider: str = "Google"
     api_key: Optional[str] = None
-    model: str = "gemini-2.5-pro"
+    model: str = "gemini-3.8-flash"
     response_format: Optional[Dict[str, Any]] = None
     response_format_class: Optional[Any] = None
     last_response: Optional[Any] = None
@@ -215,7 +247,8 @@ class GoogleProvider(BaseProvider):
 - Automatic API key handling from environment variables (`GEMINI_API_KEY`)
 - Support for structured JSON responses
 - Processing of text and image inputs (multimodal capabilities)
-- Native token counting and cost calculation using Google's token counter
+- Cost calculation from the token usage Gemini reports, including thinking tokens
+- Gemini's `thinking_config` can be passed through `model_args` (see [Model compatibility](#model-compatibility))
 - Comprehensive error handling with detailed error messages
 
 ### Usage Example
@@ -223,11 +256,11 @@ class GoogleProvider(BaseProvider):
 ```python
 from lattereview.providers import GoogleProvider
 
-# Initialize with default Gemini 2.5 Pro model
+# Initialize with the default model (gemini-3.8-flash)
 provider = GoogleProvider()
 
 # Or specify a different model
-provider = GoogleProvider(model="gemini-2.5-flash")
+provider = GoogleProvider(model="gemini-3.5-flash-lite")
 
 # Get a text response
 response, cost = await provider.get_response("What is the capital of France?")
@@ -238,6 +271,21 @@ response, cost = await provider.get_response("What's in this image?", ["path/to/
 # Get a structured JSON response
 provider.set_response_format({"name": str, "population": int, "landmarks": [str]})
 response, cost = await provider.get_json_response("Give me information about Paris.")
+```
+
+### Generation Parameters
+
+Reviewers pass their `model_args` to the provider. `GoogleProvider` copies `temperature`, `top_p`, `top_k`, `max_output_tokens`, `safety_settings` and `thinking_config` into Gemini's generation config and ignores other keys:
+
+```python
+from lattereview.agents import ScoringReviewer
+
+reviewer = ScoringReviewer(
+    provider=GoogleProvider(model="gemini-3.8-flash"),
+    name="Gemini",
+    scoring_task="Does the study use deep learning?",
+    model_args={"thinking_config": {"thinking_level": "low"}},  # Gemini 2.5: {"thinking_budget": 0}
+)
 ```
 
 ### Response Format
@@ -322,7 +370,7 @@ A unified provider implementation using LiteLLM, enabling access to multiple LLM
 ```python
 class LiteLLMProvider(BaseProvider):
     provider: str = "LiteLLM"
-    model: str = "gpt-4o-mini"
+    model: str = "gpt-6-luna"
     custom_llm_provider: Optional[str] = None
     response_format_class: Optional[Any] = None
 ```
@@ -341,7 +389,9 @@ class LiteLLMProvider(BaseProvider):
 from lattereview.providers import LiteLLMProvider
 
 # Initialize with different models
-provider = LiteLLMProvider(model="gpt-4o-mini")
+provider = LiteLLMProvider(model="gpt-6-luna")
+provider = LiteLLMProvider(model="anthropic/claude-sonnet-5")  # Needs ANTHROPIC_API_KEY
+provider = LiteLLMProvider(model="gemini/gemini-3.8-flash")  # Needs GEMINI_API_KEY
 
 # Get response
 response, cost = await provider.get_response("What is the capital of the country shown in this map?", ["path/to/image1.png"])

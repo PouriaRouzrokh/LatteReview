@@ -12,11 +12,14 @@ from google.genai import types
 
 from .base_provider import BaseProvider, ProviderError, ClientCreationError, ResponseError, InvalidResponseFormatError
 
+# model_args keys that are copied into the Gemini GenerateContentConfig; other keys are ignored.
+GENERATION_CONFIG_PARAMS = ("temperature", "top_p", "top_k", "max_output_tokens", "safety_settings", "thinking_config")
+
 
 class GoogleProvider(BaseProvider):
     provider: str = "Google"
     api_key: str = None
-    model: str = "gemini-2.5-pro"
+    model: str = "gemini-3.8-flash"
     response_format_class: Optional[Any] = None
 
     def __init__(self, **data: Any) -> None:
@@ -137,35 +140,14 @@ class GoogleProvider(BaseProvider):
             # Convert to Google genai format
             contents = self._convert_to_genai_format(input_prompt, image_path_list, message_list)
 
-            # Run in executor to avoid blocking
-            loop = asyncio.get_event_loop()
-            # Create a config object for generation parameters
-            config = None
-            if kwargs:
-                config = types.GenerateContentConfig()
-                # Copy any valid parameters from kwargs to config
-                if "temperature" in kwargs:
-                    config.temperature = kwargs["temperature"]
-                if "top_p" in kwargs:
-                    config.top_p = kwargs["top_p"]
-                if "top_k" in kwargs:
-                    config.top_k = kwargs["top_k"]
-                if "max_output_tokens" in kwargs:
-                    config.max_output_tokens = kwargs["max_output_tokens"]
-                if "safety_settings" in kwargs:
-                    config.safety_settings = kwargs["safety_settings"]
-
-            # Call the generate_content method with the proper parameter structure
-            response = await loop.run_in_executor(
-                None, lambda: self.client.models.generate_content(model=self.model, contents=contents, config=config)
-            )
+            response = await self._fetch_adapting_params(self._generate, contents, self._config_kwargs(kwargs))
 
             # Extract text from response
             txt_response = response.text
             self.last_response = response
 
             # Calculate costs
-            cost = await self._get_cost(input_messages=input_prompt, completion_text=txt_response)
+            cost = self._get_response_cost(input_prompt, txt_response, response)
             return txt_response, cost
 
         except Exception as e:
@@ -191,31 +173,8 @@ class GoogleProvider(BaseProvider):
             # Convert to Google genai format
             contents = self._convert_to_genai_format(input_prompt, image_path_list, message_list)
 
-            # Create a config object for generation parameters
-            config = types.GenerateContentConfig()
-
-            # Set the response schema and mime type for JSON responses
-            config.response_mime_type = "application/json"
-            # Use the response_format dictionary directly
-            config.response_schema = self.response_format
-
-            # Copy any valid parameters from kwargs to config
-            if kwargs:
-                if "temperature" in kwargs:
-                    config.temperature = kwargs["temperature"]
-                if "top_p" in kwargs:
-                    config.top_p = kwargs["top_p"]
-                if "top_k" in kwargs:
-                    config.top_k = kwargs["top_k"]
-                if "max_output_tokens" in kwargs:
-                    config.max_output_tokens = kwargs["max_output_tokens"]
-                if "safety_settings" in kwargs:
-                    config.safety_settings = kwargs["safety_settings"]
-
-            # Run in executor to avoid blocking
-            loop = asyncio.get_event_loop()
-            response = await loop.run_in_executor(
-                None, lambda: self.client.models.generate_content(model=self.model, contents=contents, config=config)
+            response = await self._fetch_adapting_params(
+                self._generate_json, contents, self._config_kwargs(kwargs), is_truncated=self._is_truncated
             )
 
             self.last_response = response
@@ -239,7 +198,7 @@ class GoogleProvider(BaseProvider):
             txt_response = response.text if hasattr(response, "text") else str(parsed_response)
 
             # Calculate costs
-            cost = await self._get_cost(input_messages=input_prompt, completion_text=txt_response)
+            cost = self._get_response_cost(input_prompt, txt_response, response)
             return parsed_response, cost
 
         except Exception as e:
@@ -273,7 +232,7 @@ class GoogleProvider(BaseProvider):
                         image_bytes = f.read()
                     parts.append(
                         types.Part(
-                            inline_data=types.Blob(mime_type=f"image/{image_path.split('.')[-1]}", data=image_bytes)
+                            inline_data=types.Blob(mime_type=self._image_mime_type(image_path), data=image_bytes)
                         )
                     )
                 return parts
@@ -328,7 +287,7 @@ class GoogleProvider(BaseProvider):
                             image_bytes = f.read()
                         parts.append(
                             types.Part(
-                                inline_data=types.Blob(mime_type=f"image/{image_path.split('.')[-1]}", data=image_bytes)
+                                inline_data=types.Blob(mime_type=self._image_mime_type(image_path), data=image_bytes)
                             )
                         )
                     contents.append(types.Content(role="user", parts=parts))
@@ -361,67 +320,51 @@ class GoogleProvider(BaseProvider):
         except Exception as e:
             raise ProviderError(f"Error converting to genai format: {str(e)}")
 
-    async def _get_cost(self, input_messages: str, completion_text: str) -> Dict[str, float]:
-        """Calculate the cost using Gemini's native token counting."""
-        try:
-            if not self.calculate_cost:
-                return {
-                    "input_cost": 0.0,
-                    "output_cost": 0.0,
-                    "total_cost": 0.0,
-                }
+    def _config_kwargs(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
+        """Keep only the model_args that map onto the Gemini generation config."""
+        return {key: value for key, value in kwargs.items() if key in GENERATION_CONFIG_PARAMS}
 
-            # Get input token count using Gemini's native counter
-            input_token_response = await self.client.aio.models.count_tokens(
-                model=self.model,
-                contents=input_messages,
-            )
-            input_tokens = input_token_response.total_tokens
+    def _build_config(self, kwargs: Optional[Dict[str, Any]] = None, json_mode: bool = False) -> Any:
+        """Build the generation config from model_args, plus the response schema for JSON responses."""
+        if not kwargs and not json_mode:
+            return None
+        config = types.GenerateContentConfig(**self._config_kwargs(kwargs or {}))
+        if json_mode:
+            config.response_mime_type = "application/json"
+            config.response_schema = self.response_format
+        return config
 
-            # Get output token count
-            output_token_response = await self.client.aio.models.count_tokens(
-                model=self.model,
-                contents=completion_text,
-            )
-            output_tokens = output_token_response.total_tokens
+    async def _generate(self, contents: Any, kwargs: Optional[Dict[str, Any]] = None, json_mode: bool = False) -> Any:
+        """Call generate_content in an executor so the synchronous client does not block the event loop."""
+        config = self._build_config(kwargs, json_mode)
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, lambda: self.client.models.generate_content(model=self.model, contents=contents, config=config)
+        )
 
-            # Calculate costs based on Gemini's pricing model
-            # Rates as of May 2025 (these should be updated if Google changes pricing)
-            if "1.5-pro" in self.model or "1.5-flash" in self.model:
-                # Gemini 1.5 Pro/Flash rates
-                input_cost = input_tokens * 0.000007  # $0.007 per 1K input tokens
-                output_cost = output_tokens * 0.000021  # $0.021 per 1K output tokens
-            elif "1.5-ultra" in self.model:
-                # Gemini 1.5 Ultra rates
-                input_cost = input_tokens * 0.000014  # $0.014 per 1K input tokens
-                output_cost = output_tokens * 0.000042  # $0.042 per 1K output tokens
-            elif "2.5-pro" in self.model:
-                # Gemini 2.5 Pro rates
-                input_cost = input_tokens * 0.000025  # $0.025 per 1K input tokens
-                output_cost = output_tokens * 0.000075  # $0.075 per 1K output tokens
-            elif "2.5-flash" in self.model:
-                # Gemini 2.5 Flash rates
-                input_cost = input_tokens * 0.000005  # $0.005 per 1K input tokens
-                output_cost = output_tokens * 0.000015  # $0.015 per 1K output tokens
-            else:  # Default for other/newer models
-                input_cost = input_tokens * 0.00001  # $0.01 per 1K input tokens (default)
-                output_cost = output_tokens * 0.00003  # $0.03 per 1K output tokens (default)
+    async def _generate_json(self, contents: Any, kwargs: Optional[Dict[str, Any]] = None) -> Any:
+        """Call generate_content with the JSON response schema."""
+        return await self._generate(contents, kwargs, json_mode=True)
 
-            total_cost = input_cost + output_cost
+    def _is_truncated(self, response_or_error: Any) -> bool:
+        """Check whether a response was cut off by the token limit."""
+        candidates = getattr(response_or_error, "candidates", None)
+        return bool(candidates) and candidates[0].finish_reason == types.FinishReason.MAX_TOKENS
 
-            return {
-                "input_cost": float(input_cost),
-                "output_cost": float(output_cost),
-                "total_cost": float(total_cost),
-            }
-        except Exception as e:
-            # If there's an error, log it but don't fail the entire operation
-            print(f"Error calculating costs: {str(e)}")
-            return {
-                "input_cost": -1.0,
-                "output_cost": -1.0,
-                "total_cost": -1.0,
-            }
+    def _get_response_cost(self, input_prompt: str, txt_response: str, response: Any) -> Dict[str, float]:
+        """Calculate the cost from the token usage Gemini reported; thinking tokens are billed as output."""
+        usage = getattr(response, "usage_metadata", None)
+        prompt_tokens = getattr(usage, "prompt_token_count", None)
+        completion_tokens = None
+        if usage is not None and getattr(usage, "candidates_token_count", None) is not None:
+            completion_tokens = usage.candidates_token_count + (getattr(usage, "thoughts_token_count", None) or 0)
+        return self._get_cost(
+            input_messages=input_prompt,
+            completion_text=txt_response or "",
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            custom_llm_provider="gemini",
+        )
 
     def _prepare_message_list(
         self,
@@ -456,27 +399,7 @@ class GoogleProvider(BaseProvider):
         """Fetch response (compatibility method)."""
         # This is just a wrapper around get_response for backward compatibility
         contents = self._convert_to_genai_format("", [], message_list)
-
-        # Create a config object for generation parameters
-        config = None
-        if kwargs:
-            config = types.GenerateContentConfig()
-            # Copy any valid parameters from kwargs to config
-            if "temperature" in kwargs:
-                config.temperature = kwargs["temperature"]
-            if "top_p" in kwargs:
-                config.top_p = kwargs["top_p"]
-            if "top_k" in kwargs:
-                config.top_k = kwargs["top_k"]
-            if "max_output_tokens" in kwargs:
-                config.max_output_tokens = kwargs["max_output_tokens"]
-            if "safety_settings" in kwargs:
-                config.safety_settings = kwargs["safety_settings"]
-
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None, lambda: self.client.models.generate_content(model=self.model, contents=contents, config=config)
-        )
+        return await self._generate(contents, kwargs)
 
     async def _fetch_json_response(
         self, message_list: List[Dict[str, Any]], kwargs: Optional[Dict[str, Any]] = None
@@ -484,31 +407,7 @@ class GoogleProvider(BaseProvider):
         """Fetch JSON response (compatibility method)."""
         # This is just a wrapper around get_json_response for backward compatibility
         contents = self._convert_to_genai_format("", [], message_list)
-
-        # Create a config object for generation parameters
-        config = types.GenerateContentConfig()
-
-        # Set the response schema and mime type for JSON responses
-        config.response_mime_type = "application/json"
-        config.response_schema = self.response_format_class
-
-        # Copy any valid parameters from kwargs to config
-        if kwargs:
-            if "temperature" in kwargs:
-                config.temperature = kwargs["temperature"]
-            if "top_p" in kwargs:
-                config.top_p = kwargs["top_p"]
-            if "top_k" in kwargs:
-                config.top_k = kwargs["top_k"]
-            if "max_output_tokens" in kwargs:
-                config.max_output_tokens = kwargs["max_output_tokens"]
-            if "safety_settings" in kwargs:
-                config.safety_settings = kwargs["safety_settings"]
-
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            None, lambda: self.client.models.generate_content(model=self.model, contents=contents, config=config)
-        )
+        return await self._generate_json(contents, kwargs)
 
     def _extract_content(self, response: Any) -> str:
         """Extract content from the response."""

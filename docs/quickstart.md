@@ -67,39 +67,39 @@ Create reviewer agents by configuring `TitleAbstractReviewer` objects. Each revi
 - A unique name
 - Inclusion and exclusion criteria
 - A reasoning argument that defaults to `brief` but can also be set to `cot` for detailed step-by-step reasoning. This cannot be `None`.
-- Optional configuration like temperature and model parameters
+- Optional model parameters (`model_args`), such as `reasoning_effort` for reasoning models or `temperature` for older models (see [Model compatibility](api/providers.md#model-compatibility))
 
 ```python
 # Example of creating a TitleAbstractReviewer
 reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),  # Choose your model provider
+    provider=LiteLLMProvider(model="gpt-6-luna"),   # Choose your model provider
     name="Alice",                                    # Unique name for the reviewer
     inclusion_criteria="Must be relevant to AI in medical imaging.",
     exclusion_criteria="Exclude papers focusing only on basic sciences.",
     reasoning="brief",                               # Reasoning explanation
-    model_args={"temperature": 0.1}                 # Model configuration
+    model_args={"reasoning_effort": "low"}           # Model configuration
 )
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-2.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-3.8-flash"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="Relevant to artificial intelligence in radiology.",
     exclusion_criteria="Exclude studies focused solely on hardware.",
     reasoning="cot",
-    model_args={"temperature": 0.8}
+    model_args={"reasoning_effort": "medium"}
 )
 
 # Expert Reviewer: Resolves disagreements
 expert = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="o3-mini"),
+    provider=LiteLLMProvider(model="gpt-6-sol"),
     name="Carol",
     backstory="a professor of AI in medical imaging",
     inclusion_criteria="Must align with at least one of Alice or Bob's recommendations.",
     exclusion_criteria="Exclude only if both Alice and Bob disagreed.",
     reasoning="brief",
-    model_args={"reasoning_effort": "high"}  # o3-mini specific parameter
+    model_args={"reasoning_effort": "high"}  # Reasoning models accept reasoning_effort
 )
 ```
 
@@ -167,35 +167,35 @@ load_dotenv()
 
 # First Reviewer: Conservative approach
 reviewer1 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gpt-4o-mini"),
+    provider=LiteLLMProvider(model="gpt-6-luna"),
     name="Alice",
     backstory="a radiologist with expertise in systematic reviews",
     inclusion_criteria="Must be relevant to artificial intelligence in radiology.",
     exclusion_criteria="Exclude studies that are not peer-reviewed.",
     reasoning="brief",
-    model_args={"temperature": 0.1}
+    model_args={"reasoning_effort": "low"}
 )
 
 # Second Reviewer: More exploratory approach
 reviewer2 = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="gemini/gemini-2.5-flash"),
+    provider=LiteLLMProvider(model="gemini/gemini-3.8-flash"),
     name="Bob",
     backstory="a computer scientist specializing in medical AI",
     inclusion_criteria="Relevant to artificial intelligence in radiology.",
     exclusion_criteria="Exclude studies focused solely on hardware.",
     reasoning="cot",
-    model_args={"temperature": 0.8}
+    model_args={"reasoning_effort": "medium"}
 )
 
 # Expert Reviewer: Resolves disagreements
 expert = TitleAbstractReviewer(
-    provider=LiteLLMProvider(model="o3-mini"),
+    provider=LiteLLMProvider(model="gpt-6-sol"),
     name="Carol",
     backstory="a professor of AI in medical imaging",
     inclusion_criteria="Must align with at least one of Alice or Bob's recommendations.",
     exclusion_criteria="Exclude only if both Alice and Bob disagreed.",
     reasoning="brief",
-    model_args={"reasoning_effort": "high"}  # o3-mini specific parameter
+    model_args={"reasoning_effort": "high"}  # Reasoning models accept reasoning_effort
 )
 
 # Define workflow

@@ -4,6 +4,7 @@ import base64
 import inspect
 from typing import Optional, List, Dict, Any, Union, Tuple, Type
 import json
+import re
 from pydantic import BaseModel, create_model
 import litellm
 from litellm import acompletion, completion_cost
@@ -15,7 +16,7 @@ litellm.enable_json_schema_validation = True  # Enable client-side JSON schema v
 
 class LiteLLMProvider(BaseProvider):
     provider: str = "LiteLLM"
-    model: str = "gpt-4o-mini"
+    model: str = "gpt-6-luna"
     custom_llm_provider: Optional[str] = None
     response_format_class: Optional[Any] = None
 
@@ -46,9 +47,23 @@ class LiteLLMProvider(BaseProvider):
         LiteLLM's pricing map (e.g., proxied or newly released models) so that a
         successful review is never discarded over cost bookkeeping."""
         try:
-            return completion_cost(completion_response=response)
+            try:
+                return completion_cost(completion_response=response)
+            except Exception:
+                # Some responses (e.g., Groq's) report a model name that is not the key in LiteLLM's pricing map,
+                # so price the reported token usage under the model name the user gave instead.
+                input_cost, output_cost = litellm.cost_per_token(
+                    model=self.model,
+                    prompt_tokens=response.usage.prompt_tokens,
+                    completion_tokens=response.usage.completion_tokens,
+                    custom_llm_provider=self.custom_llm_provider,
+                )
+                return input_cost + output_cost
         except Exception as e:
-            print(f"Warning: could not calculate cost for model <{self.model}>: {str(e)}. Reporting cost as 0.")
+            self._warn_once(
+                f"cost:{self.model}",
+                f"could not calculate cost for model <{self.model}>: {str(e).splitlines()[0]}. Reporting cost as 0.",
+            )
             return 0.0
 
     async def get_response(
@@ -61,7 +76,7 @@ class LiteLLMProvider(BaseProvider):
         """Get a response from LiteLLM."""
         try:
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
-            response = await self._fetch_response(message_list, kwargs)
+            response = await self._fetch_adapting_params(self._fetch_response, message_list, kwargs)
             txt_response = self._extract_content(response)
             cost = self._safe_completion_cost(response)
 
@@ -82,39 +97,58 @@ class LiteLLMProvider(BaseProvider):
                 raise ValueError("Response format is not set")
 
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
-
-            # Pass response format directly to acompletion
-            kwargs["response_format"] = self.response_format_class
-
-            try:
-                response = await self._fetch_response(message_list, kwargs)
-            except Exception as e:
-                # Some providers (e.g., DeepSeek) no longer accept json_schema response
-                # formats. Retry in basic JSON mode with an explicit JSON instruction
-                # (providers like DeepSeek require the word "json" in the prompt).
-                if "response_format" not in str(e):
-                    raise
-                fallback_kwargs = {**kwargs, "response_format": {"type": "json_object"}}
-                json_keys = ", ".join(self.response_format_class.model_fields.keys())
-                fallback_messages = message_list + [
-                    {
-                        "role": "user",
-                        "content": f"Return your response as a valid JSON object with these keys: {json_keys}.",
-                    }
-                ]
-                response = await self._fetch_response(fallback_messages, fallback_kwargs)
-
+            response = await self._fetch_adapting_params(
+                self._fetch_json_response, message_list, kwargs, is_truncated=self._is_truncated
+            )
             txt_response = self._extract_content(response)
 
-            # Parse the response as JSON if it's a string
+            # Parse the response as JSON if it's a string. In basic JSON mode some models
+            # (e.g., Claude) wrap the JSON in a markdown code fence.
             if isinstance(txt_response, str):
-                txt_response = json.loads(txt_response)
+                fenced = re.fullmatch(r"\s*```(?:json)?\s*(.*?)\s*```\s*", txt_response, re.DOTALL)
+                txt_response = json.loads(fenced.group(1) if fenced else txt_response)
 
             cost = self._safe_completion_cost(response)
 
             return txt_response, cost
         except Exception as e:
             raise ResponseError(f"Error getting JSON response: {str(e)}")
+
+    async def _fetch_json_response(
+        self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None
+    ) -> Any:
+        """Fetch a response in the defined JSON schema, falling back to basic JSON mode if the provider rejects it."""
+        # Pass response format directly to acompletion
+        kwargs = {**(kwargs or {}), "response_format": self.response_format_class}
+        try:
+            return await self._fetch_response(message_list, kwargs)
+        except Exception as e:
+            # Some providers (e.g., DeepSeek) no longer accept json_schema response
+            # formats, and some models (e.g., Claude Opus 5.5 and Fable 5.1) reject the
+            # forced tool call that older LiteLLM releases use to emulate them. Retry in
+            # basic JSON mode with an explicit JSON instruction (providers like DeepSeek
+            # require the word "json" in the prompt).
+            if "response_format" not in str(e) and "tool_choice" not in str(e):
+                raise
+            fallback_kwargs = {**kwargs, "response_format": {"type": "json_object"}}
+            json_keys = ", ".join(self.response_format_class.model_fields.keys())
+            fallback_messages = message_list + [
+                {
+                    "role": "user",
+                    "content": f"Return your response as a valid JSON object with these keys: {json_keys}.",
+                }
+            ]
+            return await self._fetch_response(fallback_messages, fallback_kwargs)
+
+    def _is_truncated(self, response_or_error: Any) -> bool:
+        """Check whether a response (or the error raised for it) was cut off by the token limit."""
+        if isinstance(response_or_error, Exception):
+            # LiteLLM validates the JSON before returning it, so a cut-off answer surfaces as a validation error;
+            # some providers (e.g., Groq) reject cut-off JSON themselves.
+            error = response_or_error.__cause__ or response_or_error
+            return isinstance(error, litellm.JSONSchemaValidationError) or "max completion tokens reached" in str(error)
+        choices = getattr(response_or_error, "choices", None)
+        return bool(choices) and choices[0].finish_reason == "length"
 
     def _prepare_message_list(
         self,
@@ -159,7 +193,7 @@ class LiteLLMProvider(BaseProvider):
             )
             return response
         except Exception as e:
-            raise ResponseError(f"Error fetching response: {str(e)}")
+            raise ResponseError(f"Error fetching response: {str(e)}") from e
 
     def _extract_content(self, response: Any) -> str:
         """Extract content from the response, handling both direct content and tool calls."""
@@ -189,7 +223,7 @@ class LiteLLMProvider(BaseProvider):
     def _encode_image(self, image_path):
         with open(image_path, "rb") as image_file:
             base64_image = base64.b64encode(image_file.read()).decode("utf-8")
-            return f"data:image/{image_path.split('.')[-1]};base64,{base64_image}"
+            return f"data:{self._image_mime_type(image_path)};base64,{base64_image}"
 
     def _check_basemodel_class(self, arg):
         """Check if the argument is a Pydantic BaseModel class."""

@@ -2,7 +2,7 @@
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
 [![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
 [![View on arXiv](https://img.shields.io/badge/arXiv-View%20Paper-orange)](https://arxiv.org/abs/2501.05468)
@@ -13,7 +13,17 @@
 
 A framework for multi-agent review workflows using large language models.
 
-🚨 **NEW**: Now supports the Gemini 2.5 family of models using a new GoogleProvider class.
+🚨 **NEW in v1.2.0**: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), while older models keep working unchanged. See [Model compatibility](api/providers.md#model-compatibility).
+
+## 🆕 What's New in v1.2.0
+
+- **Current models**: tested with OpenAI GPT-6 (`gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (`gemini-3.8-flash`, `gemini-3.5-flash-lite`). Older models such as `gpt-4o-mini` and `gemini-2.5-flash` keep working.
+- **No more rejected-parameter errors**: if a model rejects a setting in `model_args` (e.g., `temperature` on GPT-6 or Claude 5, or `max_tokens` on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.
+- **New default models**: `OpenAIProvider` and `LiteLLMProvider` default to `gpt-6-luna`, and `GoogleProvider` to `gemini-3.8-flash`. Pass `model=` to choose another.
+- **More accurate costs**: computed from the token usage each API reports, including hidden reasoning tokens.
+- **Python 3.10 or later** is now required. On Python 3.9, `pip` installs 1.1.1.
+
+See the [CHANGELOG](https://github.com/PouriaRouzrokh/LatteReview/blob/main/CHANGELOG.md) for the full list.
 
 ## Overview
 
@@ -29,7 +39,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - Enable reviewer agents to analyze peer feedback, cast votes, and propose corrections to other reviewers' assessments
 - Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
 - Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
-- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, and local models via Ollama
+- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, DeepSeek, OpenRouter, and local models via Ollama
 - High-performance asynchronous processing for efficient batch reviews
 - Standardized output format featuring detailed scoring metrics and reasoning transparency
 - Robust cost tracking and memory management systems

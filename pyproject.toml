@@ -1,6 +1,6 @@
 [project]
 name = "lattereview"
-version = "1.1.2"
+version = "1.2.0"
 description = "A framework for multi-agent literature review workflows using large language models"
 readme = "README.md"
 authors = [{ name = "Pouria Rouzrokh", email = "po.rouzrokh@gmail.com" }]
@@ -24,13 +24,13 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 dependencies = [
-    "litellm>=1.55.2",
+    "litellm>=1.94.0",
     "nest-asyncio>=1.6.0",
     "ollama>=0.4.4",
     "openai>=1.57.4",
-    "google-genai>=1.15.0",
+    "google-genai>=1.51.0",
     "openpyxl>=3.1.5",
     "pandas>=2.2.2",
     "pydantic>=2.10.3",
@@ -73,4 +73,4 @@ include = ["lattereview*"]
 
 [tool.black]
 line-length = 120
-target-version = ['py39']
+target-version = ['py310']

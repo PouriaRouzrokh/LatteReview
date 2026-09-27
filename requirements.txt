@@ -1,8 +1,8 @@
-litellm>=1.55.2
+litellm>=1.94.0
 nest-asyncio>=1.6.0
 ollama>=0.4.4
 openai>=1.57.4
-google-genai>=1.15.0
+google-genai>=1.51.0
 openpyxl>=3.1.5
 pandas>=2.2.2
 pydantic>=2.10.3

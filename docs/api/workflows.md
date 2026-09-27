@@ -100,13 +100,13 @@ from lattereview.providers import LiteLLMProvider
 
 # Create reviewers
 reviewer1 = ScoringReviewer(
-    provider=LiteLLMProvider(model="gpt-4o"),
+    provider=LiteLLMProvider(model="gpt-6-luna"),
     name="Initial",
     scoring_task="Initial paper screening"
 )
 
 reviewer2 = ScoringReviewer(
-    provider=LiteLLMProvider(model="gpt-4o"),
+    provider=LiteLLMProvider(model="gpt-6-sol"),
     name="Expert",
     scoring_task="Detailed technical review"
 )

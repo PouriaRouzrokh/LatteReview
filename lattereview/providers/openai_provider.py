@@ -13,7 +13,7 @@ class OpenAIProvider(BaseProvider):
     provider: str = "OpenAI"
     api_key: str = None
     base_url: str = None
-    model: str = "gpt-4o-mini"
+    model: str = "gpt-6-luna"
     response_format_class: Optional[Any] = None
 
     def __init__(self, **data: Any) -> None:
@@ -75,9 +75,9 @@ class OpenAIProvider(BaseProvider):
         """Get a response from OpenAI."""
         try:
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
-            response = await self._fetch_response(message_list, kwargs)
+            response = await self._fetch_adapting_params(self._fetch_response, message_list, kwargs)
             txt_response = self._extract_content(response)
-            cost = self._get_cost(input_messages=input_prompt, completion_text=txt_response)
+            cost = self._get_response_cost(input_prompt, txt_response, response)
             return txt_response, cost
         except Exception as e:
             raise ResponseError(f"Error getting response: {str(e)}")
@@ -94,9 +94,11 @@ class OpenAIProvider(BaseProvider):
             if not self.response_format_class:
                 raise ValueError("Response format is not set")
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
-            response = await self._fetch_json_response(message_list, kwargs)
+            response = await self._fetch_adapting_params(
+                self._fetch_json_response, message_list, kwargs, is_truncated=self._is_truncated
+            )
             txt_response = self._extract_content(response)
-            cost = self._get_cost(input_messages=input_prompt, completion_text=txt_response)
+            cost = self._get_response_cost(input_prompt, txt_response, response)
             return txt_response, cost
         except Exception as e:
             raise ResponseError(f"Error getting JSON response: {str(e)}")
@@ -141,18 +143,22 @@ class OpenAIProvider(BaseProvider):
         try:
             return await self.client.chat.completions.create(model=self.model, messages=message_list, **(kwargs or {}))
         except Exception as e:
-            raise ResponseError(f"Error fetching response: {str(e)}")
+            raise ResponseError(f"Error fetching response: {str(e)}") from e
 
     async def _fetch_json_response(
         self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None
     ) -> Any:
         """Fetch the JSON response from OpenAI."""
         try:
-            return await self.client.beta.chat.completions.parse(
+            # Newer openai releases expose parse() on chat.completions; older ones only have it under beta.
+            completions = self.client.chat.completions
+            if not hasattr(completions, "parse"):
+                completions = self.client.beta.chat.completions
+            return await completions.parse(
                 model=self.model, messages=message_list, response_format=self.response_format_class, **(kwargs or {})
             )
         except Exception as e:
-            raise ResponseError(f"Error fetching JSON response: {str(e)}")
+            raise ResponseError(f"Error fetching JSON response: {str(e)}") from e
 
     def _extract_content(self, response: Any) -> str:
         """Extract content from the response."""
@@ -164,11 +170,33 @@ class OpenAIProvider(BaseProvider):
         except Exception as e:
             raise ResponseError(f"Error extracting content: {str(e)}")
 
+    def _is_truncated(self, response_or_error: Any) -> bool:
+        """Check whether a response (or the error raised for it) was cut off by the token limit."""
+        if isinstance(response_or_error, Exception):
+            return isinstance(response_or_error.__cause__ or response_or_error, openai.LengthFinishReasonError)
+        choices = getattr(response_or_error, "choices", None)
+        return bool(choices) and choices[0].finish_reason == "length"
+
+    def _get_response_cost(self, input_prompt: str, txt_response: str, response: Any) -> Dict[str, float]:
+        """Calculate the cost from the token usage the API reported, including hidden reasoning tokens."""
+        usage = getattr(response, "usage", None)
+        prompt_tokens = getattr(usage, "prompt_tokens", None)
+        total_tokens = getattr(usage, "total_tokens", None)
+        # Gemini's OpenAI-compatible endpoint leaves thinking tokens out of completion_tokens but not total_tokens.
+        completion_tokens = total_tokens - prompt_tokens if prompt_tokens is not None and total_tokens else None
+        return self._get_cost(
+            input_messages=input_prompt,
+            completion_text=txt_response or "",
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            custom_llm_provider="gemini" if "gemini" in self.model.lower() else "openai",
+        )
+
     # Function to encode the image
     def _encode_image(self, image_path):
         with open(image_path, "rb") as image_file:
             base64_image = base64.b64encode(image_file.read()).decode("utf-8")
-            return f"data:image/{image_path.split('.')[-1]};base64,{base64_image}"
+            return f"data:{self._image_mime_type(image_path)};base64,{base64_image}"
 
     def _check_basemodel_class(self, arg):
         """Check if the argument is a Pydantic BaseModel class."""
