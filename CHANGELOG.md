@@ -24,6 +24,10 @@ This release adds reviewers that use System One **decision models**, such as Typ
 - Tutorials: `decision_review_jev` (screening, scoring and categorical extraction with Jev) and `hybrid_review_jev_llm` (Jev screens everything, an LLM reviews the uncertain articles).
 - A `pytest` test suite (`tests/`): unit tests with mocked HTTP, and live tests (`pytest -m live`) that run against every configured backend.
 
+### Fixed
+
+- The LLM tutorial notebooks loaded `../.env`, which from `tutorials/<name>/` points to a file that does not exist, so API keys in the repository's `.env` were not loaded. They now load `../../.env`.
+
 ### Changed
 
 - `httpx>=0.27.0` is now a direct dependency (it was already installed through other dependencies). `pytest` and `pytest-asyncio` were added to the `dev` extra.
