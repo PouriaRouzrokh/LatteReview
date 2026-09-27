@@ -1,0 +1,1432 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A framework for multi-agent review workflows using large language models">
+      
+      
+      
+      
+        <link rel="prev" href="../quickstart/">
+      
+      
+        <link rel="next" href="../api/providers/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>🎯 Decision Models (Jev) - LatteReview</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#decision-models-jev" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="LatteReview" class="md-header__button md-logo" aria-label="LatteReview" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            LatteReview
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              🎯 Decision Models (Jev)
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/PouriaRouzrokh/LatteReview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="LatteReview" class="md-nav__button md-logo" aria-label="LatteReview" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    LatteReview
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/PouriaRouzrokh/LatteReview" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ☕Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../installation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🛠️Installation
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../quickstart/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🚀 Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🎯 Decision Models (Jev)
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🎯 Decision Models (Jev)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-decision-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is a decision model?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jev-vs-llm-reviewers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jev vs LLM reviewers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screening-titles-and-abstracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screening titles and abstracts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoring-and-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scoring and extraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cost-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confidence-gated-hybrid-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence-gated hybrid workflows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a threshold
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-hosting-openjev-and-kev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-hosting: OpenJev and Kev
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-differences-between-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known differences between backends
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    💻API Reference
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    💻API Reference
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/providers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Providers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/agents/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Agents
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/workflows/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Workflows
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../about/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    💡About
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#what-is-a-decision-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What is a decision model?
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#jev-vs-llm-reviewers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Jev vs LLM reviewers
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backends
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#screening-titles-and-abstracts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Screening titles and abstracts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#scoring-and-extraction" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Scoring and extraction
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cost-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cost model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#confidence-gated-hybrid-workflows" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Confidence-gated hybrid workflows
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#choosing-a-threshold" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Choosing a threshold
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evaluation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#self-hosting-openjev-and-kev" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Self-hosting: OpenJev and Kev
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-differences-between-backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Known differences between backends
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="decision-models-jev">Decision Models (Jev)<a class="headerlink" href="#decision-models-jev" title="Permanent link">&para;</a></h1>
+<p>Since v1.3.0, LatteReview can review with <strong>System One decision models</strong> such as TypeSafe's <strong>Jev</strong>, in addition to
+LLMs. This page explains what they are, how they differ from LLM reviewers, and how to use them well.</p>
+<h2 id="what-is-a-decision-model">What is a decision model?<a class="headerlink" href="#what-is-a-decision-model" title="Permanent link">&para;</a></h2>
+<p>An LLM reviewer reads a prompt and generates text: LatteReview asks it for JSON with a score and a written reasoning.
+A decision model generates nothing. It reads a text <strong>state</strong> (here, an article's title and abstract) and a set of
+typed <strong>questions</strong>, and returns a probability for every allowed answer. Three question types exist:</p>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>You define</th>
+<th>The answer</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Noul</code> (yes/no)</td>
+<td>an instruction, optionally what "true" and "false" mean</td>
+<td>the probability of "yes"</td>
+</tr>
+<tr>
+<td><code>Choice</code></td>
+<td>named options (up to 255 with Jev), optionally with descriptions</td>
+<td>the chosen option, a probability per option, and a confidence</td>
+</tr>
+<tr>
+<td><code>Score</code></td>
+<td>2-10 ordered levels</td>
+<td>the expected level, the most likely level, a probability per level, and a confidence</td>
+</tr>
+</tbody>
+</table>
+<p>Jev was released by TypeSafe AI in September 2026. It bills <strong>$0.042 per million input tokens</strong> (output is free) and
+answers in about 0.2 seconds. Screening 1,000 abstracts costs about $0.05-0.07: roughly half the cost of a small LLM
+such as <code>gpt-6-luna</code> (about $0.13), and one to two orders of magnitude less than larger models.</p>
+<h2 id="jev-vs-llm-reviewers">Jev vs LLM reviewers<a class="headerlink" href="#jev-vs-llm-reviewers" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>LLM reviewers (<code>TitleAbstractReviewer</code>, ...)</th>
+<th>Decision reviewers (<code>DecisionTitleAbstractReviewer</code>, ...)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Output</td>
+<td>JSON generated by the model</td>
+<td>probabilities; answers can never be off-schema</td>
+</tr>
+<tr>
+<td>Written reasoning</td>
+<td>yes (<code>reasoning="brief"</code> or <code>"cot"</code>)</td>
+<td>no. The <code>reasoning</code> column is <strong>generated by LatteReview</strong> from the probabilities</td>
+</tr>
+<tr>
+<td>Certainty</td>
+<td>the model's self-reported number</td>
+<td>a probability, which can be thresholded for a target recall</td>
+</tr>
+<tr>
+<td>Inputs</td>
+<td>text and images</td>
+<td>text only (English-optimized, up to 32k tokens for the state plus the longest question)</td>
+</tr>
+<tr>
+<td>Multi-step reasoning</td>
+<td>yes</td>
+<td>no multi-hop reasoning; keep hard, multi-step criteria for an LLM</td>
+</tr>
+<tr>
+<td>Prompting</td>
+<td>prompt templates, <code>examples</code>, <code>model_args</code></td>
+<td>typed questions only; <code>examples</code>, <code>reasoning</code>, <code>model_args</code> and prompt templates raise an error</td>
+</tr>
+<tr>
+<td>Cost per 1,000 abstracts</td>
+<td>about $0.13 (<code>gpt-6-luna</code>) to several dollars (<code>gpt-6-sol</code>, <code>gpt-6-astra</code>)</td>
+<td>about $0.05-0.07</td>
+</tr>
+<tr>
+<td>Latency per article</td>
+<td>one to several seconds</td>
+<td>about 0.2 seconds (about 16 articles per second at the default pace)</td>
+</tr>
+<tr>
+<td>Deterministic</td>
+<td>not guaranteed</td>
+<td>TypeSafe: identical requests give identical answers</td>
+</tr>
+</tbody>
+</table>
+<p>Decision reviewers are <code>BasicReviewer</code> subclasses, so they work in any <code>ReviewWorkflow</code>, next to LLM reviewers, with
+the usual <code>round-{R}_{name}_{key}</code> columns, filters, cost tracking and memory. <code>backstory</code> is accepted but ignored.</p>
+<h2 id="backends">Backends<a class="headerlink" href="#backends" title="Permanent link">&para;</a></h2>
+<p><code>SystemOneProvider</code> speaks the <code>/v1/systemone</code> protocol, so every backend works the same way:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">()</span>                                    <span class="c1"># TypeSafe, jev-latest, reads TYPESAFE_API_KEY</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openrouter"</span><span class="p">)</span>                <span class="c1"># OpenRouter, ~typesafe/jev-latest, reads OPENROUTER_API_KEY</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"jev-1.13.0"</span><span class="p">)</span>                  <span class="c1"># pin a version instead of the -latest alias</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>    <span class="c1"># a self-hosted server (see below)</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">base_url</span><span class="o">=</span><span class="s2">"https://your-gateway.example/v1/systemone"</span><span class="p">,</span>         <span class="c1"># any other /v1/systemone gateway</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">api_key</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">input_price_per_million</span><span class="o">=</span><span class="mf">0.042</span><span class="p">,</span>                                <span class="c1"># for cost tracking (custom URLs default to 0)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+</code></pre></div>
+<table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>How to get access</th>
+<th>Default model</th>
+<th>Key variable</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>typesafe</code> (default)</td>
+<td>an API key from the TypeSafe console</td>
+<td><code>jev-latest</code></td>
+<td><code>TYPESAFE_API_KEY</code></td>
+</tr>
+<tr>
+<td><code>openrouter</code></td>
+<td>an OpenRouter API key; Jev is billed through your OpenRouter credits</td>
+<td><code>~typesafe/jev-latest</code></td>
+<td><code>OPENROUTER_API_KEY</code></td>
+</tr>
+<tr>
+<td>custom <code>base_url</code></td>
+<td>your own server or gateway; the URL may end with or without <code>/v1/systemone</code></td>
+<td>the server's default</td>
+<td>none (pass <code>api_key=</code> if needed)</td>
+</tr>
+</tbody>
+</table>
+<p>Other options: <code>timeout</code> (default 60 s), <code>max_retries</code> (default 3; retries 429, 529, 5xx and timeouts with
+exponential backoff, honoring <code>Retry-After</code>), and <code>requests_per_minute</code>. Jev allows 1,200 requests per minute, so the
+two named backends pace requests to 1,000 per minute by default; custom URLs are not paced. Pass
+<code>requests_per_minute=0</code> to turn pacing off.</p>
+<p>On OpenRouter, the cost comes from the response; elsewhere it is computed from the reported input tokens.</p>
+<h2 id="screening-titles-and-abstracts">Screening titles and abstracts<a class="headerlink" href="#screening-titles-and-abstracts" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must involve CT scans."</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"The study must use deep learning."</span><span class="p">},</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">exclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must not include PET scans."</span><span class="p">},</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
+</code></pre></div>
+<p>Criteria can be a string (one criterion), a list, or a numbered dict. For each article, the reviewer sends <strong>one
+request</strong> with a 5-level <code>evaluation</code> score (mirroring the 1-5 rubric of <code>TitleAbstractReviewer</code>), an overall
+<code>include</code> question, and one yes/no question per criterion. It returns these columns:</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>evaluation</code></td>
+<td>int 1-5, the most likely rubric level; existing filters such as <code>evaluation &gt;= 4</code> keep working</td>
+</tr>
+<tr>
+<td><code>include_probability</code></td>
+<td>the probability that the article meets all inclusion and no exclusion criteria</td>
+</tr>
+<tr>
+<td><code>confidence</code></td>
+<td>Jev's confidence in the evaluation score (None if the backend does not report one)</td>
+</tr>
+<tr>
+<td><code>criteria</code></td>
+<td><code>{"inclusion": {criterion: p(met)}, "exclusion": {criterion: p(applies)}}</code></td>
+</tr>
+<tr>
+<td><code>reasoning</code></td>
+<td>a sentence generated by LatteReview from the probabilities, e.g., <code>P(include)=0.03; rated 'absolutely exclude'. Likely fails inclusion 1 (p=0.02: 'The study must involve CT scans.').</code></td>
+</tr>
+</tbody>
+</table>
+<p>The raw normalized answers (per-level probabilities, confidence) are kept under <code>_answers</code> in the <code>output</code> column.</p>
+<h2 id="scoring-and-extraction">Scoring and extraction<a class="headerlink" href="#scoring-and-extraction" title="Permanent link">&para;</a></h2>
+<p><code>DecisionScoringReviewer</code> is the counterpart of <code>ScoringReviewer</code>. <code>score_descriptions</code> become the answer levels,
+and <code>certainty</code> is the confidence x 100, on the same 0-100 scale:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionScoringReviewer</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionScoringReviewer</span><span class="p">(</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Validation"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">scoring_task</span><span class="o">=</span><span class="s2">"How strong is the validation of the model in this study?"</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">scoring_set</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">score_descriptions</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"no validation"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"internal validation only"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"external validation"</span><span class="p">},</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># Columns: score (a value from scoring_set), certainty (0-100), probabilities ({score: p})</span>
+</code></pre></div>
+<p>For your own questions, use <code>DecisionReviewer</code>. Each question becomes a column: the chosen option for <code>Choice</code>, the
+probability of "yes" for <code>Noul</code>, and the expected 0-based level for <code>Score</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionReviewer</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Noul</span><span class="p">,</span> <span class="n">Choice</span><span class="p">,</span> <span class="n">Score</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionReviewer</span><span class="p">(</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Extractor"</span><span class="p">,</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">questions</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="s2">"modality"</span><span class="p">:</span> <span class="n">Choice</span><span class="p">(</span><span class="s2">"What is the main imaging modality?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"MRI"</span><span class="p">,</span> <span class="s2">"X-ray"</span><span class="p">,</span> <span class="s2">"ultrasound"</span><span class="p">]),</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="s2">"deep_learning"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Does the study use deep learning?"</span><span class="p">),</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        <span class="s2">"quality"</span><span class="p">:</span> <span class="n">Score</span><span class="p">(</span><span class="s2">"How rigorous is the evaluation?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"weak"</span><span class="p">,</span> <span class="s2">"moderate"</span><span class="p">,</span> <span class="s2">"strong"</span><span class="p">]),</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="p">},</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">)</span>
+</code></pre></div>
+<p>This covers categorical extraction. Free-text extraction (e.g., "list the reported complications") still needs an LLM
+<code>AbstractionReviewer</code>.</p>
+<p>You can also call the provider directly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">decide</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">"Title: ...</span><span class="se">\n</span><span class="s2">Abstract: ..."</span><span class="p">,</span> <span class="n">questions</span><span class="o">=</span><span class="p">{</span><span class="s2">"rct"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Is this an RCT?"</span><span class="p">)})</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"rct"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>   <span class="c1"># probability of yes</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">result</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span>
+</code></pre></div>
+<h2 id="cost-model">Cost model<a class="headerlink" href="#cost-model" title="Permanent link">&para;</a></h2>
+<p>The state is billed <strong>once per request</strong>, and each extra short question adds only about 18 tokens (plus its own
+text). The same abstract cost 1,128 tokens with one question and 1,254 tokens with eight. So:</p>
+<ul>
+<li>Ask all questions about an item in <strong>one request</strong>. The decision reviewers always do.</li>
+<li>One question per criterion is nearly free, and gives you a probability for every criterion.</li>
+<li>Long criteria repeated in several questions cost more than the abstract itself; keep criteria concise.</li>
+</ul>
+<h2 id="confidence-gated-hybrid-workflows">Confidence-gated hybrid workflows<a class="headerlink" href="#confidence-gated-hybrid-workflows" title="Permanent link">&para;</a></h2>
+<p>Jev is cheap enough to screen everything, and an LLM can then review only the articles Jev is unsure about. Filters
+are plain row functions, so no special workflow is needed:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">OpenAIProvider</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">,</span> <span class="n">TitleAbstractReviewer</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.workflows</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewWorkflow</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">jev</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>                                    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion</span><span class="p">)</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">TitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">OpenAIProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"LLM"</span><span class="p">,</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>                            <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion_text</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion_text</span><span class="p">)</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">jev</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">]},</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">llm</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">],</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>     <span class="s2">"filter"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="mf">0.1</span> <span class="o">&lt;=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"round-A_Jev_include_probability"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">},</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">])</span>
+</code></pre></div>
+<p>Jev's probabilities are mostly close to 0 or 1, so a band of [0.1, 0.9) routed about 20% of articles to the LLM in
+our evaluation (5% to 43% depending on the dataset). Replacing Jev's decision with the LLM's inside the band gave
+almost the same recall and precision as reviewing everything with the LLM, for about one fifth of the LLM calls. The
+LLM is most useful on criteria that need an extra reasoning step, such as telling a segmentation study from a
+classifier study.</p>
+<p>See the <a href="https://github.com/PouriaRouzrokh/LatteReview/tree/main/tutorials/hybrid_review_jev_llm">hybrid tutorial</a>
+for a complete pipeline with measurements.</p>
+<h2 id="choosing-a-threshold">Choosing a threshold<a class="headerlink" href="#choosing-a-threshold" title="Permanent link">&para;</a></h2>
+<p>A probability cutoff fitted on one dataset (or one backend) does not carry over to another. With a labeled sample of
+your own data, <code>suggest_threshold</code> finds the highest cutoff that still reaches a target recall:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">suggest_threshold</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">suggest_threshold</span><span class="p">(</span><span class="n">labeled_df</span><span class="p">,</span> <span class="s2">"round-A_Jev_include_probability"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">,</span> <span class="n">target_recall</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># {'threshold': 0.08, 'recall': 0.96, 'precision': 0.41, 'n_included': 212, 'wss': 0.52}</span>
+</code></pre></div>
+<p><code>wss</code> is the work saved over sampling: the fraction of articles you would not need to read at that cutoff, minus the
+recall given up.</p>
+<h2 id="evaluation">Evaluation<a class="headerlink" href="#evaluation" title="Permanent link">&para;</a></h2>
+<p>We ran <code>DecisionTitleAbstractReviewer</code> (Jev 1.13) on all 11,793 articles of LatteReview's v1 evaluation: three
+custom searches over 978 radiology AI articles and six SYNERGY systematic-review datasets. The criteria were passed
+exactly as the v1 LLM reviewers got them. The comparison is the stored v1 LLM decision (<code>gemini-2.5-flash</code> and
+<code>gpt-4o-mini</code>, with <code>gpt-4o</code> resolving disagreements). The full run took 14 minutes and cost $0.71. The notebook and
+per-article results are in
+<a href="https://github.com/PouriaRouzrokh/LatteReview/blob/main/evaluation/decision_evaluation.ipynb"><code>evaluation/decision_evaluation.ipynb</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th style="text-align: right;">Articles</th>
+<th style="text-align: right;">Included</th>
+<th style="text-align: right;">Jev AUC</th>
+<th style="text-align: right;">LLM AUC</th>
+<th style="text-align: right;">Jev WSS@95</th>
+<th style="text-align: right;">LLM WSS@95</th>
+<th style="text-align: right;">Jev recall at p ≥ 0.5</th>
+<th style="text-align: right;">LLM recall at ≥ 3</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>search1</td>
+<td style="text-align: right;">978</td>
+<td style="text-align: right;">697</td>
+<td style="text-align: right;">0.957</td>
+<td style="text-align: right;">0.937</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.92</td>
+<td style="text-align: right;">0.92</td>
+</tr>
+<tr>
+<td>search2</td>
+<td style="text-align: right;">978</td>
+<td style="text-align: right;">367</td>
+<td style="text-align: right;">0.875</td>
+<td style="text-align: right;">0.818</td>
+<td style="text-align: right;">0.23</td>
+<td style="text-align: right;">0.25</td>
+<td style="text-align: right;">0.85</td>
+<td style="text-align: right;">0.84</td>
+</tr>
+<tr>
+<td>search3</td>
+<td style="text-align: right;">978</td>
+<td style="text-align: right;">55</td>
+<td style="text-align: right;">0.865</td>
+<td style="text-align: right;">0.789</td>
+<td style="text-align: right;">0.32</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.56</td>
+<td style="text-align: right;">0.78</td>
+</tr>
+<tr>
+<td>Appenzeller-Herzog 2019</td>
+<td style="text-align: right;">2,873</td>
+<td style="text-align: right;">26</td>
+<td style="text-align: right;">0.899</td>
+<td style="text-align: right;">0.847</td>
+<td style="text-align: right;">0.64</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.31</td>
+</tr>
+<tr>
+<td>Donners 2021</td>
+<td style="text-align: right;">258</td>
+<td style="text-align: right;">15</td>
+<td style="text-align: right;">0.923</td>
+<td style="text-align: right;">0.772</td>
+<td style="text-align: right;">0.66</td>
+<td style="text-align: right;">0.07</td>
+<td style="text-align: right;">0.67</td>
+<td style="text-align: right;">0.73</td>
+</tr>
+<tr>
+<td>Jeyaraman 2020</td>
+<td style="text-align: right;">1,175</td>
+<td style="text-align: right;">96</td>
+<td style="text-align: right;">0.795</td>
+<td style="text-align: right;">0.708</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.02</td>
+</tr>
+<tr>
+<td>Meijboom 2021</td>
+<td style="text-align: right;">882</td>
+<td style="text-align: right;">37</td>
+<td style="text-align: right;">0.941</td>
+<td style="text-align: right;">0.902</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">0.54</td>
+<td style="text-align: right;">0.14</td>
+<td style="text-align: right;">0.84</td>
+</tr>
+<tr>
+<td>Muthu 2021</td>
+<td style="text-align: right;">2,719</td>
+<td style="text-align: right;">336</td>
+<td style="text-align: right;">0.735</td>
+<td style="text-align: right;">0.728</td>
+<td style="text-align: right;">0.17</td>
+<td style="text-align: right;">0.27</td>
+<td style="text-align: right;">0.08</td>
+<td style="text-align: right;">0.24</td>
+</tr>
+<tr>
+<td>Oud 2018</td>
+<td style="text-align: right;">952</td>
+<td style="text-align: right;">20</td>
+<td style="text-align: right;">0.969</td>
+<td style="text-align: right;">0.955</td>
+<td style="text-align: right;">0.87</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">0.70</td>
+<td style="text-align: right;">0.80</td>
+</tr>
+<tr>
+<td><strong>Mean</strong></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"></td>
+<td style="text-align: right;"><strong>0.884</strong></td>
+<td style="text-align: right;"><strong>0.828</strong></td>
+<td style="text-align: right;"><strong>0.43</strong></td>
+<td style="text-align: right;"><strong>0.22</strong></td>
+<td style="text-align: right;">0.44</td>
+<td style="text-align: right;">0.61</td>
+</tr>
+</tbody>
+</table>
+<p>AUC measures how well a score ranks included articles above excluded ones. WSS@95 is the work saved over sampling at
+95% recall: the fraction of articles a reviewer would not need to read at the cutoff that still finds 95% of the
+included ones, minus the 5% recall given up.</p>
+<p>What this shows:</p>
+<ul>
+<li><strong>Jev ranks articles better than the v1 LLM reviewers on every dataset</strong> (Muthu is a tie), and saves about twice as
+  much screening work at 95% recall.</li>
+<li><strong>A cutoff of 0.5 is too strict for long, multi-part criteria.</strong> On the SYNERGY datasets, whose criteria are
+  paragraphs with many conditions, Jev's <code>include_probability</code> rarely exceeds 0.5 for included articles. The cutoffs
+  that reach 95% recall ranged from 0.01 to 0.23. Rank by the probability, or fit a cutoff with <code>suggest_threshold</code>
+  on labeled data, instead of using 0.5. Splitting long criteria into separate items (a list or numbered dict) also
+  gives you one probability per criterion.</li>
+<li><strong>Use the probabilities, not the <code>evaluation</code> integer, for ranking.</strong> The 1-5 <code>evaluation</code> column is kept for
+  compatibility with LLM filters, but it is coarse (mean AUC 0.79).</li>
+<li>Other signals rank about as well as <code>include_probability</code>: the expected evaluation score (mean AUC 0.889) and the
+  product of the per-criterion probabilities (0.894, best on 4 of 9 datasets). None was consistently best, so
+  <code>include_probability</code> is the recommended signal.</li>
+<li>The labels of the custom searches come from structured metadata and contain some noise: several articles labeled
+  "CT" are PET/CT studies that both Jev and the LLMs excluded.</li>
+</ul>
+<h2 id="self-hosting-openjev-and-kev">Self-hosting: OpenJev and Kev<a class="headerlink" href="#self-hosting-openjev-and-kev" title="Permanent link">&para;</a></h2>
+<p>Open models that serve the same <code>/v1/systemone</code> API can run on your own hardware. Point <code>base_url</code> at them:</p>
+<ul>
+<li>
+<p><strong>OpenJev 27B</strong> (<a href="https://huggingface.co/openjev">openjev</a>), an independent open model. <strong>The weights are licensed
+  CC BY-NC 4.0: research and non-commercial use only.</strong> The Apache-2.0 server
+  <a href="https://github.com/abhishekgahlot2/openjev-server"><code>openjev-server</code></a> runs it with vLLM or, on Apple silicon, MLX.
+  On a 32 GB Mac, use the 4-bit MLX build (about 15 GB):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"openjev-server[mlx] @ git+https://github.com/abhishekgahlot2/openjev-server"</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>hf<span class="w"> </span>download<span class="w"> </span>openjev/openjev-MLX-4bit<span class="w"> </span>--local-dir<span class="w"> </span>openjev-MLX-4bit
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>openjev<span class="w"> </span>serve<span class="w"> </span>--backend<span class="w"> </span>mlx<span class="w"> </span>--model<span class="w"> </span>openjev-MLX-4bit<span class="w"> </span>--profile<span class="w"> </span>openjev<span class="w"> </span>--port<span class="w"> </span><span class="m">3000</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>
+</code></pre></div>
+</li>
+<li>
+<p><strong>Kev</strong> (<a href="https://github.com/jaredpalmer/kev">jaredpalmer/kev</a>, Apache-2.0): Qwen base models with a LoRA adapter,
+  from 0.8B to 27B parameters. <code>python -m kev.serve --run jaredpalmer/kev-4b --port 8009</code>, then
+  <code>SystemOneProvider(base_url="http://127.0.0.1:8009", api_key="local")</code>.</p>
+</li>
+<li><strong>openjev-sglang</strong> serves any SGLang model by reading first-token probabilities, which its authors describe as
+  not calibrated.</li>
+</ul>
+<h2 id="known-differences-between-backends">Known differences between backends<a class="headerlink" href="#known-differences-between-backends" title="Permanent link">&para;</a></h2>
+<p>A compatible API is not an equivalent model. Before relying on another backend, check it on labeled data.</p>
+<p>We ran the same 200 articles (100 each from custom searches 2 and 3, stratified by label) through three backends
+with <code>DecisionTitleAbstractReviewer</code>:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Jev 1.13 (TypeSafe)</th>
+<th>OpenJev 27B, 4-bit MLX (<code>openjev-server</code> 0.2.0)</th>
+<th>Kev-4B (bf16, MLX)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AUC, search 2 / search 3</td>
+<td>0.873 / 0.838</td>
+<td>0.872 / 0.826</td>
+<td>0.854 / 0.814</td>
+</tr>
+<tr>
+<td>Same include decision as Jev (p ≥ 0.5)</td>
+<td>-</td>
+<td>98% / 92%</td>
+<td>77% / 51%</td>
+</tr>
+<tr>
+<td>Articles with 0.05 &lt; p &lt; 0.95</td>
+<td>51% / 66%</td>
+<td>34% / 64%</td>
+<td>91% / 99%</td>
+</tr>
+<tr>
+<td>Median confidence (evaluation score)</td>
+<td>0.93 / 0.77</td>
+<td>0.93 / 0.68</td>
+<td>0.36 / 0.50</td>
+</tr>
+<tr>
+<td>Time per article (6-8 questions)</td>
+<td>about 0.2 s; about 16 articles/s at the default pace</td>
+<td>9.5-13.5 s</td>
+<td>1.2-2.2 s</td>
+</tr>
+<tr>
+<td>Cost and license</td>
+<td>$0.042 per million input tokens</td>
+<td>free on your hardware; weights CC BY-NC 4.0</td>
+<td>free on your hardware; Apache-2.0</td>
+</tr>
+</tbody>
+</table>
+<p>The local models ran on an Apple M5 with 32 GB of memory.</p>
+<ul>
+<li><strong>OpenJev</strong> ranks and decides almost like Jev, but on a laptop it is about 50 times slower. A short one-question
+  request took about 0.9 s, and each question with an abstract-length state added about 0.7 s.</li>
+<li><strong>Kev-4B</strong> ranks almost as well, but its probabilities are much less extreme and its confidence values are lower.
+  A cutoff or an uncertain band tuned on Jev would route almost every article to the LLM with Kev. Fit thresholds
+  per backend.</li>
+<li><strong>Response details differ.</strong> TypeSafe returns identical answers for identical requests; OpenRouter's can differ
+  by about 0.01. OpenRouter reports the cost in the response. OpenJev returns probabilities with four decimals and
+  counts tokens differently (its prompt template makes requests look 2-4 times larger). TypeSafe requires a <code>model</code>;
+  local servers use their own default when it is omitted. Missing fields (a missing <code>confidence</code>, <code>legend</code> or
+  <code>choice</code>) are handled by <code>SystemOneProvider</code>, so reviewers see the same answer format everywhere.</li>
+<li>Jev limits a choice question to 255 options; OpenJev evaluates up to 52 options in one pass. Validation errors
+  from the server are shown in the error message.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

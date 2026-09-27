@@ -318,10 +318,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#whats-new-in-v120" class="md-nav__link">
+  <a href="#whats-new-in-v130" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🆕 What's New in v1.2.0
+        🆕 What's New in v1.3.0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-was-new-in-v120" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Was New in v1.2.0
       
     </span>
   </a>
@@ -501,6 +512,33 @@
   
   
   
+    <li class="md-nav__item">
+      <a href="decision_models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    🎯 Decision Models (Jev)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
     
     
     
@@ -510,10 +548,10 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
         
           
-          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
             
   
   
@@ -531,8 +569,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -687,10 +725,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#whats-new-in-v120" class="md-nav__link">
+  <a href="#whats-new-in-v130" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🆕 What's New in v1.2.0
+        🆕 What's New in v1.3.0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-was-new-in-v120" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Was New in v1.2.0
       
     </span>
   </a>
@@ -834,8 +883,17 @@
 <p><img src="images/robot.png" width="400"></p>
 
 <p>A framework for multi-agent review workflows using large language models.</p>
-<p>🚨 <strong>NEW in v1.2.0</strong>: Works with the newest models from OpenAI (GPT-6, GPT-5.x), Anthropic (Claude Opus 5.5, Sonnet 5, Fable 5.1) and Google (Gemini 3.x), plus local models like Qwen 3.8 through Ollama, while older models keep working unchanged. See <a href="#whats-new-in-v120">What's New</a> below and <a href="api/providers/#model-compatibility">Model compatibility</a>.</p>
-<h2 id="whats-new-in-v120">🆕 What's New in v1.2.0<a class="headerlink" href="#whats-new-in-v120" title="Permanent link">&para;</a></h2>
+<p>🚨 <strong>NEW in v1.3.0</strong>: Screen with <strong>decision models</strong> such as TypeSafe's <strong>Jev</strong>: probabilities instead of generated text, in about 0.2 seconds per article, next to your LLM reviewers in the same workflow. See <a href="#whats-new-in-v130">What's New</a> below and <a href="decision_models/">Decision Models</a>.</p>
+<h2 id="whats-new-in-v130">🆕 What's New in v1.3.0<a class="headerlink" href="#whats-new-in-v130" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Decision reviewers with Jev</strong>: LatteReview can now review with System One decision models such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. <code>DecisionTitleAbstractReviewer</code>, <code>DecisionScoringReviewer</code> and the generic <code>DecisionReviewer</code> work in any <code>ReviewWorkflow</code>, next to LLM reviewers.</li>
+<li><strong>One provider, any backend</strong>: <code>SystemOneProvider</code> works with TypeSafe and OpenRouter, and with any other <code>/v1/systemone</code> server via <code>base_url</code>, including a self-hosted OpenJev model.</li>
+<li><strong>Evaluated at full scale</strong>: on all 11,793 articles of LatteReview's evaluation datasets, Jev ranked articles better than the v1 LLM reviewers on every dataset (mean AUC 0.88 vs 0.83), for about $0.06 per 1,000 articles. See the <a href="decision_models/#evaluation">evaluation</a>, including where Jev falls short.</li>
+<li><strong>Thresholds for a target recall</strong>: <code>suggest_threshold</code> fits a probability cutoff on labeled data.</li>
+<li><strong>Hybrid workflows</strong>: let Jev screen everything and send only uncertain articles to an LLM.</li>
+</ul>
+<p>Nothing changes for existing LLM reviewers. Read <a href="decision_models/">Decision Models</a> for how Jev differs from LLM reviewers and how to use it well.</p>
+<h2 id="what-was-new-in-v120">What Was New in v1.2.0<a class="headerlink" href="#what-was-new-in-v120" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Current models</strong>: tested with OpenAI GPT-6 (<code>gpt-6-astra</code>, <code>gpt-6-sol</code>, <code>gpt-6-luna</code>) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (<code>gemini-3.8-flash</code>, <code>gemini-3.5-flash-lite</code>). Older models such as <code>gpt-4o-mini</code> and <code>gemini-2.5-flash</code> keep working.</li>
 <li><strong>No more rejected-parameter errors</strong>: if a model rejects a setting in <code>model_args</code> (e.g., <code>temperature</code> on GPT-6 or Claude 5, or <code>max_tokens</code> on OpenAI reasoning models), LatteReview drops or renames it with a one-time warning and retries. If a reasoning model runs out of tokens before finishing its answer, the call is retried without the limit.</li>
@@ -863,6 +921,7 @@
 <li>Robust cost tracking and memory management systems</li>
 <li>Extensible architecture supporting custom review workflow implementation</li>
 <li><strong>NEW</strong>: Support for RIS (Research Information Systems) file format for academic literature review</li>
+<li><strong>NEW</strong>: Decision-model reviewers (TypeSafe's Jev, or a self-hosted OpenJev) that return probabilities for fast, cheap screening</li>
 </ul>
 <h2 id="quick-links">Quick Links<a class="headerlink" href="#quick-links" title="Permanent link">&para;</a></h2>
 <ul>
