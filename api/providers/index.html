@@ -348,7 +348,7 @@
   <span class="md-ellipsis">
     
   
-    🎯 Decision Models (Jev)
+    🎯 Decision Models
   
 
     
@@ -875,6 +875,17 @@
     <span class="md-ellipsis">
       
         Usage Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#perplexity-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perplexity models
       
     </span>
   </a>
@@ -1510,6 +1521,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#perplexity-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Perplexity models
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1639,7 +1661,7 @@
 <li><code>OllamaProvider</code>: Implementation for local Ollama models</li>
 <li><code>LiteLLMProvider</code>: Implementation using LiteLLM for unified API access</li>
 <li><code>GoogleProvider</code>: Implementation for Google's Gemini API (including Gemini Pro and Flash models)</li>
-<li><code>SystemOneProvider</code> (new in v1.3.0): Client for System One <strong>decision models</strong> such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. It is used by the decision reviewers; see <a href="../../decision_models/">Decision Models</a>.</li>
+<li><code>SystemOneProvider</code> (new in v1.3.0; Perplexity and OpenAI backends since v1.4.0): Client for <strong>decision models</strong> such as TypeSafe's Jev, Perplexity's pplx-decider and OpenAI's gpt-6-luna, which answer typed questions with probabilities instead of generating text. It is used by the decision reviewers; see <a href="../../decision_models/">Decision Models</a>.</li>
 </ul>
 <p>** You can use any of the models offered by the providers above as far as they support structured outputs. **</p>
 <h2 id="model-compatibility">Model compatibility<a class="headerlink" href="#model-compatibility" title="Permanent link">&para;</a></h2>
@@ -1709,6 +1731,7 @@
 </tr>
 </tbody>
 </table>
+<p>Added in v1.4.0: Perplexity's Sonar models through <code>LiteLLMProvider</code>, tested with <code>openrouter/perplexity/sonar</code> (see <a href="#perplexity-models">Perplexity models</a>).</p>
 <h2 id="baseprovider">BaseProvider<a class="headerlink" href="#baseprovider" title="Permanent link">&para;</a></h2>
 <h3 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
 <p>The <code>BaseProvider</code> class serves as the foundation for all LLM provider implementations. It provides a consistent interface and error handling for interacting with language models.</p>
@@ -1983,31 +2006,100 @@
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">)</span>
 <a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"anthropic/claude-sonnet-5"</span><span class="p">)</span>  <span class="c1"># Needs ANTHROPIC_API_KEY</span>
 <a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gemini/gemini-3.8-flash"</span><span class="p">)</span>  <span class="c1"># Needs GEMINI_API_KEY</span>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="c1"># Get response</span>
-<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="n">response</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="s2">"What is the capital of the country shown in this map?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"path/to/image1.png"</span><span class="p">])</span>
-<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>
-<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a><span class="c1"># Get JSON response with schema</span>
-<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="n">provider</span><span class="o">.</span><span class="n">set_response_format</span><span class="p">({</span><span class="s2">"answer"</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">"confidence"</span><span class="p">:</span> <span class="nb">float</span><span class="p">})</span>
-<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="n">response</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_json_response</span><span class="p">(</span><span class="s2">"What is the capital of France?"</span><span class="p">,</span> <span class="p">[])</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>  <span class="c1"># Needs PERPLEXITY_API_KEY</span>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="c1"># Get response</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="n">response</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="s2">"What is the capital of the country shown in this map?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"path/to/image1.png"</span><span class="p">])</span>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="c1"># Get JSON response with schema</span>
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="n">provider</span><span class="o">.</span><span class="n">set_response_format</span><span class="p">({</span><span class="s2">"answer"</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="s2">"confidence"</span><span class="p">:</span> <span class="nb">float</span><span class="p">})</span>
+<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="n">response</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_json_response</span><span class="p">(</span><span class="s2">"What is the capital of France?"</span><span class="p">,</span> <span class="p">[])</span>
 </code></pre></div>
+<p>When the API reports the cost of a request itself (OpenRouter and Perplexity do), <code>LiteLLMProvider</code> uses that cost
+instead of pricing the tokens, so per-request fees are counted.</p>
+<h3 id="perplexity-models">Perplexity models<a class="headerlink" href="#perplexity-models" title="Permanent link">&para;</a></h3>
+<p>Perplexity's Sonar models (<code>sonar</code>, <code>sonar-pro</code>, <code>sonar-reasoning-pro</code>, <code>sonar-deep-research</code>) work as LLM reviewers
+through <code>LiteLLMProvider</code>, with structured output:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>              <span class="c1"># PERPLEXITY_API_KEY (or PERPLEXITYAI_API_KEY)</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"openrouter/perplexity/sonar"</span><span class="p">)</span>   <span class="c1"># the same model through OpenRouter (OPENROUTER_API_KEY)</span>
+</code></pre></div>
+<p>Things to know before screening with them:</p>
+<ul>
+<li><strong>Every Sonar request searches the web</strong> and pays a request fee on top of the tokens: $5-14 per 1,000 requests,
+  depending on the model and search context size. Screening 1,000 abstracts with <code>sonar</code> costs about $5, about 40 times
+  more than <code>gpt-6-luna</code>; the fee is included in LatteReview's cost tracking. Web search rarely helps when the title and
+  abstract are already given, so Sonar is worth it mainly for reviewers that need outside information.</li>
+<li>Perplexity is moving Sonar users to its Agent API. Sonar requests still work (Perplexity now serves them through the
+  Agent API), but check Perplexity's documentation for the current status.</li>
+<li>Perplexity's decision model, <strong>pplx-decider</strong>, is not an LLM: use it with <code>SystemOneProvider(backend="perplexity")</code>
+  and the decision reviewers.</li>
+</ul>
 <h2 id="systemoneprovider">SystemOneProvider<a class="headerlink" href="#systemoneprovider" title="Permanent link">&para;</a></h2>
 <h3 id="description_5">Description<a class="headerlink" href="#description_5" title="Permanent link">&para;</a></h3>
-<p><code>SystemOneProvider</code> (new in v1.3.0) talks to System One decision models over the <code>/v1/systemone</code> protocol. Unlike the LLM providers above, it does not send prompts or parse JSON text: it sends a text <strong>state</strong> and typed <strong>questions</strong> in one request and returns a probability for every allowed answer. It is not a <code>BaseProvider</code> subclass, and it is used by <code>DecisionReviewer</code>, <code>DecisionTitleAbstractReviewer</code> and <code>DecisionScoringReviewer</code>. See <a href="../../decision_models/">Decision Models</a> for the concepts, evaluation results and self-hosting.</p>
+<p><code>SystemOneProvider</code> (new in v1.3.0) talks to decision models: TypeSafe's Jev, Perplexity's pplx-decider (v1.4.0) and OpenAI's gpt-6-luna (v1.4.0), and any server that speaks the <code>/v1/systemone</code> protocol. Unlike the LLM providers above, it does not send prompts or parse JSON text: it sends a text <strong>state</strong> and typed <strong>questions</strong> in one request and returns a probability for every allowed answer. OpenAI's Decisions API uses its own request format, which the provider translates, so every backend returns the same <code>DecisionResult</code>. It is not a <code>BaseProvider</code> subclass, and it is used by <code>DecisionReviewer</code>, <code>DecisionTitleAbstractReviewer</code> and <code>DecisionScoringReviewer</code>. See <a href="../../decision_models/">Decision Models</a> for the concepts, evaluation results and self-hosting.</p>
 <h3 id="class-definition_5">Class Definition<a class="headerlink" href="#class-definition_5" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">SystemOneProvider</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a>    <span class="n">backend</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"typesafe"</span><span class="p">,</span> <span class="s2">"openrouter"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"typesafe"</span>
-<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a>    <span class="n">base_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>                 <span class="c1"># any other /v1/systemone server; overrides backend</span>
-<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>                  <span class="c1"># else TYPESAFE_API_KEY / OPENROUTER_API_KEY; optional for base_url</span>
-<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a>    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>                    <span class="c1"># else "jev-latest" / "~typesafe/jev-latest"; the server default for base_url</span>
-<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">60.0</span>
-<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>                           <span class="c1"># retries 429, 529, 5xx and timeouts, honoring Retry-After</span>
-<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a>    <span class="n">requests_per_minute</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>    <span class="c1"># 1,000 for the named backends, unlimited for base_url, 0 = off</span>
-<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>    <span class="n">input_price_per_million</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># 0.042 for the named backends, 0 for base_url</span>
-<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a>
-<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">decide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">questions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DecisionResult</span><span class="p">:</span> <span class="o">...</span>
-<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">aclose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">class</span><span class="w"> </span><span class="nc">SystemOneProvider</span><span class="p">(</span><span class="n">pydantic</span><span class="o">.</span><span class="n">BaseModel</span><span class="p">):</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>    <span class="n">backend</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">"typesafe"</span><span class="p">,</span> <span class="s2">"openrouter"</span><span class="p">,</span> <span class="s2">"perplexity"</span><span class="p">,</span> <span class="s2">"openai"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"typesafe"</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>    <span class="n">base_url</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>                 <span class="c1"># any other server; overrides backend</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>    <span class="n">protocol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Literal</span><span class="p">[</span><span class="s2">"systemone"</span><span class="p">,</span> <span class="s2">"openai"</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># for base_url only; default "systemone"</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a>    <span class="n">api_key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>                  <span class="c1"># else the backend's key variable (below); optional for base_url</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>                    <span class="c1"># else the backend's default (below); the server default for base_url</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">60.0</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>    <span class="n">max_retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">3</span>                           <span class="c1"># retries 429, 529, 5xx and timeouts, honoring Retry-After</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>    <span class="n">requests_per_minute</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>    <span class="c1"># backend default (below), unlimited for base_url, 0 = off</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>    <span class="n">input_price_per_million</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># backend list price (below), 0 for base_url</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">decide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">,</span> <span class="n">questions</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">DecisionResult</span><span class="p">:</span> <span class="o">...</span>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">aclose</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 </code></pre></div>
+<table>
+<thead>
+<tr>
+<th><code>backend</code></th>
+<th>Endpoint</th>
+<th>Default model</th>
+<th>Key variable</th>
+<th>Price per million input tokens</th>
+<th>Pacing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>typesafe</code> (default)</td>
+<td><code>https://api.typesafe.ai/v1/systemone</code></td>
+<td><code>jev-latest</code></td>
+<td><code>TYPESAFE_API_KEY</code></td>
+<td>$0.042</td>
+<td>1,000/min</td>
+</tr>
+<tr>
+<td><code>openrouter</code></td>
+<td><code>https://openrouter.ai/api/v1/systemone</code></td>
+<td><code>~typesafe/jev-latest</code> (also <code>perplexity/pplx-decider-v1.1-27b</code>)</td>
+<td><code>OPENROUTER_API_KEY</code></td>
+<td>reported by OpenRouter</td>
+<td>1,000/min</td>
+</tr>
+<tr>
+<td><code>perplexity</code></td>
+<td><code>https://api.perplexity.ai/v1/decisions</code></td>
+<td><code>pplx-decider-v1.1-27b</code></td>
+<td><code>PERPLEXITY_API_KEY</code> (or <code>PERPLEXITYAI_API_KEY</code>)</td>
+<td>$0.02</td>
+<td>500/min</td>
+</tr>
+<tr>
+<td><code>openai</code></td>
+<td><code>https://api.openai.com/v1/decisions</code></td>
+<td><code>gpt-6-luna</code></td>
+<td><code>OPENAI_API_KEY</code></td>
+<td>$0.10</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p>A custom <code>base_url</code> may end with <code>/v1/systemone</code> or <code>/v1/decisions</code>; otherwise <code>/v1/systemone</code> is added (or
+<code>/v1/decisions</code> with <code>protocol="openai"</code>, for gateways that serve OpenAI's Decisions format).</p>
 <h3 id="questions-and-answers">Questions and answers<a class="headerlink" href="#questions-and-answers" title="Permanent link">&para;</a></h3>
 <ul>
 <li><code>Noul(instructions, true=None, false=None)</code>: a yes/no question.</li>
@@ -2056,28 +2148,40 @@
 <td>as reported, else None</td>
 <td>as reported, else None</td>
 </tr>
+<tr>
+<td><code>refused</code></td>
+<td>True if the backend declined to answer</td>
+<td>same</td>
+<td>same</td>
+</tr>
 </tbody>
 </table>
+<p>When <code>refused</code> is True (OpenAI may decline single questions), every field except <code>type</code> is None. The other answers in
+the request are unaffected.</p>
 <h3 id="usage-example_4">Usage Example<a class="headerlink" href="#usage-example_4" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">Noul</span><span class="p">,</span> <span class="n">Choice</span><span class="p">,</span> <span class="n">Score</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">()</span>                                   <span class="c1"># TypeSafe; needs TYPESAFE_API_KEY</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openrouter"</span><span class="p">)</span>               <span class="c1"># needs OPENROUTER_API_KEY</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>   <span class="c1"># e.g., a local OpenJev server</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">decide</span><span class="p">(</span>
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a>    <span class="s2">"Title: Deep learning for pneumonia detection on chest radiographs.</span><span class="se">\n</span><span class="s2">Abstract: ..."</span><span class="p">,</span>
-<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a>    <span class="p">{</span>
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a>        <span class="s2">"deep_learning"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Does the study use deep learning?"</span><span class="p">),</span>
-<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>        <span class="s2">"modality"</span><span class="p">:</span> <span class="n">Choice</span><span class="p">(</span><span class="s2">"Which imaging modality is studied?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"MRI"</span><span class="p">,</span> <span class="s2">"X-ray"</span><span class="p">]),</span>
-<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a>        <span class="s2">"validation"</span><span class="p">:</span> <span class="n">Score</span><span class="p">(</span><span class="s2">"How strong is the validation?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"internal only"</span><span class="p">,</span> <span class="s2">"external"</span><span class="p">]),</span>
-<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a>    <span class="p">},</span>
-<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="p">)</span>
-<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"modality"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>        <span class="c1"># "X-ray"</span>
-<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"validation"</span><span class="p">]</span><span class="o">.</span><span class="n">label</span>      <span class="c1"># "external"</span>
-<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="n">result</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">Noul</span><span class="p">,</span> <span class="n">Choice</span><span class="p">,</span> <span class="n">Score</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">()</span>                                   <span class="c1"># TypeSafe; needs TYPESAFE_API_KEY</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openrouter"</span><span class="p">)</span>               <span class="c1"># needs OPENROUTER_API_KEY</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"perplexity"</span><span class="p">)</span>               <span class="c1"># Perplexity's pplx-decider; needs PERPLEXITY_API_KEY</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openai"</span><span class="p">)</span>                   <span class="c1"># OpenAI's gpt-6-luna; needs OPENAI_API_KEY</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>   <span class="c1"># e.g., a local OpenJev server</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">decide</span><span class="p">(</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a>    <span class="s2">"Title: Deep learning for pneumonia detection on chest radiographs.</span><span class="se">\n</span><span class="s2">Abstract: ..."</span><span class="p">,</span>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>    <span class="p">{</span>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a>        <span class="s2">"deep_learning"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Does the study use deep learning?"</span><span class="p">),</span>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>        <span class="s2">"modality"</span><span class="p">:</span> <span class="n">Choice</span><span class="p">(</span><span class="s2">"Which imaging modality is studied?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"MRI"</span><span class="p">,</span> <span class="s2">"X-ray"</span><span class="p">]),</span>
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a>        <span class="s2">"validation"</span><span class="p">:</span> <span class="n">Score</span><span class="p">(</span><span class="s2">"How strong is the validation?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"none"</span><span class="p">,</span> <span class="s2">"internal only"</span><span class="p">,</span> <span class="s2">"external"</span><span class="p">]),</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>    <span class="p">},</span>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="p">)</span>
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"modality"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>        <span class="c1"># "X-ray"</span>
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"validation"</span><span class="p">]</span><span class="o">.</span><span class="n">label</span>      <span class="c1"># "external"</span>
+<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="n">result</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span>
 </code></pre></div>
-<p>Ask all questions about an item in one request: the state is billed once, and each extra question adds only a few tokens.</p>
+<p>Ask all questions about an item in one request. Jev and OpenAI bill the state once per request, and each extra
+question adds a few tokens (about 18 on Jev, about 150 on OpenAI). Perplexity's pplx-decider bills the state once per
+question, so each extra question costs as much as the first.</p>
 <p>Errors raise <code>SystemOneResponseError</code> (a <code>ResponseError</code>) with the server's message, the HTTP <code>status_code</code>, and <code>retryable</code> (False for errors a retry cannot fix, such as 401 or 422). A missing API key raises <code>ClientCreationError</code>.</p>
 <h2 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h2>
 <p>Common error scenarios:</p>

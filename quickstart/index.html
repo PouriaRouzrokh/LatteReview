@@ -436,10 +436,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#screening-with-a-decision-model-jev" class="md-nav__link">
+  <a href="#screening-with-a-decision-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Screening with a Decision Model (Jev)
+        Screening with a Decision Model
       
     </span>
   </a>
@@ -468,7 +468,7 @@
   <span class="md-ellipsis">
     
   
-    🎯 Decision Models (Jev)
+    🎯 Decision Models
   
 
     
@@ -737,10 +737,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#screening-with-a-decision-model-jev" class="md-nav__link">
+  <a href="#screening-with-a-decision-model" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Screening with a Decision Model (Jev)
+        Screening with a Decision Model
       
     </span>
   </a>
@@ -783,7 +783,8 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>OPENAI_API_KEY=your-openai-key
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>GEMINI_API_KEY=your-gemini-key
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>ANTHROPIC_API_KEY=your-anthropic-key
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>TYPESAFE_API_KEY=your-typesafe-key      # for decision reviewers (Jev)
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>TYPESAFE_API_KEY=your-typesafe-key      # for decision reviewers with Jev
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>PERPLEXITY_API_KEY=your-perplexity-key  # for pplx-decider and Sonar models
 </code></pre></div>
 <ul>
 <li>Load it in your code:</li>
@@ -969,15 +970,16 @@
 <a id="__codelineno-8-68" name="__codelineno-8-68" href="#__codelineno-8-68"></a><span class="c1"># Save results</span>
 <a id="__codelineno-8-69" name="__codelineno-8-69" href="#__codelineno-8-69"></a><span class="n">results</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="s2">"review_results.csv"</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="screening-with-a-decision-model-jev">Screening with a Decision Model (Jev)<a class="headerlink" href="#screening-with-a-decision-model-jev" title="Permanent link">&para;</a></h2>
-<p>Decision reviewers use a System One decision model such as TypeSafe's Jev instead of an LLM. They return probabilities
-instead of generated text, cost about $0.06 per 1,000 abstracts, and work in the same workflows:</p>
+<h2 id="screening-with-a-decision-model">Screening with a Decision Model<a class="headerlink" href="#screening-with-a-decision-model" title="Permanent link">&para;</a></h2>
+<p>Decision reviewers use a decision model such as TypeSafe's Jev, Perplexity's pplx-decider or OpenAI's gpt-6-luna
+instead of an LLM. They return probabilities instead of generated text, cost about $0.05-0.16 per 1,000 abstracts, and
+work in the same workflows:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span>
 <a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span>
 <a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.workflows</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewWorkflow</span>
 <a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>
 <a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="n">jev</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span>
-<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>  <span class="c1"># needs TYPESAFE_API_KEY; or SystemOneProvider(backend="openrouter")</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>  <span class="c1"># Jev; needs TYPESAFE_API_KEY. Or backend="perplexity", "openai" or "openrouter"</span>
 <a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
 <a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a>    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must involve CT scans."</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"The study must use deep learning."</span><span class="p">},</span>
 <a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>    <span class="n">exclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must not include PET scans."</span><span class="p">},</span>

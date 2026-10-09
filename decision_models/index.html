@@ -25,7 +25,7 @@
     
     
       
-        <title>🎯 Decision Models (Jev) - LatteReview</title>
+        <title>🎯 Decision Models - LatteReview</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#decision-models-jev" class="md-skip">
+        <a href="#decision-models" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              🎯 Decision Models (Jev)
+              🎯 Decision Models
             
           </span>
         </div>
@@ -357,7 +357,7 @@
   <span class="md-ellipsis">
     
   
-    🎯 Decision Models (Jev)
+    🎯 Decision Models
   
 
     
@@ -375,7 +375,7 @@
   <span class="md-ellipsis">
     
   
-    🎯 Decision Models (Jev)
+    🎯 Decision Models
   
 
     
@@ -412,10 +412,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#jev-vs-llm-reviewers" class="md-nav__link">
+  <a href="#decision-models-vs-llm-reviewers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Jev vs LLM reviewers
+        Decision models vs LLM reviewers
       
     </span>
   </a>
@@ -467,6 +467,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#refusals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refusals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#confidence-gated-hybrid-workflows" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -493,6 +504,17 @@
     <span class="md-ellipsis">
       
         Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparing-jev-pplx-decider-and-gpt-6-luna" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparing Jev, pplx-decider and gpt-6-luna
       
     </span>
   </a>
@@ -732,10 +754,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#jev-vs-llm-reviewers" class="md-nav__link">
+  <a href="#decision-models-vs-llm-reviewers" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Jev vs LLM reviewers
+        Decision models vs LLM reviewers
       
     </span>
   </a>
@@ -787,6 +809,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#refusals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refusals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#confidence-gated-hybrid-workflows" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -813,6 +846,17 @@
     <span class="md-ellipsis">
       
         Evaluation
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#comparing-jev-pplx-decider-and-gpt-6-luna" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Comparing Jev, pplx-decider and gpt-6-luna
       
     </span>
   </a>
@@ -861,9 +905,11 @@
   
 
 
-<h1 id="decision-models-jev">Decision Models (Jev)<a class="headerlink" href="#decision-models-jev" title="Permanent link">&para;</a></h1>
-<p>Since v1.3.0, LatteReview can review with <strong>System One decision models</strong> such as TypeSafe's <strong>Jev</strong>, in addition to
-LLMs. This page explains what they are, how they differ from LLM reviewers, and how to use them well.</p>
+<h1 id="decision-models">Decision Models<a class="headerlink" href="#decision-models" title="Permanent link">&para;</a></h1>
+<p>Since v1.3.0, LatteReview can review with <strong>decision models</strong> (also called System One models) in addition to LLMs.
+v1.3.0 added TypeSafe's <strong>Jev</strong>; v1.4.0 adds Perplexity's <strong>pplx-decider</strong> and OpenAI's <strong>gpt-6-luna</strong> through their
+Decisions APIs. This page explains what decision models are, how they differ from LLM reviewers, how the three models
+compare, and how to use them well.</p>
 <h2 id="what-is-a-decision-model">What is a decision model?<a class="headerlink" href="#what-is-a-decision-model" title="Permanent link">&para;</a></h2>
 <p>An LLM reviewer reads a prompt and generates text: LatteReview asks it for JSON with a score and a written reasoning.
 A decision model generates nothing. It reads a text <strong>state</strong> (here, an article's title and abstract) and a set of
@@ -894,10 +940,47 @@ typed <strong>questions</strong>, and returns a probability for every allowed an
 </tr>
 </tbody>
 </table>
-<p>Jev was released by TypeSafe AI in September 2026. It bills <strong>$0.042 per million input tokens</strong> (output is free) and
-answers in about 0.2 seconds. Screening 1,000 abstracts costs about $0.05-0.07: roughly half the cost of a small LLM
-such as <code>gpt-6-luna</code> (about $0.13), and one to two orders of magnitude less than larger models.</p>
-<h2 id="jev-vs-llm-reviewers">Jev vs LLM reviewers<a class="headerlink" href="#jev-vs-llm-reviewers" title="Permanent link">&para;</a></h2>
+<p>Three decision models are supported:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Maker</th>
+<th>How to use it</th>
+<th>Price (input tokens; output is free)</th>
+<th>Screening cost per 1,000 abstracts*</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Jev</strong> (<code>jev-latest</code>)</td>
+<td>TypeSafe AI</td>
+<td><code>SystemOneProvider()</code> or <code>backend="openrouter"</code></td>
+<td>$0.042 per million</td>
+<td>about $0.06</td>
+</tr>
+<tr>
+<td><strong>pplx-decider</strong> (<code>pplx-decider-v1.1-27b</code>)</td>
+<td>Perplexity</td>
+<td><code>backend="perplexity"</code>, or <code>backend="openrouter", model="perplexity/pplx-decider-v1.1-27b"</code></td>
+<td>$0.02 per million</td>
+<td>about $0.05</td>
+</tr>
+<tr>
+<td><strong>gpt-6-luna</strong></td>
+<td>OpenAI</td>
+<td><code>backend="openai"</code> (OpenAI's Decisions API)</td>
+<td>$0.10 per million</td>
+<td>about $0.16</td>
+</tr>
+</tbody>
+</table>
+<p>* Measured with <code>DecisionTitleAbstractReviewer</code> on the evaluation below. For comparison, <code>TitleAbstractReviewer</code> with
+the <code>gpt-6-luna</code> LLM costs about $0.10-0.13 per 1,000 abstracts, and larger LLMs one to two orders of magnitude more.</p>
+<p>All three answer in well under a second per article. In our evaluation, <strong>pplx-decider ranked articles best and cost
+least</strong>; gpt-6-luna's Decisions API ranked worse than the LLM baseline on long, multi-part criteria (see
+<a href="#comparing-jev-pplx-decider-and-gpt-6-luna">Comparing the three models</a>).</p>
+<h2 id="decision-models-vs-llm-reviewers">Decision models vs LLM reviewers<a class="headerlink" href="#decision-models-vs-llm-reviewers" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -925,7 +1008,7 @@ such as <code>gpt-6-luna</code> (about $0.13), and one to two orders of magnitud
 <tr>
 <td>Inputs</td>
 <td>text and images</td>
-<td>text only (English-optimized, up to 32k tokens for the state plus the longest question)</td>
+<td>text only in LatteReview (Jev: English-optimized, up to 32k tokens for the state plus the longest question)</td>
 </tr>
 <tr>
 <td>Multi-step reasoning</td>
@@ -940,36 +1023,45 @@ such as <code>gpt-6-luna</code> (about $0.13), and one to two orders of magnitud
 <tr>
 <td>Cost per 1,000 abstracts</td>
 <td>about $0.13 (<code>gpt-6-luna</code>) to several dollars (<code>gpt-6-sol</code>, <code>gpt-6-astra</code>)</td>
-<td>about $0.05-0.07</td>
+<td>about $0.05-0.16</td>
 </tr>
 <tr>
 <td>Latency per article</td>
 <td>one to several seconds</td>
-<td>about 0.2 seconds (about 16 articles per second at the default pace)</td>
+<td>0.2-0.8 seconds (Jev and pplx-decider are paced to about 16 articles per second by default)</td>
 </tr>
 <tr>
 <td>Repeatability</td>
 <td>answers can change between runs</td>
-<td>confident answers repeat; uncertain ones vary between identical requests (we saw 0.62-0.84 for one article)</td>
+<td>pplx-decider and gpt-6-luna repeated identical requests exactly; Jev's uncertain answers vary (we saw 0.62-0.84 for one article)</td>
+</tr>
+<tr>
+<td>Refusals</td>
+<td>the model may refuse in text</td>
+<td>OpenAI may decline single questions; the answer is then None (see <a href="#refusals">Refusals</a>)</td>
 </tr>
 </tbody>
 </table>
 <p>Decision reviewers are <code>BasicReviewer</code> subclasses, so they work in any <code>ReviewWorkflow</code>, next to LLM reviewers, with
 the usual <code>round-{R}_{name}_{key}</code> columns, filters, cost tracking and memory. <code>backstory</code> is accepted but ignored.</p>
 <h2 id="backends">Backends<a class="headerlink" href="#backends" title="Permanent link">&para;</a></h2>
-<p><code>SystemOneProvider</code> speaks the <code>/v1/systemone</code> protocol, so every backend works the same way:</p>
+<p><code>SystemOneProvider</code> works the same way with every backend. Most speak the <code>/v1/systemone</code> protocol; OpenAI's Decisions
+API has its own request format, which the provider translates, so reviewers see the same answers either way.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">()</span>                                    <span class="c1"># TypeSafe, jev-latest, reads TYPESAFE_API_KEY</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openrouter"</span><span class="p">)</span>                <span class="c1"># OpenRouter, ~typesafe/jev-latest, reads OPENROUTER_API_KEY</span>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"jev-1.13.0"</span><span class="p">)</span>                  <span class="c1"># pin a version instead of the -latest alias</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>    <span class="c1"># a self-hosted server (see below)</span>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>    <span class="n">base_url</span><span class="o">=</span><span class="s2">"https://your-gateway.example/v1/systemone"</span><span class="p">,</span>         <span class="c1"># any other /v1/systemone gateway</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>    <span class="n">api_key</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">input_price_per_million</span><span class="o">=</span><span class="mf">0.042</span><span class="p">,</span>                                <span class="c1"># for cost tracking (custom URLs default to 0)</span>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="p">)</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"perplexity"</span><span class="p">)</span>                <span class="c1"># Perplexity, pplx-decider-v1.1-27b, reads PERPLEXITY_API_KEY</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openai"</span><span class="p">)</span>                    <span class="c1"># OpenAI, gpt-6-luna, reads OPENAI_API_KEY</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openrouter"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/pplx-decider-v1.1-27b"</span><span class="p">)</span>  <span class="c1"># pplx-decider via OpenRouter</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"jev-1.13.0"</span><span class="p">)</span>                  <span class="c1"># pin a version instead of the -latest alias</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>    <span class="c1"># a self-hosted server (see below)</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>    <span class="n">base_url</span><span class="o">=</span><span class="s2">"https://your-gateway.example/v1/systemone"</span><span class="p">,</span>         <span class="c1"># any other /v1/systemone gateway</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>    <span class="n">api_key</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>    <span class="n">model</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">input_price_per_million</span><span class="o">=</span><span class="mf">0.042</span><span class="p">,</span>                                <span class="c1"># for cost tracking (custom URLs default to 0)</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="p">)</span>
 </code></pre></div>
 <table>
 <thead>
@@ -989,23 +1081,39 @@ the usual <code>round-{R}_{name}_{key}</code> columns, filters, cost tracking an
 </tr>
 <tr>
 <td><code>openrouter</code></td>
-<td>an OpenRouter API key; Jev is billed through your OpenRouter credits</td>
+<td>an OpenRouter API key; billed through your OpenRouter credits. Also serves <code>perplexity/pplx-decider-v1.1-27b</code></td>
 <td><code>~typesafe/jev-latest</code></td>
 <td><code>OPENROUTER_API_KEY</code></td>
 </tr>
 <tr>
+<td><code>perplexity</code></td>
+<td>an API key from the Perplexity console (Decisions API)</td>
+<td><code>pplx-decider-v1.1-27b</code></td>
+<td><code>PERPLEXITY_API_KEY</code> (or <code>PERPLEXITYAI_API_KEY</code>)</td>
+</tr>
+<tr>
+<td><code>openai</code></td>
+<td>an OpenAI API key (Decisions API, public beta since October 2026)</td>
+<td><code>gpt-6-luna</code></td>
+<td><code>OPENAI_API_KEY</code></td>
+</tr>
+<tr>
 <td>custom <code>base_url</code></td>
-<td>your own server or gateway; the URL may end with or without <code>/v1/systemone</code></td>
+<td>your own server or gateway; the URL may end with <code>/v1/systemone</code> or <code>/v1/decisions</code>, or with neither</td>
 <td>the server's default</td>
 <td>none (pass <code>api_key=</code> if needed)</td>
 </tr>
 </tbody>
 </table>
+<p>For a custom server that speaks OpenAI's Decisions format (e.g., another region or a gateway), pass
+<code>protocol="openai"</code> with <code>base_url</code>.</p>
 <p>Other options: <code>timeout</code> (default 60 s), <code>max_retries</code> (default 3; retries 429, 529, 5xx and timeouts with
-exponential backoff, honoring <code>Retry-After</code>), and <code>requests_per_minute</code>. Jev allows 1,200 requests per minute, so the
-two named backends pace requests to 1,000 per minute by default; custom URLs are not paced. Pass
-<code>requests_per_minute=0</code> to turn pacing off.</p>
-<p>On OpenRouter, the cost comes from the response; elsewhere it is computed from the reported input tokens.</p>
+exponential backoff, honoring <code>Retry-After</code>), and <code>requests_per_minute</code>. Requests are paced below each service's limit
+by default: 1,000 per minute for TypeSafe and OpenRouter (Jev allows 1,200) and 500 for Perplexity (10 per second).
+OpenAI allows 30,000 per minute, so OpenAI and custom URLs are not paced. Pass <code>requests_per_minute=0</code> to turn pacing
+off.</p>
+<p>On OpenRouter, the cost comes from the response; elsewhere it is computed from the reported input tokens and the list
+price.</p>
 <h2 id="screening-titles-and-abstracts">Screening titles and abstracts<a class="headerlink" href="#screening-titles-and-abstracts" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
@@ -1087,31 +1195,85 @@ probability of "yes" for <code>Noul</code>, and the expected 0-based level for <
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">result</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span>
 </code></pre></div>
 <h2 id="cost-model">Cost model<a class="headerlink" href="#cost-model" title="Permanent link">&para;</a></h2>
-<p>The state is billed <strong>once per request</strong>, and each extra short question adds only about 18 tokens (plus its own
-text). The same abstract cost 1,128 tokens with one question and 1,254 tokens with eight. So:</p>
+<p>The three services bill a request's questions differently. Input tokens for the same abstract (about 750 tokens) with
+1, 2, 4 and 8 short yes/no questions:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">1 question</th>
+<th style="text-align: right;">2</th>
+<th style="text-align: right;">4</th>
+<th style="text-align: right;">8</th>
+<th>Billing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Jev</td>
+<td style="text-align: right;">1,134</td>
+<td style="text-align: right;">1,150</td>
+<td style="text-align: right;">1,182</td>
+<td style="text-align: right;">1,246</td>
+<td>the state once per request; about 16 tokens per extra question</td>
+</tr>
+<tr>
+<td>gpt-6-luna</td>
+<td style="text-align: right;">902</td>
+<td style="text-align: right;">1,055</td>
+<td style="text-align: right;">1,361</td>
+<td style="text-align: right;">1,973</td>
+<td>the state once per request; about 150 tokens per extra question</td>
+</tr>
+<tr>
+<td>pplx-decider (via OpenRouter)</td>
+<td style="text-align: right;">926</td>
+<td style="text-align: right;">1,852</td>
+<td style="text-align: right;">3,704</td>
+<td style="text-align: right;">7,408</td>
+<td><strong>the state once per question</strong></td>
+</tr>
+</tbody>
+</table>
+<p>So:</p>
 <ul>
 <li>Ask all questions about an item in <strong>one request</strong>. The decision reviewers always do.</li>
-<li>One question per criterion is nearly free, and gives you a probability for every criterion.</li>
+<li>On Jev, one question per criterion is nearly free. On gpt-6-luna each extra question adds a small fixed cost, and on
+  pplx-decider each one costs as much as the first. pplx-decider's low price still made it the cheapest model in our
+  evaluation, but a reviewer with many criteria costs proportionally more.</li>
 <li>Long criteria repeated in several questions cost more than the abstract itself; keep criteria concise.</li>
 </ul>
+<h2 id="refusals">Refusals<a class="headerlink" href="#refusals" title="Permanent link">&para;</a></h2>
+<p>OpenAI's Decisions API may decline to answer a single question. In our evaluation, 4 of about 50,000 questions were
+declined, all on ordinary medical abstracts (e.g., a spine-surgery study). LatteReview does not fail or retry the item:</p>
+<ul>
+<li>The refused answer has <code>refused=True</code> and <code>value=None</code> (in <code>_answers</code>), and the matching output column is None. For
+  <code>DecisionTitleAbstractReviewer</code>, the generated <code>reasoning</code> names the unanswered questions.</li>
+<li>The other answers of the same request are kept.</li>
+<li>A warning is printed the first time a reviewer gets a refusal.</li>
+</ul>
+<p>Send such items on to an LLM or a human. A None value fails comparisons such as <code>0.1 &lt;= p &lt; 0.9</code>, so check for it
+explicitly in workflow filters, as in the hybrid example below.</p>
 <h2 id="confidence-gated-hybrid-workflows">Confidence-gated hybrid workflows<a class="headerlink" href="#confidence-gated-hybrid-workflows" title="Permanent link">&para;</a></h2>
 <p>Jev is cheap enough to screen everything, and an LLM can then review only the articles Jev is unsure about. Filters
 are plain row functions, so no special workflow is needed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">OpenAIProvider</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">,</span> <span class="n">TitleAbstractReviewer</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.workflows</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewWorkflow</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="n">jev</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>                                    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion</span><span class="p">)</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">TitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">OpenAIProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"LLM"</span><span class="p">,</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>                            <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion_text</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion_text</span><span class="p">)</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">jev</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">]},</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">llm</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">],</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>     <span class="s2">"filter"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="mf">0.1</span> <span class="o">&lt;=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"round-A_Jev_include_probability"</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">},</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">OpenAIProvider</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">,</span> <span class="n">TitleAbstractReviewer</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.workflows</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewWorkflow</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">jev</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>                                    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion</span><span class="p">)</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">TitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">OpenAIProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"LLM"</span><span class="p">,</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>                            <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion_text</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion_text</span><span class="p">)</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">jev</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">]},</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">llm</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">],</span>
+<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>     <span class="s2">"filter"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">p</span> <span class="o">:=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"round-A_Jev_include_probability"</span><span class="p">])</span> <span class="ow">or</span> <span class="mf">0.1</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">},</span>
+<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">])</span>
 </code></pre></div>
+<p>The <code>pd.isna</code> check also routes articles whose include question was refused (see <a href="#refusals">Refusals</a>).</p>
 <p>Jev's probabilities are mostly close to 0 or 1, so a band of [0.1, 0.9) routed about 20% of articles to the LLM in
 our evaluation (5% to 43% depending on the dataset). Replacing Jev's decision with the LLM's inside the band gave
 almost the same recall and precision as reviewing everything with the LLM, for about one fifth of the LLM calls. The
@@ -1285,6 +1447,182 @@ included ones, minus the 5% recall given up.</p>
 <li>The labels of the custom searches come from structured metadata and contain some noise: several articles labeled
   "CT" are PET/CT studies that both Jev and the LLMs excluded.</li>
 </ul>
+<h2 id="comparing-jev-pplx-decider-and-gpt-6-luna">Comparing Jev, pplx-decider and gpt-6-luna<a class="headerlink" href="#comparing-jev-pplx-decider-and-gpt-6-luna" title="Permanent link">&para;</a></h2>
+<p>For v1.4.0 we ran the same <code>DecisionTitleAbstractReviewer</code>, with the same criteria and questions, on all 11,793
+articles with each model: Jev through OpenRouter, pplx-decider through OpenRouter (served by Perplexity), and
+gpt-6-luna through OpenAI's Decisions API. The notebook and per-article results are in
+<a href="https://github.com/PouriaRouzrokh/LatteReview/blob/main/evaluation/decision_model_comparison.ipynb"><code>evaluation/decision_model_comparison.ipynb</code></a>.
+Jev's numbers differ slightly from the table above because v1.4.0 leaves the workflow's task ID out of the model's
+input and because Jev's uncertain answers vary between runs.</p>
+<p>AUC of <code>include_probability</code> (the LLM column is the stored v1 LLM decision):</p>
+<table>
+<thead>
+<tr>
+<th>Dataset</th>
+<th style="text-align: right;">Jev</th>
+<th style="text-align: right;">pplx-decider</th>
+<th style="text-align: right;">gpt-6-luna</th>
+<th style="text-align: right;">LLM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>search1</td>
+<td style="text-align: right;"><strong>0.960</strong></td>
+<td style="text-align: right;">0.951</td>
+<td style="text-align: right;">0.946</td>
+<td style="text-align: right;">0.937</td>
+</tr>
+<tr>
+<td>search2</td>
+<td style="text-align: right;">0.874</td>
+<td style="text-align: right;"><strong>0.886</strong></td>
+<td style="text-align: right;"><strong>0.886</strong></td>
+<td style="text-align: right;">0.818</td>
+</tr>
+<tr>
+<td>search3</td>
+<td style="text-align: right;">0.863</td>
+<td style="text-align: right;"><strong>0.864</strong></td>
+<td style="text-align: right;">0.832</td>
+<td style="text-align: right;">0.789</td>
+</tr>
+<tr>
+<td>Appenzeller-Herzog 2019</td>
+<td style="text-align: right;">0.888</td>
+<td style="text-align: right;"><strong>0.947</strong></td>
+<td style="text-align: right;">0.582</td>
+<td style="text-align: right;">0.847</td>
+</tr>
+<tr>
+<td>Donners 2021</td>
+<td style="text-align: right;">0.915</td>
+<td style="text-align: right;"><strong>0.965</strong></td>
+<td style="text-align: right;">0.857</td>
+<td style="text-align: right;">0.772</td>
+</tr>
+<tr>
+<td>Jeyaraman 2020</td>
+<td style="text-align: right;">0.762</td>
+<td style="text-align: right;"><strong>0.777</strong></td>
+<td style="text-align: right;">0.500</td>
+<td style="text-align: right;">0.708</td>
+</tr>
+<tr>
+<td>Meijboom 2021</td>
+<td style="text-align: right;">0.939</td>
+<td style="text-align: right;"><strong>0.945</strong></td>
+<td style="text-align: right;">0.881</td>
+<td style="text-align: right;">0.902</td>
+</tr>
+<tr>
+<td>Muthu 2021</td>
+<td style="text-align: right;">0.735</td>
+<td style="text-align: right;"><strong>0.752</strong></td>
+<td style="text-align: right;">0.579</td>
+<td style="text-align: right;">0.728</td>
+</tr>
+<tr>
+<td>Oud 2018</td>
+<td style="text-align: right;">0.968</td>
+<td style="text-align: right;"><strong>0.970</strong></td>
+<td style="text-align: right;">0.952</td>
+<td style="text-align: right;">0.955</td>
+</tr>
+<tr>
+<td><strong>Mean</strong></td>
+<td style="text-align: right;">0.878</td>
+<td style="text-align: right;"><strong>0.895</strong></td>
+<td style="text-align: right;">0.779</td>
+<td style="text-align: right;">0.828</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th></th>
+<th style="text-align: right;">Jev</th>
+<th style="text-align: right;">pplx-decider</th>
+<th style="text-align: right;">gpt-6-luna</th>
+<th style="text-align: right;">LLM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mean WSS@95</td>
+<td style="text-align: right;">0.38</td>
+<td style="text-align: right;"><strong>0.51</strong></td>
+<td style="text-align: right;">0.12</td>
+<td style="text-align: right;">0.22</td>
+</tr>
+<tr>
+<td>Mean AUC of <code>expected_evaluation</code> / <code>criteria_product</code></td>
+<td style="text-align: right;">0.887 / 0.892</td>
+<td style="text-align: right;"><strong>0.903 / 0.914</strong></td>
+<td style="text-align: right;">0.872 / 0.805</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td>Mean recall / precision at p ≥ 0.5 (LLM: score ≥ 3)</td>
+<td style="text-align: right;">0.43 / 0.54</td>
+<td style="text-align: right;">0.63 / 0.42</td>
+<td style="text-align: right;">0.43 / 0.58</td>
+<td style="text-align: right;">0.61 / 0.37</td>
+</tr>
+<tr>
+<td>Articles with 0.1 ≤ p &lt; 0.9</td>
+<td style="text-align: right;">16%</td>
+<td style="text-align: right;">12%</td>
+<td style="text-align: right;">4%</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td>Hybrid band [0.1, 0.9) + LLM: routed / recall / precision</td>
+<td style="text-align: right;">19% / 0.59 / 0.37</td>
+<td style="text-align: right;">13% / 0.62 / 0.45</td>
+<td style="text-align: right;">6% / 0.49 / 0.47</td>
+<td style="text-align: right;">100% / 0.61 / 0.37</td>
+</tr>
+<tr>
+<td>Cost of the full run (11,793 articles)</td>
+<td style="text-align: right;">$0.70</td>
+<td style="text-align: right;">$0.61</td>
+<td style="text-align: right;">$1.87</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td>Run time</td>
+<td style="text-align: right;">12 min (paced)</td>
+<td style="text-align: right;">13 min (paced)</td>
+<td style="text-align: right;">3 min (16 concurrent, not paced)</td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td>Refused questions</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table>
+<p>What this shows:</p>
+<ul>
+<li><strong>pplx-decider was the best decision model</strong>: the highest AUC on 7 of 9 datasets and the most screening work saved
+  at 95% recall, at the lowest cost. Its probabilities are less extreme than Jev's, so a 0.5 cutoff kept more included
+  articles (mean recall 0.63 vs 0.43), and its hybrid pipeline matched the recall of reviewing everything with the LLM
+  (0.62 vs 0.61) with better precision (0.45 vs 0.37), while sending only 13% of articles to the LLM.</li>
+<li><strong>gpt-6-luna's Decisions API was the weakest</strong> on the SYNERGY datasets, whose criteria are long paragraphs with many
+  conditions. It returned exactly 0.00 for nearly every article there, included ones too (OpenAI rounds probabilities
+  to two decimals), which leaves nothing to rank by: AUC 0.50 on Jeyaraman and 0.58 on Appenzeller-Herzog and Muthu.
+  Its expected evaluation score ranked much better (mean AUC 0.872), so if you use gpt-6-luna, rank by
+  <code>output["_answers"]["evaluation"]["value"]</code> rather than <code>include_probability</code>, and prefer short, single-condition
+  criteria. It was also the most expensive of the three.</li>
+<li>The three models agree on most decisions (94-98% at p ≥ 0.5), but they rank articles differently (rank
+  correlation 0.93 between Jev and pplx-decider, 0.65-0.68 with gpt-6-luna), and their fitted cutoffs differ a lot.
+  <strong>Fit a cutoff per model</strong>: one fitted for Jev does not carry over to another model.</li>
+</ul>
 <h2 id="self-hosting-openjev-and-kev">Self-hosting: OpenJev and Kev<a class="headerlink" href="#self-hosting-openjev-and-kev" title="Permanent link">&para;</a></h2>
 <p>Open models that serve the same <code>/v1/systemone</code> API can run on your own hardware. Point <code>base_url</code> at them:</p>
 <ul>
@@ -1307,6 +1645,8 @@ included ones, minus the 5% recall given up.</p>
 </li>
 <li><strong>openjev-sglang</strong> serves any SGLang model by reading first-token probabilities, which its authors describe as
   not calibrated.</li>
+<li><strong>pplx-decider</strong>: Perplexity publishes the weights under Apache-2.0 on Hugging Face. We have not tested a self-hosted
+  server; any server that speaks the same protocol works through <code>base_url</code>.</li>
 </ul>
 <h2 id="known-differences-between-backends">Known differences between backends<a class="headerlink" href="#known-differences-between-backends" title="Permanent link">&para;</a></h2>
 <p>A compatible API is not an equivalent model. Before relying on another backend, check it on labeled data.</p>
@@ -1377,6 +1717,22 @@ with <code>DecisionTitleAbstractReviewer</code>:</p>
   <code>choice</code>) are handled by <code>SystemOneProvider</code>, so reviewers see the same answer format everywhere.</li>
 <li>Jev limits a choice question to 255 options; OpenJev evaluates up to 52 options in one pass. Validation errors
   from the server are shown in the error message.</li>
+</ul>
+<p>The v1.4.0 backends:</p>
+<ul>
+<li><strong>pplx-decider and gpt-6-luna gave identical answers to identical requests</strong> in our tests (six repeats each on
+  borderline articles). But all three models change their answers on borderline articles when unrelated text in the
+  input changes. For one article, gpt-6-luna returned an include probability of 0.05 without the workflow's
+  <code>Review Task ID</code> line, and 0.50 or 0.65 with two different IDs. Since v1.4.0 the decision reviewers leave that line out, so an article
+  gets the same input, and with these two models the same answer, whatever its row or round.</li>
+<li><strong>OpenAI rounds probabilities to two decimals</strong>, so many articles tie (gpt-6-luna returned 99 distinct
+  <code>include_probability</code> values over 11,793 articles, pplx-decider 11,772). Ties make ranking and fitted cutoffs coarse.</li>
+<li><strong>OpenAI's yes/no questions have no answer descriptions.</strong> LatteReview adds a <code>Noul</code>'s <code>true</code>/<code>false</code> descriptions to
+  the instructions ("Answer true if: ..."). Testing on two datasets showed no difference either way.</li>
+<li><strong>OpenAI may refuse single questions</strong> (see <a href="#refusals">Refusals</a>); Jev and Perplexity have not refused any in our
+  tests.</li>
+<li><strong>Perplexity accepts up to 128 questions per request</strong> and inputs up to 262,144 tokens. Its responses report tokens
+  but not cost, so LatteReview prices them at $0.02 per million input tokens. Through OpenRouter, the cost is reported.</li>
 </ul>
 
 

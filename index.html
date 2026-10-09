@@ -318,10 +318,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#whats-new-in-v130" class="md-nav__link">
+  <a href="#whats-new-in-v140" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🆕 What's New in v1.3.0
+        🆕 What's New in v1.4.0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-was-new-in-v130" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Was New in v1.3.0
       
     </span>
   </a>
@@ -520,7 +531,7 @@
   <span class="md-ellipsis">
     
   
-    🎯 Decision Models (Jev)
+    🎯 Decision Models
   
 
     
@@ -725,10 +736,21 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#whats-new-in-v130" class="md-nav__link">
+  <a href="#whats-new-in-v140" class="md-nav__link">
     <span class="md-ellipsis">
       
-        🆕 What's New in v1.3.0
+        🆕 What's New in v1.4.0
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-was-new-in-v130" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        What Was New in v1.3.0
       
     </span>
   </a>
@@ -883,8 +905,17 @@
 <p><img src="images/robot.png" width="400"></p>
 
 <p>A framework for multi-agent review workflows using large language models.</p>
-<p>🚨 <strong>NEW in v1.3.0</strong>: Screen with <strong>decision models</strong> such as TypeSafe's <strong>Jev</strong>: probabilities instead of generated text, in about 0.2 seconds per article, next to your LLM reviewers in the same workflow. See <a href="#whats-new-in-v130">What's New</a> below and <a href="decision_models/">Decision Models</a>.</p>
-<h2 id="whats-new-in-v130">🆕 What's New in v1.3.0<a class="headerlink" href="#whats-new-in-v130" title="Permanent link">&para;</a></h2>
+<p>🚨 <strong>NEW in v1.4.0</strong>: Decision reviewers now also run on <strong>Perplexity's pplx-decider</strong> and <strong>OpenAI's gpt-6-luna</strong> through their new Decisions APIs, next to TypeSafe's <strong>Jev</strong>. In our evaluation on 11,793 articles, pplx-decider ranked articles best, for about $0.05 per 1,000 abstracts. See <a href="#whats-new-in-v140">What's New</a> below and <a href="decision_models/">Decision Models</a>.</p>
+<h2 id="whats-new-in-v140">🆕 What's New in v1.4.0<a class="headerlink" href="#whats-new-in-v140" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Perplexity's Decisions API</strong>: decision reviewers run on Perplexity's <strong>pplx-decider</strong> with <code>SystemOneProvider(backend="perplexity")</code> (<code>PERPLEXITY_API_KEY</code>), or through OpenRouter with <code>SystemOneProvider(backend="openrouter", model="perplexity/pplx-decider-v1.1-27b")</code>.</li>
+<li><strong>OpenAI's Decisions API</strong>: <code>SystemOneProvider(backend="openai")</code> runs <strong>gpt-6-luna</strong> through OpenAI's new Decisions API. The provider translates OpenAI's request format, so every decision reviewer works unchanged. Questions that OpenAI declines to answer come back as None instead of stopping the run.</li>
+<li><strong>Three decision models compared on 11,793 articles</strong>: pplx-decider ranked best (mean AUC 0.895, best on 7 of 9 datasets, about $0.05 per 1,000 abstracts), then Jev (0.878, $0.06) and the v1 LLM reviewers (0.828). gpt-6-luna's Decisions API scored 0.779 ($0.16): on long, multi-part criteria it returned 0.00 for almost every article. See the <a href="decision_models/#comparing-jev-pplx-decider-and-gpt-6-luna">comparison</a>.</li>
+<li><strong>Perplexity's Sonar models as LLM reviewers</strong>: <code>LiteLLMProvider(model="perplexity/sonar")</code>. Sonar searches the web on every request, which costs about $5 per 1,000 abstracts.</li>
+<li><strong>Correct costs for per-request fees</strong>: <code>LiteLLMProvider</code> now uses the cost the API reports (OpenRouter and Perplexity), so fees such as Sonar's search fee are counted. Before, a Sonar request through OpenRouter was recorded at about 1/18 of its price.</li>
+<li><strong>Same input, same answer</strong>: decision reviewers leave the workflow's <code>Review Task ID</code> line out of the model's input. With it, a borderline article's answer could depend on its row number.</li>
+</ul>
+<h2 id="what-was-new-in-v130">What Was New in v1.3.0<a class="headerlink" href="#what-was-new-in-v130" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Decision reviewers with Jev</strong>: LatteReview can now review with System One decision models such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. <code>DecisionTitleAbstractReviewer</code>, <code>DecisionScoringReviewer</code> and the generic <code>DecisionReviewer</code> work in any <code>ReviewWorkflow</code>, next to LLM reviewers.</li>
 <li><strong>One provider, any backend</strong>: <code>SystemOneProvider</code> works with TypeSafe and OpenRouter, and with any other <code>/v1/systemone</code> server via <code>base_url</code>, including a self-hosted OpenJev model.</li>
@@ -892,8 +923,8 @@
 <li><strong>Thresholds for a target recall</strong>: <code>suggest_threshold</code> fits a probability cutoff on labeled data.</li>
 <li><strong>Hybrid workflows</strong>: let Jev screen everything and send only uncertain articles to an LLM.</li>
 </ul>
-<p>Nothing changes for existing LLM reviewers. Read <a href="decision_models/">Decision Models</a> for how Jev differs from LLM reviewers and how to use it well.</p>
-<p>Try it in the notebooks: <a href="https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb">Screening, scoring and extraction with Jev</a> · <a href="https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb">Hybrid Jev + LLM review with measurements</a>.</p>
+<p>Read <a href="decision_models/">Decision Models</a> for how decision models differ from LLM reviewers and how to use them well.</p>
+<p>Try it in the notebooks: <a href="https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb">Screening with Jev, pplx-decider and gpt-6-luna</a> · <a href="https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb">Hybrid Jev + LLM review with measurements</a>.</p>
 <h2 id="what-was-new-in-v120">What Was New in v1.2.0<a class="headerlink" href="#what-was-new-in-v120" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Current models</strong>: tested with OpenAI GPT-6 (<code>gpt-6-astra</code>, <code>gpt-6-sol</code>, <code>gpt-6-luna</code>) and GPT-5.x, Anthropic Claude Opus 5.5, Sonnet 5, Haiku 4.5 and Fable 5.1, and Google Gemini 3.x (<code>gemini-3.8-flash</code>, <code>gemini-3.5-flash-lite</code>). Older models such as <code>gpt-4o-mini</code> and <code>gemini-2.5-flash</code> keep working.</li>

@@ -348,7 +348,7 @@
   <span class="md-ellipsis">
     
   
-    🎯 Decision Models (Jev)
+    🎯 Decision Models
   
 
     
@@ -1528,7 +1528,7 @@
 <li><strong><code>ScoringReviewer</code></strong>: A concrete implementation designed to review and score inputs based on defined criteria.</li>
 <li><strong><code>AbstractionReviewer</code></strong>: A specialized agent for structured data extraction tasks.</li>
 <li><strong><code>TitleAbstractReviewer</code></strong>: A specialized agent for reviewing and evaluating article titles and abstracts against defined criteria.</li>
-<li><strong><code>DecisionReviewer</code></strong>, <strong><code>DecisionTitleAbstractReviewer</code></strong>, <strong><code>DecisionScoringReviewer</code></strong> (new in v1.3.0): Reviewers that use a System One decision model such as Jev instead of an LLM. See <a href="../../decision_models/">Decision Models</a>.</li>
+<li><strong><code>DecisionReviewer</code></strong>, <strong><code>DecisionTitleAbstractReviewer</code></strong>, <strong><code>DecisionScoringReviewer</code></strong> (new in v1.3.0): Reviewers that use a decision model such as Jev, pplx-decider or gpt-6-luna instead of an LLM. See <a href="../../decision_models/">Decision Models</a>.</li>
 </ul>
 <h2 id="basicreviewer-class">BasicReviewer Class<a class="headerlink" href="#basicreviewer-class" title="Permanent link">&para;</a></h2>
 <h3 id="overview_1">Overview<a class="headerlink" href="#overview_1" title="Permanent link">&para;</a></h3>
@@ -1716,12 +1716,14 @@
 </ul>
 <hr />
 <h2 id="decision-reviewers">Decision Reviewers<a class="headerlink" href="#decision-reviewers" title="Permanent link">&para;</a></h2>
-<p>Decision reviewers (new in v1.3.0) use a <code>SystemOneProvider</code> and a decision model such as TypeSafe's Jev. They send each item's text as the model's state, with all questions in a single request, and return probabilities instead of generated text. They are <code>BasicReviewer</code> subclasses, so they work in any <code>ReviewWorkflow</code> next to LLM reviewers. For the differences from LLM reviewers, evaluation results and backends, see <a href="../../decision_models/">Decision Models</a>.</p>
+<p>Decision reviewers (new in v1.3.0) use a <code>SystemOneProvider</code> and a decision model such as TypeSafe's Jev, Perplexity's pplx-decider or OpenAI's gpt-6-luna. They send each item's text as the model's state, with all questions in a single request, and return probabilities instead of generated text. They are <code>BasicReviewer</code> subclasses, so they work in any <code>ReviewWorkflow</code> next to LLM reviewers. For the differences from LLM reviewers, evaluation results and backends, see <a href="../../decision_models/">Decision Models</a>.</p>
 <p>Common behavior:</p>
 <ul>
 <li><code>max_concurrent_requests</code> defaults to 8; the provider paces requests to its <code>requests_per_minute</code>.</li>
 <li>Text only: an item with images raises <code>AgentError</code>. <code>reasoning</code>, <code>examples</code>, <code>model_args</code>, <code>generic_prompt</code> and <code>prompt_path</code> raise <code>AgentError</code> at creation, because decision models use no prompts. <code>backstory</code> is accepted but ignored.</li>
 <li><code>additional_context</code> (a string or an async function, as for LLM reviewers) is sent with the item as the state <code>{"item": ..., "additional_context": ...}</code>.</li>
+<li>The <code>Review Task ID: ...</code> line that <code>ReviewWorkflow</code> adds to every item is left out of the state (since v1.4.0), so an item gets the same answer whatever its row or round. An <code>additional_context</code> function still receives it.</li>
+<li>If the backend declines to answer a question (OpenAI may refuse single questions), the matching output is None, its <code>_answers</code> entry has <code>refused=True</code>, and a warning is printed once per reviewer. The item is not retried and the run continues. Route such items to an LLM or a human reviewer, e.g., with a filter such as <code>lambda row: pd.isna(row["round-A_Jev_include_probability"])</code>.</li>
 <li>The output of each item also holds <code>_answers</code>, the full normalized answers (probabilities and confidence), which appears in the workflow's <code>output</code> column.</li>
 <li><code>memory</code> stores the state, the questions, the response and the cost of each item.</li>
 </ul>
@@ -1752,12 +1754,12 @@
 <tbody>
 <tr>
 <td><code>evaluation</code></td>
-<td>int 1-5</td>
+<td>int 1-5 (None if refused)</td>
 <td>the most likely level of the same 1-5 rubric as <code>TitleAbstractReviewer</code></td>
 </tr>
 <tr>
 <td><code>include_probability</code></td>
-<td>float</td>
+<td>float (None if refused)</td>
 <td>probability of meeting all inclusion and no exclusion criteria (the recommended screening signal)</td>
 </tr>
 <tr>
