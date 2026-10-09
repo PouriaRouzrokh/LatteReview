@@ -28,7 +28,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 - **Correct costs for per-request fees**: `LiteLLMProvider` now uses the cost the API reports (OpenRouter and Perplexity), so fees such as Sonar's search fee are counted. Before, a Sonar request through OpenRouter was recorded at about 1/18 of its price.
 - **Same input, same answer**: decision reviewers leave the workflow's `Review Task ID` line out of the model's input. With it, a borderline article's answer could depend on its row number.
 
-A decision-model + LLM pipeline in a few lines: the decision model screens every article, and only the articles it is unsure about go to an LLM (set `TYPESAFE_API_KEY` and `OPENAI_API_KEY`):
+A decision-model + LLM pipeline in a few lines: Perplexity's pplx-decider screens every article, and only the articles it is unsure about go to an LLM (set `PERPLEXITY_API_KEY` and `OPENAI_API_KEY`):
 
 ```python
 import asyncio
@@ -40,9 +40,9 @@ from lattereview.workflows import ReviewWorkflow
 inclusion = {1: "The study must involve CT scans.", 2: "The study must use deep learning."}
 exclusion = {1: "The study must not include PET scans."}
 
-jev = DecisionTitleAbstractReviewer(
-    provider=SystemOneProvider(),  # TypeSafe's Jev; or backend="perplexity", "openai" or "openrouter"
-    name="Jev", inclusion_criteria=inclusion, exclusion_criteria=exclusion,
+decider = DecisionTitleAbstractReviewer(
+    provider=SystemOneProvider(backend="perplexity"),  # or SystemOneProvider() for TypeSafe's Jev, backend="openai"
+    name="Decider", inclusion_criteria=inclusion, exclusion_criteria=exclusion,
 )
 llm = TitleAbstractReviewer(
     provider=OpenAIProvider(model="gpt-6-luna"),
@@ -50,9 +50,9 @@ llm = TitleAbstractReviewer(
 )
 
 workflow = ReviewWorkflow(workflow_schema=[
-    {"round": "A", "reviewers": [jev], "text_inputs": ["title", "abstract"]},
+    {"round": "A", "reviewers": [decider], "text_inputs": ["title", "abstract"]},
     {"round": "B", "reviewers": [llm], "text_inputs": ["title", "abstract"],
-     "filter": lambda row: pd.isna(p := row["round-A_Jev_include_probability"]) or 0.1 <= p < 0.9},  # uncertain or unanswered
+     "filter": lambda row: pd.isna(p := row["round-A_Decider_include_probability"]) or 0.1 <= p < 0.9},  # uncertain or unanswered
 ])
 results = asyncio.run(workflow(pd.read_csv("articles.csv")))  # columns: title, abstract
 ```
@@ -197,15 +197,23 @@ results.to_csv("review_results.csv", index=False)
 
 ### 🎯 Decision Models
 
-Decision reviewers use a decision model instead of an LLM. Set `TYPESAFE_API_KEY` for Jev, or choose another backend: `SystemOneProvider(backend="perplexity")` (`PERPLEXITY_API_KEY`), `backend="openai"` (`OPENAI_API_KEY`) or `backend="openrouter"` (`OPENROUTER_API_KEY`):
+Decision reviewers use a decision model instead of an LLM. Three models are supported, all through `SystemOneProvider`:
+
+| Model | Provider | API key | Mean AUC* | Cost per 1,000 abstracts* | Notes |
+| --- | --- | --- | ---: | ---: | --- |
+| Perplexity's **pplx-decider** | `SystemOneProvider(backend="perplexity")` | `PERPLEXITY_API_KEY` | **0.895** | **$0.05** | Best in our evaluation; open weights (Apache-2.0); bills the abstract once per question |
+| TypeSafe's **Jev** | `SystemOneProvider()` (default) | `TYPESAFE_API_KEY` | 0.878 | $0.06 | Nearly free to add questions; uncertain answers vary slightly between runs |
+| OpenAI's **gpt-6-luna** | `SystemOneProvider(backend="openai")` | `OPENAI_API_KEY` | 0.779 | $0.16 | Weak on long, multi-part criteria; may decline single questions (answer = None) |
+
+\* `DecisionTitleAbstractReviewer` on all 11,793 articles of LatteReview's evaluation datasets; the v1 LLM reviewers scored 0.828. Jev and pplx-decider are also available through OpenRouter (`backend="openrouter"`, `OPENROUTER_API_KEY`).
 
 ```python
 from lattereview.providers import SystemOneProvider
 from lattereview.agents import DecisionTitleAbstractReviewer
 
-jev = DecisionTitleAbstractReviewer(
-    provider=SystemOneProvider(),  # TypeSafe's jev-latest
-    name="Jev",
+decider = DecisionTitleAbstractReviewer(
+    provider=SystemOneProvider(backend="perplexity"),  # pplx-decider-v1.1-27b
+    name="Decider",
     inclusion_criteria={1: "The study must involve CT scans.", 2: "The study must use deep learning."},
     exclusion_criteria={1: "The study must not include PET scans."},
 )
