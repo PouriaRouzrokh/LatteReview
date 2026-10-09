@@ -114,7 +114,7 @@ async def test_title_abstract_output(fake):
     response, input_prompt, cost = await reviewer.review_item("Review Task ID: A-0\n=== title ===\nA CT study")
 
     assert len(backend.bodies) == 1  # all questions in a single request
-    assert backend.bodies[0]["state"] == "Review Task ID: A-0\n=== title ===\nA CT study"
+    assert backend.bodies[0]["state"] == "=== title ===\nA CT study"  # the workflow's task ID is left out
     assert response["evaluation"] == 2
     assert response["include_probability"] == 0.12
     assert response["confidence"] == 0.8
@@ -230,6 +230,12 @@ async def test_async_additional_context(fake):
     reviewer = DecisionReviewer(provider=provider, questions={"q": Noul("x")}, additional_context=context)
     await reviewer.review_item("item-1")
     assert backend.bodies[0]["state"] == {"item": "item-1", "additional_context": "context for item-1"}
+    # The callable still sees the task ID (e.g., to look up context by item); the state does not.
+    await reviewer.review_item("Review Task ID: A-3\nitem-2")
+    assert backend.bodies[1]["state"] == {
+        "item": "item-2",
+        "additional_context": "context for Review Task ID: A-3\nitem-2",
+    }
 
 
 @pytest.mark.parametrize(
@@ -321,8 +327,9 @@ async def test_workflow_routes_uncertain_items_to_round_b(fake):
     assert "_answers" in result.loc[0, "round-A_Jev_output"]
     assert result["round-B_Scorer_score"].notna().tolist() == [False, False, True]
     assert len(backend.bodies) == 4
-    states = sorted(body["state"] for body in backend.bodies)
-    assert states[0] == "Review Task ID: A-0\n=== title ===\nclear include\n\n=== abstract ===\n..."
+    states = [body["state"] for body in backend.bodies]
+    assert "=== title ===\nclear include\n\n=== abstract ===\n..." in states
+    assert states.count("=== title ===\nunsure\n\n=== abstract ===\n...") == 2  # same state in rounds A and B
     assert workflow.get_total_cost() == pytest.approx(4 * 1000 * 0.042 / 1e6)
     assert len(jev.memory) == 3 and jev.memory[0]["cost"] > 0
 

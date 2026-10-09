@@ -1,5 +1,6 @@
 """Reviewer for System One decision models (e.g., TypeSafe's Jev), which answer typed questions with probabilities."""
 
+import re
 from typing import Annotated, Any, Callable, ClassVar, Dict, List, Union
 
 import pydantic
@@ -16,6 +17,9 @@ from ..providers.system_one_provider import (
 
 # Decision models answer in ~0.2 s, so a few concurrent requests already reach the provider's requests_per_minute pace.
 DEFAULT_CONCURRENT_REQUESTS = 8
+# ReviewWorkflow starts every item with this line to track LLM outputs. Decision models have no use for it, and it
+# shifts their answers on borderline items, so it is left out of the state.
+TASK_ID_LINE = re.compile(r"\AReview Task ID: [^\n]*\n")
 DEFAULT_MAX_RETRIES = 3
 
 Question = Annotated[Union[Noul, Choice, Score], pydantic.Field(discriminator="type")]
@@ -112,16 +116,21 @@ class DecisionReviewer(BasicReviewer):
         return response
 
     async def _build_state(self, text_input_string: str) -> Union[str, Dict[str, str]]:
-        """Return the item text, or {"item", "additional_context"} when additional context is set."""
+        """Return the item text, or {"item", "additional_context"} when additional context is set.
+
+        The workflow's "Review Task ID" line is left out of the state, so an item gets the same answer whatever its
+        row or round. A callable additional_context still receives the full text, including that line.
+        """
+        item = TASK_ID_LINE.sub("", text_input_string)
         if not self.additional_context:
-            return text_input_string
+            return item
         if isinstance(self.additional_context, str):
             context = self.additional_context
         elif isinstance(self.additional_context, Callable):
             context = await self.additional_context(text_input_string)
         else:
             raise AgentError("Additional context must be a string or callable")
-        return {"item": text_input_string, "additional_context": context} if context else text_input_string
+        return {"item": item, "additional_context": context} if context else item
 
     def _warn_on_refusal(self, result: DecisionResult) -> None:
         """Print a warning the first time the backend declines to answer a question for this reviewer."""
