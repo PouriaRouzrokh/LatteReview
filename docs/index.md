@@ -13,9 +13,18 @@
 
 A framework for multi-agent review workflows using large language models.
 
-🚨 **NEW in v1.3.0**: Screen with **decision models** such as TypeSafe's **Jev**: probabilities instead of generated text, in about 0.2 seconds per article, next to your LLM reviewers in the same workflow. See [What's New](#whats-new-in-v130) below and [Decision Models](decision_models.md).
+🚨 **NEW in v1.4.0**: Decision reviewers now also run on **Perplexity's pplx-decider** and **OpenAI's gpt-6-luna** through their new Decisions APIs, next to TypeSafe's **Jev**. In our evaluation on 11,793 articles, pplx-decider ranked articles best, for about $0.05 per 1,000 abstracts. See [What's New](#whats-new-in-v140) below and [Decision Models](decision_models.md).
 
-## 🆕 What's New in v1.3.0
+## 🆕 What's New in v1.4.0
+
+- **Perplexity's Decisions API**: decision reviewers run on Perplexity's **pplx-decider** with `SystemOneProvider(backend="perplexity")` (`PERPLEXITY_API_KEY`), or through OpenRouter with `SystemOneProvider(backend="openrouter", model="perplexity/pplx-decider-v1.1-27b")`.
+- **OpenAI's Decisions API**: `SystemOneProvider(backend="openai")` runs **gpt-6-luna** through OpenAI's new Decisions API. The provider translates OpenAI's request format, so every decision reviewer works unchanged. Questions that OpenAI declines to answer come back as None instead of stopping the run.
+- **Three decision models compared on 11,793 articles**: pplx-decider ranked best (mean AUC 0.895, best on 7 of 9 datasets, about $0.05 per 1,000 abstracts), then Jev (0.878, $0.06) and the v1 LLM reviewers (0.828). gpt-6-luna's Decisions API scored 0.779 ($0.16): on long, multi-part criteria it returned 0.00 for almost every article. See the [comparison](decision_models.md#comparing-jev-pplx-decider-and-gpt-6-luna).
+- **Perplexity's Sonar models as LLM reviewers**: `LiteLLMProvider(model="perplexity/sonar")`. Sonar searches the web on every request, which costs about $5 per 1,000 abstracts.
+- **Correct costs for per-request fees**: `LiteLLMProvider` now uses the cost the API reports (OpenRouter and Perplexity), so fees such as Sonar's search fee are counted. Before, a Sonar request through OpenRouter was recorded at about 1/18 of its price.
+- **Same input, same answer**: decision reviewers leave the workflow's `Review Task ID` line out of the model's input. With it, a borderline article's answer could depend on its row number.
+
+## What Was New in v1.3.0
 
 - **Decision reviewers with Jev**: LatteReview can now review with System One decision models such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. `DecisionTitleAbstractReviewer`, `DecisionScoringReviewer` and the generic `DecisionReviewer` work in any `ReviewWorkflow`, next to LLM reviewers.
 - **One provider, any backend**: `SystemOneProvider` works with TypeSafe and OpenRouter, and with any other `/v1/systemone` server via `base_url`, including a self-hosted OpenJev model.
@@ -23,9 +32,9 @@ A framework for multi-agent review workflows using large language models.
 - **Thresholds for a target recall**: `suggest_threshold` fits a probability cutoff on labeled data.
 - **Hybrid workflows**: let Jev screen everything and send only uncertain articles to an LLM.
 
-Nothing changes for existing LLM reviewers. Read [Decision Models](decision_models.md) for how Jev differs from LLM reviewers and how to use it well.
+Read [Decision Models](decision_models.md) for how decision models differ from LLM reviewers and how to use them well.
 
-Try it in the notebooks: [Screening, scoring and extraction with Jev](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) · [Hybrid Jev + LLM review with measurements](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb).
+Try it in the notebooks: [Screening with Jev, pplx-decider and gpt-6-luna](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) · [Hybrid Jev + LLM review with measurements](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb).
 
 ## What Was New in v1.2.0
 

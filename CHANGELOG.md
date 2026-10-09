@@ -9,6 +9,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+## [1.4.0] - 2026-10-9
+
+This release adds Perplexity's and OpenAI's Decisions APIs as decision-model backends, supports Perplexity's Sonar LLMs, and compares the three decision models on the full evaluation data.
+
+### Added
+
+- `SystemOneProvider(backend="perplexity")`: Perplexity's Decisions API (`https://api.perplexity.ai/v1/decisions`, model `pplx-decider-v1.1-27b`, `PERPLEXITY_API_KEY` or `PERPLEXITYAI_API_KEY`, $0.02 per million input tokens, paced to 500 requests per minute). It speaks the same protocol as `/v1/systemone`. Perplexity's model also works through OpenRouter: `SystemOneProvider(backend="openrouter", model="perplexity/pplx-decider-v1.1-27b")`.
+- `SystemOneProvider(backend="openai")`: OpenAI's Decisions API (`https://api.openai.com/v1/decisions`, model `gpt-6-luna`, `OPENAI_API_KEY`, $0.10 per million input tokens, not paced). The provider translates OpenAI's format (an array of `predicate`/`choice`/`score` questions and answers) into the same `DecisionResult`, so all decision reviewers work unchanged. A `Noul`'s `true`/`false` descriptions are added to the predicate's instructions, since OpenAI's predicates have no answer descriptions.
+- `SystemOneProvider(protocol=...)`: for a custom `base_url`, `"openai"` selects OpenAI's Decisions format (default `"systemone"`). Custom URLs may now also end with `/v1/decisions`.
+- Refusals: OpenAI may decline to answer single questions. The answer then has `refused=True` and `value=None`, the other answers of the request are kept, and the item is neither failed nor retried. Decision reviewers output None for refused answers, `DecisionTitleAbstractReviewer` names them in the generated reasoning, and a warning is printed once per reviewer.
+- Perplexity's Sonar models as LLM reviewers through `LiteLLMProvider(model="perplexity/sonar")` (also `sonar-pro`, `sonar-reasoning-pro`, `sonar-deep-research`), tested through OpenRouter.
+- `evaluation/decision_model_comparison.ipynb`: Jev, pplx-decider and gpt-6-luna on all 11,793 evaluation articles. Mean AUC: pplx-decider 0.895, Jev 0.878, v1 LLM baseline 0.828, gpt-6-luna 0.779 (it returned 0.00 for almost every article on long, multi-part criteria). Cost per 1,000 articles: $0.052, $0.059 and $0.159.
+- The `decision_review_jev` tutorial screens the same articles with pplx-decider and gpt-6-luna and compares them with Jev.
+- Live tests for the new backends and for Sonar (`pytest -m live`); unit tests built on recorded OpenAI and Perplexity responses.
+
+### Changed
+
+- Decision reviewers leave the `Review Task ID` line that `ReviewWorkflow` adds to every item out of the model's input. It shifted answers on borderline articles (gpt-6-luna gave 0.05, 0.50 or 0.65 for the same abstract depending on the line), so an article's decision could depend on its row. A callable `additional_context` still receives the full text.
+- `.env_sample` lists `PERPLEXITY_API_KEY`.
+
+### Fixed
+
+- `LiteLLMProvider` now uses the cost the API reports (`usage.cost` from OpenRouter, `usage.cost.total_cost` from Perplexity) when there is one, so per-request fees are counted. A Sonar request through OpenRouter was recorded at $0.0003 instead of $0.0053 because its web-search fee was missing.
+
 ## [1.3.0] - 2026-9-27
 
 This release adds reviewers that use System One **decision models**, such as TypeSafe's Jev, instead of LLMs. Existing LLM reviewers, providers and defaults are unchanged.

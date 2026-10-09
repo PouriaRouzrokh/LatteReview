@@ -1,0 +1,74 @@
+{
+ "search1": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 978,
+  "seconds": 61.07821798324585,
+  "cost": 0.04436680000000004,
+  "input_tokens": null
+ },
+ "search2": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 978,
+  "seconds": 61.72073984146118,
+  "cost": 0.06639372000000003,
+  "input_tokens": null
+ },
+ "search3": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 978,
+  "seconds": 61.56111812591553,
+  "cost": 0.08865536,
+  "input_tokens": null
+ },
+ "Appenzeller-Herzog_2019": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 2873,
+  "seconds": 206.47184801101685,
+  "cost": 0.1070566399999999,
+  "input_tokens": null
+ },
+ "Donners_2021": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 258,
+  "seconds": 15.95061182975769,
+  "cost": 0.011459159999999996,
+  "input_tokens": null
+ },
+ "Jeyaraman_2020": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 1175,
+  "seconds": 71.07936692237854,
+  "cost": 0.06382456000000002,
+  "input_tokens": null
+ },
+ "Meijboom_2021": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 882,
+  "seconds": 68.79814577102661,
+  "cost": 0.038702520000000004,
+  "input_tokens": null
+ },
+ "Muthu_2021": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 2719,
+  "seconds": 183.6063506603241,
+  "cost": 0.15016907999999998,
+  "input_tokens": null
+ },
+ "Oud_2018": {
+  "backend": "openrouter",
+  "model": "perplexity/pplx-decider-v1.1-27b",
+  "items": 952,
+  "seconds": 59.65916895866394,
+  "cost": 0.043958720000000104,
+  "input_tokens": null
+ }
+}

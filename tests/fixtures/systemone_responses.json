@@ -1,5 +1,5 @@
 {
-  "_note": "Real /v1/systemone responses recorded on 2026-09-27 for the questions in REQUEST_QUESTIONS (tests/conftest.py).",
+  "_note": "Real responses recorded for the questions in REQUEST_QUESTIONS (tests/systemone_fixtures.py): TypeSafe, OpenRouter and errors on 2026-09-27; OpenAI's /v1/decisions (including a refusal) and Perplexity's pplx-decider via OpenRouter on 2026-10-09.",
   "typesafe": {
     "model": "jev-1.13.0",
     "answers": {
@@ -120,5 +120,151 @@
       "message": "Invalid discriminator value. Expected 'noul' | 'choice' | 'score'",
       "code": 400
     }
+  },
+  "openai": {
+    "model": "gpt-6-luna",
+    "answers": [
+      {
+        "type": "predicate",
+        "name": "dl",
+        "probability": 1.0
+      },
+      {
+        "type": "choice",
+        "name": "mod",
+        "choice": "XR",
+        "probabilities": [
+          {
+            "value": "CT",
+            "probability": 0.0
+          },
+          {
+            "value": "MRI",
+            "probability": 0.0
+          },
+          {
+            "value": "XR",
+            "probability": 1.0
+          },
+          {
+            "value": "US",
+            "probability": 0.0
+          }
+        ],
+        "confidence": 1.0
+      },
+      {
+        "type": "score",
+        "name": "q",
+        "score": 2.0,
+        "probabilities": [
+          {
+            "value": 0,
+            "label": "none",
+            "probability": 0.0
+          },
+          {
+            "value": 1,
+            "label": "internal only",
+            "probability": 0.0
+          },
+          {
+            "value": 2,
+            "label": "external",
+            "probability": 1.0
+          }
+        ],
+        "confidence": 1.0
+      },
+      {
+        "type": "predicate",
+        "name": "plain",
+        "probability": 0.04
+      }
+    ],
+    "usage": {
+      "input_tokens": 601,
+      "input_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 601
+    }
+  },
+  "openai_refusal": {
+    "model": "gpt-6-luna",
+    "answers": [
+      {
+        "type": "refusal",
+        "name": "complete"
+      },
+      {
+        "type": "predicate",
+        "name": "plain",
+        "probability": 1.0
+      }
+    ],
+    "usage": {
+      "input_tokens": 173,
+      "input_tokens_details": {
+        "cached_tokens": 0,
+        "cache_write_tokens": 0
+      },
+      "output_tokens": 0,
+      "output_tokens_details": {
+        "reasoning_tokens": 0
+      },
+      "total_tokens": 173
+    }
+  },
+  "perplexity_openrouter": {
+    "model": "perplexity/pplx-decider-v1.1-27b-20261006",
+    "answers": {
+      "dl": {
+        "type": "noul",
+        "noul": 0.999652232270817
+      },
+      "mod": {
+        "type": "choice",
+        "choice": "XR",
+        "probabilities": {
+          "CT": 0.0008959783651888815,
+          "MRI": 3.058895182892485e-05,
+          "XR": 0.9990115042582813,
+          "US": 6.192842470094807e-05
+        },
+        "confidence": 0.9986820056777085
+      },
+      "q": {
+        "type": "score",
+        "score": 1.9990029110429592,
+        "legend": {
+          "0": "none",
+          "1": "internal only",
+          "2": "external"
+        },
+        "probabilities": {
+          "0": 8.653176854716527e-05,
+          "1": 0.0008240254199466171,
+          "2": 0.9990894428115064
+        },
+        "confidence": 0.999002911042959
+      },
+      "plain": {
+        "type": "noul",
+        "noul": 0.000464640652319535
+      }
+    },
+    "usage": {
+      "input_tokens": 591,
+      "output_tokens": 4,
+      "cost": 1.182e-05
+    },
+    "id": "gen-dec-1791551092-cbHMHbOcSsb6jsQRlie3",
+    "provider": "Perplexity"
   }
 }

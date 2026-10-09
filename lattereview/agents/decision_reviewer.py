@@ -1,5 +1,6 @@
 """Reviewer for System One decision models (e.g., TypeSafe's Jev), which answer typed questions with probabilities."""
 
+import re
 from typing import Annotated, Any, Callable, ClassVar, Dict, List, Union
 
 import pydantic
@@ -16,6 +17,9 @@ from ..providers.system_one_provider import (
 
 # Decision models answer in ~0.2 s, so a few concurrent requests already reach the provider's requests_per_minute pace.
 DEFAULT_CONCURRENT_REQUESTS = 8
+# ReviewWorkflow starts every item with this line to track LLM outputs. Decision models have no use for it, and it
+# shifts their answers on borderline items, so it is left out of the state.
+TASK_ID_LINE = re.compile(r"\AReview Task ID: [^\n]*\n")
 DEFAULT_MAX_RETRIES = 3
 
 Question = Annotated[Union[Noul, Choice, Score], pydantic.Field(discriminator="type")]
@@ -29,6 +33,9 @@ class DecisionReviewer(BasicReviewer):
     one key per question holding the answer's value (noul: probability of yes; choice: the chosen option; score: the
     expected 0-based level), plus `_answers` with the full normalized answers (probabilities and confidence).
 
+    If the backend declines to answer a question (OpenAI may refuse single questions), its value is None and its
+    `_answers` entry has `refused=True`; a warning is printed the first time. Route such items to an LLM or a human.
+
     `provider` must be a SystemOneProvider. Decision models return no written text, so `reasoning`, `examples`,
     `model_args`, prompt templates, and images are not supported, and `backstory` is ignored.
     """
@@ -41,6 +48,7 @@ class DecisionReviewer(BasicReviewer):
     max_retries: int = DEFAULT_MAX_RETRIES
     # Presets build their questions from their own fields (criteria, scoring task) and reject user-given questions.
     _builds_questions: ClassVar[bool] = False
+    _warned_refusal: bool = pydantic.PrivateAttr(default=False)
 
     def model_post_init(self, __context: Any) -> None:
         """Reject LLM-only options, then build the questions and response format."""
@@ -108,16 +116,31 @@ class DecisionReviewer(BasicReviewer):
         return response
 
     async def _build_state(self, text_input_string: str) -> Union[str, Dict[str, str]]:
-        """Return the item text, or {"item", "additional_context"} when additional context is set."""
+        """Return the item text, or {"item", "additional_context"} when additional context is set.
+
+        The workflow's "Review Task ID" line is left out of the state, so an item gets the same answer whatever its
+        row or round. A callable additional_context still receives the full text, including that line.
+        """
+        item = TASK_ID_LINE.sub("", text_input_string) or text_input_string  # never send an empty state
         if not self.additional_context:
-            return text_input_string
+            return item
         if isinstance(self.additional_context, str):
             context = self.additional_context
         elif isinstance(self.additional_context, Callable):
             context = await self.additional_context(text_input_string)
         else:
             raise AgentError("Additional context must be a string or callable")
-        return {"item": text_input_string, "additional_context": context} if context else text_input_string
+        return {"item": item, "additional_context": context} if context else item
+
+    def _warn_on_refusal(self, result: DecisionResult) -> None:
+        """Print a warning the first time the backend declines to answer a question for this reviewer."""
+        refused = [qid for qid, answer in result.answers.items() if answer.refused]
+        if refused and not self._warned_refusal:
+            self._warned_refusal = True
+            print(
+                f"Warning: {self.name}: the model declined to answer {', '.join(refused)} for an item, so those "
+                "outputs are None. Route items with missing answers to an LLM or a human reviewer. (Shown once.)"
+            )
 
     async def review_item(
         self, text_input_string: str, image_path_list: List[str] = []
@@ -133,6 +156,7 @@ class DecisionReviewer(BasicReviewer):
             try:
                 state = await self._build_state(text_input_string)
                 result = await self.provider.decide(state, self.questions)
+                self._warn_on_refusal(result)
                 input_prompt = {"state": state, "questions": self.identity["questions"]}
                 return self.format_response(result), input_prompt, result.cost
             except Exception as e:

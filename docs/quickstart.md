@@ -16,7 +16,8 @@ To use LatteReview with different LLM engines (OpenAI, Anthropic, Google, etc.),
 OPENAI_API_KEY=your-openai-key
 GEMINI_API_KEY=your-gemini-key
 ANTHROPIC_API_KEY=your-anthropic-key
-TYPESAFE_API_KEY=your-typesafe-key      # for decision reviewers (Jev)
+TYPESAFE_API_KEY=your-typesafe-key      # for decision reviewers with Jev
+PERPLEXITY_API_KEY=your-perplexity-key  # for pplx-decider and Sonar models
 ```
 
 - Load it in your code:
@@ -227,10 +228,11 @@ results = asyncio.run(workflow(data))  # Returns a pandas DataFrame with all ori
 results.to_csv("review_results.csv", index=False)
 ```
 
-## Screening with a Decision Model (Jev)
+## Screening with a Decision Model
 
-Decision reviewers use a System One decision model such as TypeSafe's Jev instead of an LLM. They return probabilities
-instead of generated text, cost about $0.06 per 1,000 abstracts, and work in the same workflows:
+Decision reviewers use a decision model such as TypeSafe's Jev, Perplexity's pplx-decider or OpenAI's gpt-6-luna
+instead of an LLM. They return probabilities instead of generated text, cost about $0.05-0.16 per 1,000 abstracts, and
+work in the same workflows:
 
 ```python
 from lattereview.providers import SystemOneProvider
@@ -238,7 +240,7 @@ from lattereview.agents import DecisionTitleAbstractReviewer
 from lattereview.workflows import ReviewWorkflow
 
 jev = DecisionTitleAbstractReviewer(
-    provider=SystemOneProvider(),  # needs TYPESAFE_API_KEY; or SystemOneProvider(backend="openrouter")
+    provider=SystemOneProvider(),  # Jev; needs TYPESAFE_API_KEY. Or backend="perplexity", "openai" or "openrouter"
     name="Jev",
     inclusion_criteria={1: "The study must involve CT scans.", 2: "The study must use deep learning."},
     exclusion_criteria={1: "The study must not include PET scans."},
