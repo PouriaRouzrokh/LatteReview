@@ -45,7 +45,13 @@ class LiteLLMProvider(BaseProvider):
     def _safe_completion_cost(self, response: Any) -> float:
         """Calculate the completion cost, returning 0.0 when the model is missing from
         LiteLLM's pricing map (e.g., proxied or newly released models) so that a
-        successful review is never discarded over cost bookkeeping."""
+        successful review is never discarded over cost bookkeeping.
+
+        A cost reported by the API itself wins over token pricing, because it includes per-request
+        fees that token prices miss (e.g., the web-search fee of Perplexity's Sonar models)."""
+        reported = self._reported_cost(response)
+        if reported is not None:
+            return reported
         try:
             try:
                 return completion_cost(completion_response=response)
@@ -65,6 +71,17 @@ class LiteLLMProvider(BaseProvider):
                 f"could not calculate cost for model <{self.model}>: {str(e).splitlines()[0]}. Reporting cost as 0.",
             )
             return 0.0
+
+    @staticmethod
+    def _reported_cost(response: Any) -> Optional[float]:
+        """Return the cost the API reported in `usage.cost` (OpenRouter: a number; Perplexity: {"total_cost": ...}),
+        or None if it reported none. A zero cost (e.g., OpenRouter with your own provider key) counts as none."""
+        cost = getattr(getattr(response, "usage", None), "cost", None)
+        if isinstance(cost, dict):
+            cost = cost.get("total_cost")
+        if isinstance(cost, (int, float)) and not isinstance(cost, bool) and cost > 0:
+            return float(cost)
+        return None
 
     async def get_response(
         self,

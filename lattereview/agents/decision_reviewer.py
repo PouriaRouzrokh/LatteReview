@@ -29,6 +29,9 @@ class DecisionReviewer(BasicReviewer):
     one key per question holding the answer's value (noul: probability of yes; choice: the chosen option; score: the
     expected 0-based level), plus `_answers` with the full normalized answers (probabilities and confidence).
 
+    If the backend declines to answer a question (OpenAI may refuse single questions), its value is None and its
+    `_answers` entry has `refused=True`; a warning is printed the first time. Route such items to an LLM or a human.
+
     `provider` must be a SystemOneProvider. Decision models return no written text, so `reasoning`, `examples`,
     `model_args`, prompt templates, and images are not supported, and `backstory` is ignored.
     """
@@ -41,6 +44,7 @@ class DecisionReviewer(BasicReviewer):
     max_retries: int = DEFAULT_MAX_RETRIES
     # Presets build their questions from their own fields (criteria, scoring task) and reject user-given questions.
     _builds_questions: ClassVar[bool] = False
+    _warned_refusal: bool = pydantic.PrivateAttr(default=False)
 
     def model_post_init(self, __context: Any) -> None:
         """Reject LLM-only options, then build the questions and response format."""
@@ -119,6 +123,16 @@ class DecisionReviewer(BasicReviewer):
             raise AgentError("Additional context must be a string or callable")
         return {"item": text_input_string, "additional_context": context} if context else text_input_string
 
+    def _warn_on_refusal(self, result: DecisionResult) -> None:
+        """Print a warning the first time the backend declines to answer a question for this reviewer."""
+        refused = [qid for qid, answer in result.answers.items() if answer.refused]
+        if refused and not self._warned_refusal:
+            self._warned_refusal = True
+            print(
+                f"Warning: {self.name}: the model declined to answer {', '.join(refused)} for an item, so those "
+                "outputs are None. Route items with missing answers to an LLM or a human reviewer. (Shown once.)"
+            )
+
     async def review_item(
         self, text_input_string: str, image_path_list: List[str] = []
     ) -> tuple[Dict[str, Any], Dict[str, Any], float]:
@@ -133,6 +147,7 @@ class DecisionReviewer(BasicReviewer):
             try:
                 state = await self._build_state(text_input_string)
                 result = await self.provider.decide(state, self.questions)
+                self._warn_on_refusal(result)
                 input_prompt = {"state": state, "questions": self.identity["questions"]}
                 return self.format_response(result), input_prompt, result.cost
             except Exception as e:

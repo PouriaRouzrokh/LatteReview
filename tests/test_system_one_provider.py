@@ -74,6 +74,52 @@ def test_backend_presets(monkeypatch):
     assert SystemOneProvider(api_key="explicit").api_key == "explicit"
 
 
+def test_perplexity_and_openai_presets(monkeypatch):
+    monkeypatch.setenv("PERPLEXITY_API_KEY", "pplx-key")
+    monkeypatch.setenv("OPENAI_API_KEY", "oa-key")
+    perplexity = SystemOneProvider(backend="perplexity")
+    assert perplexity.endpoint == "https://api.perplexity.ai/v1/decisions" and perplexity.protocol == "systemone"
+    assert (perplexity.model, perplexity.api_key, perplexity.input_price_per_million) == (
+        "pplx-decider-v1.1-27b",
+        "pplx-key",
+        0.02,
+    )
+    assert perplexity.requests_per_minute == 500
+    openai = SystemOneProvider(backend="openai")
+    assert openai.endpoint == "https://api.openai.com/v1/decisions" and openai.protocol == "openai"
+    assert (openai.model, openai.api_key, openai.input_price_per_million) == ("gpt-6-luna", "oa-key", 0.10)
+    assert openai.requests_per_minute == 0
+
+
+def test_perplexity_key_falls_back_to_litellm_name(monkeypatch):
+    monkeypatch.delenv("PERPLEXITY_API_KEY", raising=False)
+    monkeypatch.setenv("PERPLEXITYAI_API_KEY", "litellm-style-key")
+    assert SystemOneProvider(backend="perplexity").api_key == "litellm-style-key"
+    monkeypatch.delenv("PERPLEXITYAI_API_KEY")
+    with pytest.raises(ClientCreationError, match="PERPLEXITY_API_KEY"):
+        SystemOneProvider(backend="perplexity")
+
+
+def test_protocol_applies_only_to_custom_servers(monkeypatch):
+    monkeypatch.setenv("TYPESAFE_API_KEY", "ts-key")
+    with pytest.raises(ClientCreationError, match="only to a custom base_url"):
+        SystemOneProvider(backend="typesafe", protocol="openai")
+    assert SystemOneProvider(backend="typesafe", protocol="systemone").protocol == "systemone"
+
+
+@pytest.mark.parametrize(
+    "base_url, protocol, endpoint",
+    [
+        ("https://gateway.example", "openai", "https://gateway.example/v1/decisions"),
+        ("https://eu.gateway.example/v1/decisions/", "openai", "https://eu.gateway.example/v1/decisions"),
+        ("http://localhost:8000/v1/decisions", None, "http://localhost:8000/v1/decisions"),  # a self-hosted decider
+    ],
+)
+def test_custom_decisions_urls(base_url, protocol, endpoint):
+    provider = SystemOneProvider(base_url=base_url, protocol=protocol)
+    assert provider.endpoint == endpoint and provider.protocol == (protocol or "systemone")
+
+
 @pytest.mark.parametrize(
     "base_url",
     [
@@ -137,6 +183,130 @@ async def test_openrouter_response_normalized(make_provider):
     assert isinstance(q.value, float) and q.value == 2.0  # whole-number score normalized to float
     assert q.label == "external" and q.confidence == 1.0
     assert result.cost == RESPONSES["openrouter"]["usage"]["cost"]  # reported cost wins over the token price
+
+
+async def test_perplexity_response_normalized(make_provider):
+    """Perplexity speaks the System One protocol at /v1/decisions; without a reported cost, its list price is used."""
+    response = {key: value for key, value in RESPONSES["perplexity_openrouter"].items() if key != "usage"}
+    response["usage"] = {"input_tokens": 591, "output_tokens": 4}  # Perplexity's own usage has no cost
+    provider, recorder = make_provider(ok(response), backend="perplexity")
+    result = await provider.decide("Title: a study", REQUEST_QUESTIONS)
+    assert str(recorder.requests[0].url) == "https://api.perplexity.ai/v1/decisions"
+    assert recorder.requests[0].headers["authorization"] == "Bearer test-perplexity-key"
+    body = recorder.bodies[0]
+    assert set(body) == {"model", "state", "questions"}  # Perplexity rejects unknown top-level fields
+    assert body["model"] == "pplx-decider-v1.1-27b" and body["questions"]["q"]["criteria"][0] == "none"
+    mod, q = result.answers["mod"], result.answers["q"]
+    assert mod.value == "XR" and list(mod.probabilities) == ["CT", "MRI", "XR", "US"]
+    assert (q.label, q.level) == ("external", 2) and 0.99 < q.confidence < 1
+    assert result.cost == pytest.approx(591 * 0.02 / 1e6)
+
+
+async def test_perplexity_decider_on_openrouter(make_provider):
+    provider, recorder = make_provider(
+        ok(RESPONSES["perplexity_openrouter"]), backend="openrouter", model="perplexity/pplx-decider-v1.1-27b"
+    )
+    result = await provider.decide("Title: a study", REQUEST_QUESTIONS)
+    assert recorder.bodies[0]["model"] == "perplexity/pplx-decider-v1.1-27b"
+    assert result.answers["dl"].value > 0.99 and result.answers["plain"].value < 0.01
+    assert result.cost == RESPONSES["perplexity_openrouter"]["usage"]["cost"]
+
+
+async def test_openai_request_translated(make_provider):
+    provider, recorder = make_provider(ok(RESPONSES["openai"]), backend="openai")
+    await provider.decide("Title: a study", REQUEST_QUESTIONS)
+    assert str(recorder.requests[0].url) == "https://api.openai.com/v1/decisions"
+    assert recorder.requests[0].headers["authorization"] == "Bearer test-openai-key"
+    body = recorder.bodies[0]
+    assert set(body) == {"model", "input", "questions"} and body["model"] == "gpt-6-luna"
+    assert body["input"] == "Title: a study"
+    dl, mod, q, plain = body["questions"]
+    assert dl == {
+        "type": "predicate",
+        "name": "dl",
+        "instructions": "Does the study use deep learning?\nAnswer true if: uses deep learning\nAnswer false if: does not",
+    }
+    assert mod["type"] == "choice" and mod["choices"][2] == {"value": "XR", "description": "radiography"}
+    assert q["type"] == "score" and q["levels"] == [
+        {"label": "none"},
+        {"label": "internal only"},
+        {"label": "external"},
+    ]
+    assert plain == {"type": "predicate", "name": "plain", "instructions": "Is this a randomized controlled trial?"}
+
+
+async def test_openai_request_serializes_json_and_skips_redundant_descriptions(make_provider):
+    provider, recorder = make_provider(ok(RESPONSES["openai"]), backend="openai")
+    questions = {
+        "organ": Choice("Organ?", ["brain", "lung"]),
+        "level": Score({"task": "rate"}, [{"level": "low"}, {"level": "high"}]),
+    }
+    with pytest.raises(SystemOneResponseError):  # the recorded answers belong to other questions
+        await provider.decide({"item": "text", "additional_context": "ctx"}, questions)
+    body = recorder.bodies[0]
+    assert body["input"] == '{"item": "text", "additional_context": "ctx"}'
+    organ, level = body["questions"]
+    assert organ["choices"] == [{"value": "brain"}, {"value": "lung"}]
+    assert level["instructions"] == '{"task": "rate"}' and level["levels"][0] == {"label": '{"level": "low"}'}
+
+
+async def test_openai_response_normalized(make_provider):
+    provider, _ = make_provider(ok(RESPONSES["openai"]), backend="openai")
+    result = await provider.decide("Title: a study", REQUEST_QUESTIONS)
+    dl, mod, q, plain = (result.answers[k] for k in ("dl", "mod", "q", "plain"))
+    assert (dl.type, dl.value, dl.confidence, dl.refused) == ("noul", 1.0, None, False)
+    assert (mod.value, mod.label, mod.confidence) == ("XR", "XR", 1.0)
+    assert mod.probabilities == {"CT": 0.0, "MRI": 0.0, "XR": 1.0, "US": 0.0}
+    assert (q.value, q.level, q.label, q.confidence) == (2.0, 2, "external", 1.0)
+    assert list(q.probabilities) == ["none", "internal only", "external"]
+    assert plain.value == 0.04
+    assert result.model == "gpt-6-luna" and result.input_tokens == 601
+    assert result.cost == pytest.approx(601 * 0.10 / 1e6)  # OpenAI reports no cost
+    assert result.raw == RESPONSES["openai"]  # the untranslated response
+
+
+async def test_openai_refusal_is_an_answer_not_an_error(make_provider):
+    provider, _ = make_provider(ok(RESPONSES["openai_refusal"]), backend="openai")
+    result = await provider.decide("text", {"complete": Noul("Is it complete?"), "plain": Noul("Is it English?")})
+    complete, plain = result.answers["complete"], result.answers["plain"]
+    assert (complete.type, complete.value, complete.refused) == ("noul", None, True)
+    assert (plain.value, plain.refused) == (1.0, False)
+
+
+async def test_openai_answers_without_names_match_by_position(make_provider):
+    response = {
+        "answers": [{"type": "predicate", "probability": 0.3}, {"type": "choice", "choice": "MRI"}],
+        "usage": {"input_tokens": 10},
+    }
+    provider, _ = make_provider(ok(response), backend="openai")
+    result = await provider.decide("text", {"a": Noul("A?"), "b": Choice("Modality?", ["CT", "MRI"])})
+    assert (result.answers["a"].value, result.answers["b"].value) == (0.3, "MRI")
+    assert result.answers["b"].probabilities is None
+
+
+@pytest.mark.parametrize(
+    "response",
+    [
+        {"answers": {"dl": {"type": "predicate", "probability": 0.9}}},  # not a list
+        {"answers": [{"type": "predicate", "name": "dl"}]},  # predicate without a probability
+        {"answers": [{"type": "choice", "name": "dl", "probabilities": [{"value": "CT"}]}]},  # malformed probabilities
+        {"answers": [{"type": "predicate", "name": "other", "probability": 0.9}]},  # the question is not answered
+        {"answers": [{"type": "mystery", "name": "dl"}]},  # unknown answer type
+    ],
+)
+async def test_malformed_openai_responses(make_provider, response):
+    provider, _ = make_provider(ok(response), backend="openai")
+    with pytest.raises(SystemOneResponseError) as error:
+        await provider.decide("state", {"dl": Noul("Deep learning?")})
+    assert error.value.status_code == 200
+
+
+async def test_openai_errors_are_readable_and_not_retried(make_provider):
+    body = {"error": {"message": "The model `gpt-6-luna-nope` does not exist.", "type": "invalid_request_error"}}
+    provider, recorder = make_provider(httpx.Response(404, json=body), backend="openai")
+    with pytest.raises(SystemOneResponseError, match="HTTP 404: The model `gpt-6-luna-nope` does not exist"):
+        await provider.decide("state", {"dl": Noul("Deep learning?")})
+    assert len(recorder.requests) == 1
 
 
 async def test_clone_style_response_without_legend_or_confidence(make_provider):

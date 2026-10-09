@@ -338,3 +338,122 @@ async def test_workflow_rejects_image_inputs(fake, tmp_path):
     )
     with pytest.raises(Exception, match="accepts text only"):
         await workflow(pd.DataFrame({"title": ["t"], "image": [str(image)]}))
+
+
+# --- OpenAI's Decisions API and refusals ---------------------------------------------------------------------------
+
+
+class FakeOpenAIBackend:
+    """Answers in OpenAI's Decisions format: predicates get `probability` (default 0.9), and any question whose name is
+    in `refuse` (or whose input contains `refuse_text`) is refused."""
+
+    def __init__(self, probability=None, refuse=(), refuse_text=None):
+        self.probability, self.refuse, self.refuse_text = probability or {}, set(refuse), refuse_text
+        self.bodies = []
+
+    def __call__(self, request):
+        body = json.loads(request.content)
+        self.bodies.append(body)
+        answers = []
+        for question in body["questions"]:
+            name = question["name"]
+            if name in self.refuse or (self.refuse_text and self.refuse_text in body["input"]):
+                answers.append({"type": "refusal", "name": name})
+            elif question["type"] == "predicate":
+                answers.append({"type": "predicate", "name": name, "probability": self.probability.get(name, 0.9)})
+            elif question["type"] == "choice":
+                values = [choice["value"] for choice in question["choices"]]
+                probabilities = [{"value": v, "probability": 1.0 if i == 0 else 0.0} for i, v in enumerate(values)]
+                answers.append({"type": "choice", "name": name, "choice": values[0], "probabilities": probabilities})
+                answers[-1]["confidence"] = 1.0
+            else:
+                labels = [level["label"] for level in question["levels"]]
+                probabilities = [
+                    {"value": i, "label": label, "probability": 1.0 if i == len(labels) - 1 else 0.0}
+                    for i, label in enumerate(labels)
+                ]
+                answers.append(
+                    {"type": "score", "name": name, "score": len(labels) - 1.0, "probabilities": probabilities}
+                )
+                answers[-1]["confidence"] = 0.9
+        return httpx.Response(200, json={"model": "gpt-6-luna", "answers": answers, "usage": {"input_tokens": 500}})
+
+
+@pytest.fixture
+def fake_openai(make_provider):
+    def factory(**kwargs):
+        backend = FakeOpenAIBackend(**kwargs)
+        provider, _ = make_provider(backend, backend="openai")
+        return provider, backend
+
+    return factory
+
+
+async def test_title_abstract_reviewer_on_openai(fake_openai):
+    provider, backend = fake_openai(probability={"include": 0.2, "inc_2": 0.1})
+    reviewer = DecisionTitleAbstractReviewer(
+        provider=provider, inclusion_criteria=INCLUSION, exclusion_criteria=EXCLUSION
+    )
+    response, input_prompt, cost = await reviewer.review_item("A CT study")
+    names = [question["name"] for question in backend.bodies[0]["questions"]]
+    assert names == ["evaluation", "include", "inc_1", "inc_2", "exc_1"]
+    assert (
+        "Answer true if: include: meets every inclusion criterion" in backend.bodies[0]["questions"][1]["instructions"]
+    )
+    assert (response["evaluation"], response["include_probability"], response["confidence"]) == (5, 0.2, 0.9)
+    assert response["criteria"]["inclusion"][INCLUSION[2]] == 0.1
+    assert "Likely fails inclusion 2" in response["reasoning"] and "declined" not in response["reasoning"]
+    assert cost == pytest.approx(500 * 0.10 / 1e6)
+
+
+async def test_title_abstract_refusals_become_none(fake_openai, capsys):
+    provider, _ = fake_openai(refuse={"include", "evaluation", "inc_2"}, probability={"inc_1": 0.95, "exc_1": 0.02})
+    reviewer = DecisionTitleAbstractReviewer(
+        provider=provider, inclusion_criteria=INCLUSION, exclusion_criteria=EXCLUSION
+    )
+    response, _, _ = await reviewer.review_item("A CT study")
+    assert (response["evaluation"], response["include_probability"], response["confidence"]) == (None, None, None)
+    assert response["criteria"]["inclusion"] == {INCLUSION[1]: 0.95, INCLUSION[2]: None}
+    assert response["_answers"]["include"]["refused"] is True
+    assert response["reasoning"] == (
+        "P(include) unknown. Likely meets the answered inclusion criteria (lowest p=0.95). No exclusion criterion "
+        "likely applies (highest p=0.02). The model declined to answer: the evaluation score, the overall include "
+        "question, inclusion 2."
+    )
+    await reviewer.review_item("Another study")
+    assert capsys.readouterr().out.count("declined to answer") == 1  # warned once per reviewer
+
+
+async def test_scoring_and_generic_refusals(fake_openai):
+    provider, _ = fake_openai(refuse={"score", "kind"})
+    scorer = DecisionScoringReviewer(provider=provider, scoring_task="Rate it.", scoring_set=[1, 2, 3])
+    response, _, _ = await scorer.review_item("text")
+    assert (response["score"], response["certainty"], response["probabilities"]) == (None, None, None)
+    generic = DecisionReviewer(provider=provider, questions={"kind": Choice("Kind?", ["a", "b"]), "ok": Noul("OK?")})
+    response, _, _ = await generic.review_item("text")
+    assert (response["kind"], response["ok"]) == (None, 0.9)
+
+
+async def test_workflow_keeps_refused_items(fake_openai):
+    """A refusal must not stop the run; refused items can be routed on to another reviewer."""
+    provider, backend = fake_openai(refuse_text="sensitive", probability={"include": 0.97})
+    reviewer = DecisionTitleAbstractReviewer(
+        provider=provider, name="Luna", inclusion_criteria=INCLUSION, exclusion_criteria=EXCLUSION, verbose=False
+    )
+    scorer = DecisionScoringReviewer(provider=provider, name="Scorer", scoring_task="Rate it.", verbose=False)
+    workflow = ReviewWorkflow(
+        workflow_schema=[
+            {"round": "A", "reviewers": [reviewer], "text_inputs": ["title"]},
+            {
+                "round": "B",
+                "reviewers": [scorer],
+                "text_inputs": ["title"],
+                "filter": lambda row: pd.isna(row["round-A_Luna_include_probability"]),
+            },
+        ],
+        verbose=False,
+    )
+    result = await workflow(pd.DataFrame({"title": ["a CT study", "a sensitive study"]}))
+    assert result["round-A_Luna_include_probability"].isna().tolist() == [False, True]
+    assert result["round-B_Scorer_score"].notna().tolist() == [False, False]  # refused in round B too
+    assert len(backend.bodies) == 3

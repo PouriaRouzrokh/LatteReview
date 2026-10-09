@@ -18,6 +18,8 @@ class DecisionScoringReviewer(DecisionReviewer):
         score: the most likely value from scoring_set.
         certainty: int 0-100, the model's confidence x 100 (same scale as ScoringReviewer; None if not reported).
         probabilities: {score value: probability}.
+
+    All three are None if the model declined to answer.
     """
 
     _builds_questions: ClassVar[bool] = True
@@ -51,7 +53,7 @@ class DecisionScoringReviewer(DecisionReviewer):
         if answer.probabilities is not None:
             probabilities = dict(zip(self.scoring_set, answer.probabilities.values()))
         response = {
-            "score": self.scoring_set[answer.level],
+            "score": self.scoring_set[answer.level] if answer.level is not None else None,
             "certainty": round(answer.confidence * 100) if answer.confidence is not None else None,
             "probabilities": probabilities,
         }

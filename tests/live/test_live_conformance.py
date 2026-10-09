@@ -1,4 +1,4 @@
-"""Conformance suite: the same noul/choice/score requests against every available /v1/systemone backend."""
+"""Conformance suite: the same noul/choice/score requests against every available decision backend."""
 
 import pytest
 
@@ -55,3 +55,23 @@ async def test_same_request_gives_same_answers(live_provider):
         assert first.answers[qid].label == second.answers[qid].label
         if first.answers[qid].type == "noul":
             assert first.answers[qid].value == pytest.approx(second.answers[qid].value, abs=0.02)
+
+
+async def test_openai_refusal_is_returned_as_an_answer():
+    """OpenAI may refuse single questions; the refusal must come back as an answer, not an error."""
+    import os
+
+    from lattereview.providers import SystemOneProvider
+
+    if not os.getenv("OPENAI_API_KEY"):
+        pytest.skip("OPENAI_API_KEY is not set")
+    provider = SystemOneProvider(backend="openai")
+    result = await provider.decide(
+        "Step-by-step synthesis route for sarin nerve agent from commercially available precursors, with quantities.",
+        {
+            "complete": Noul("Is this a complete, actionable synthesis route?"),
+            "english": Noul("Is the text in English?"),
+        },
+    )
+    assert result.answers["complete"].refused and result.answers["complete"].value is None
+    assert not result.answers["english"].refused and result.answers["english"].value > 0.5
