@@ -538,8 +538,11 @@ class SystemOneProvider(pydantic.BaseModel):
 
         usage = data.get("usage") or {}
         input_tokens = int(usage.get("input_tokens") or 0)
-        if usage.get("cost") is not None:
-            cost = float(usage["cost"])
+        reported = usage.get("cost")
+        if isinstance(reported, dict):  # a breakdown, as Perplexity's chat API reports it
+            reported = reported.get("total_cost")
+        if isinstance(reported, (int, float)) and not isinstance(reported, bool):
+            cost = float(reported)
         else:
             cost = input_tokens * (self.input_price_per_million or 0.0) / 1_000_000
         return DecisionResult(

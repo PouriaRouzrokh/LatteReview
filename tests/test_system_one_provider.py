@@ -491,3 +491,12 @@ async def test_client_is_shared_and_closable(make_provider):
     assert client.is_closed and provider._client is None
     await provider.decide("state", REQUEST_QUESTIONS)  # reopens transparently
     await provider.aclose()
+
+
+async def test_cost_reported_as_a_breakdown(make_provider):
+    response = {
+        "answers": {"plain": {"type": "noul", "noul": 0.5}},
+        "usage": {"input_tokens": 10, "cost": {"total_cost": 0.003}},
+    }
+    provider, _ = make_provider(ok(response), backend="perplexity")
+    assert (await provider.decide("state", {"plain": Noul("Is it?")})).cost == 0.003

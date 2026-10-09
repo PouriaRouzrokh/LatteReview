@@ -464,3 +464,10 @@ async def test_workflow_keeps_refused_items(fake_openai):
     assert result["round-A_Luna_include_probability"].isna().tolist() == [False, True]
     assert result["round-B_Scorer_score"].notna().tolist() == [False, False]  # refused in round B too
     assert len(backend.bodies) == 3
+
+
+async def test_item_with_only_a_task_id_keeps_it(fake):
+    provider, backend = fake()
+    reviewer = DecisionReviewer(provider=provider, questions={"q": Noul("x")})
+    await reviewer.review_item("Review Task ID: A-0\n")
+    assert backend.bodies[0]["state"] == "Review Task ID: A-0\n"

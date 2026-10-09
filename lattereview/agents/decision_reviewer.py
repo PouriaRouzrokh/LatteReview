@@ -121,7 +121,7 @@ class DecisionReviewer(BasicReviewer):
         The workflow's "Review Task ID" line is left out of the state, so an item gets the same answer whatever its
         row or round. A callable additional_context still receives the full text, including that line.
         """
-        item = TASK_ID_LINE.sub("", text_input_string)
+        item = TASK_ID_LINE.sub("", text_input_string) or text_input_string  # never send an empty state
         if not self.additional_context:
             return item
         if isinstance(self.additional_context, str):
