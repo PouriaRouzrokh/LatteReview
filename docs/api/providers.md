@@ -11,7 +11,7 @@ The providers module includes:
 - `OllamaProvider`: Implementation for local Ollama models
 - `LiteLLMProvider`: Implementation using LiteLLM for unified API access
 - `GoogleProvider`: Implementation for Google's Gemini API (including Gemini Pro and Flash models)
-- `SystemOneProvider` (new in v1.3.0): Client for System One **decision models** such as TypeSafe's Jev, which answer typed questions with probabilities instead of generating text. It is used by the decision reviewers; see [Decision Models](../decision_models.md).
+- `SystemOneProvider` (new in v1.3.0; Perplexity and OpenAI backends since v1.4.0): Client for **decision models** such as TypeSafe's Jev, Perplexity's pplx-decider and OpenAI's gpt-6-luna, which answer typed questions with probabilities instead of generating text. It is used by the decision reviewers; see [Decision Models](../decision_models.md).
 
 ** You can use any of the models offered by the providers above as far as they support structured outputs. **
 
@@ -46,6 +46,8 @@ Models tested with real API calls for v1.2.0:
 | `GoogleProvider` | `gemini-3.8-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-pro-preview`, `gemini-2.5-pro`, `gemini-2.5-flash` |
 | `OllamaProvider` (local, Apple M5, 32 GB) | `qwen3.8:27b` |
 | `LiteLLMProvider` | `gpt-6-astra`, `gpt-6-luna`, `gpt-4o-mini`, `o4-mini`, `anthropic/claude-opus-5-5`, `anthropic/claude-opus-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-fable-5-1`, `gemini/gemini-3.8-flash`, `groq/openai/gpt-oss-120b`, `deepseek/deepseek-flash`, `openrouter/qwen/qwen3.8-27b`, `ollama_chat/qwen3.8:27b` |
+
+Added in v1.4.0: Perplexity's Sonar models through `LiteLLMProvider`, tested with `openrouter/perplexity/sonar` (see [Perplexity models](#perplexity-models)).
 
 ## BaseProvider
 
@@ -396,6 +398,7 @@ from lattereview.providers import LiteLLMProvider
 provider = LiteLLMProvider(model="gpt-6-luna")
 provider = LiteLLMProvider(model="anthropic/claude-sonnet-5")  # Needs ANTHROPIC_API_KEY
 provider = LiteLLMProvider(model="gemini/gemini-3.8-flash")  # Needs GEMINI_API_KEY
+provider = LiteLLMProvider(model="perplexity/sonar")  # Needs PERPLEXITY_API_KEY
 
 # Get response
 response, cost = await provider.get_response("What is the capital of the country shown in this map?", ["path/to/image1.png"])
@@ -405,28 +408,63 @@ provider.set_response_format({"answer": str, "confidence": float})
 response, cost = await provider.get_json_response("What is the capital of France?", [])
 ```
 
+When the API reports the cost of a request itself (OpenRouter and Perplexity do), `LiteLLMProvider` uses that cost
+instead of pricing the tokens, so per-request fees are counted.
+
+### Perplexity models
+
+Perplexity's Sonar models (`sonar`, `sonar-pro`, `sonar-reasoning-pro`, `sonar-deep-research`) work as LLM reviewers
+through `LiteLLMProvider`, with structured output:
+
+```python
+provider = LiteLLMProvider(model="perplexity/sonar")              # PERPLEXITY_API_KEY (or PERPLEXITYAI_API_KEY)
+provider = LiteLLMProvider(model="openrouter/perplexity/sonar")   # the same model through OpenRouter (OPENROUTER_API_KEY)
+```
+
+Things to know before screening with them:
+
+- **Every Sonar request searches the web** and pays a request fee on top of the tokens: $5-14 per 1,000 requests,
+  depending on the model and search context size. Screening 1,000 abstracts with `sonar` costs about $5, about 40 times
+  more than `gpt-6-luna`; the fee is included in LatteReview's cost tracking. Web search rarely helps when the title and
+  abstract are already given, so Sonar is worth it mainly for reviewers that need outside information.
+- Perplexity is moving Sonar users to its Agent API. Sonar requests still work (Perplexity now serves them through the
+  Agent API), but check Perplexity's documentation for the current status.
+- Perplexity's decision model, **pplx-decider**, is not an LLM: use it with `SystemOneProvider(backend="perplexity")`
+  and the decision reviewers.
+
 ## SystemOneProvider
 
 ### Description
 
-`SystemOneProvider` (new in v1.3.0) talks to System One decision models over the `/v1/systemone` protocol. Unlike the LLM providers above, it does not send prompts or parse JSON text: it sends a text **state** and typed **questions** in one request and returns a probability for every allowed answer. It is not a `BaseProvider` subclass, and it is used by `DecisionReviewer`, `DecisionTitleAbstractReviewer` and `DecisionScoringReviewer`. See [Decision Models](../decision_models.md) for the concepts, evaluation results and self-hosting.
+`SystemOneProvider` (new in v1.3.0) talks to decision models: TypeSafe's Jev, Perplexity's pplx-decider (v1.4.0) and OpenAI's gpt-6-luna (v1.4.0), and any server that speaks the `/v1/systemone` protocol. Unlike the LLM providers above, it does not send prompts or parse JSON text: it sends a text **state** and typed **questions** in one request and returns a probability for every allowed answer. OpenAI's Decisions API uses its own request format, which the provider translates, so every backend returns the same `DecisionResult`. It is not a `BaseProvider` subclass, and it is used by `DecisionReviewer`, `DecisionTitleAbstractReviewer` and `DecisionScoringReviewer`. See [Decision Models](../decision_models.md) for the concepts, evaluation results and self-hosting.
 
 ### Class Definition
 
 ```python
 class SystemOneProvider(pydantic.BaseModel):
-    backend: Literal["typesafe", "openrouter"] = "typesafe"
-    base_url: Optional[str] = None                 # any other /v1/systemone server; overrides backend
-    api_key: Optional[str] = None                  # else TYPESAFE_API_KEY / OPENROUTER_API_KEY; optional for base_url
-    model: Optional[str] = None                    # else "jev-latest" / "~typesafe/jev-latest"; the server default for base_url
+    backend: Literal["typesafe", "openrouter", "perplexity", "openai"] = "typesafe"
+    base_url: Optional[str] = None                 # any other server; overrides backend
+    protocol: Optional[Literal["systemone", "openai"]] = None  # for base_url only; default "systemone"
+    api_key: Optional[str] = None                  # else the backend's key variable (below); optional for base_url
+    model: Optional[str] = None                    # else the backend's default (below); the server default for base_url
     timeout: float = 60.0
     max_retries: int = 3                           # retries 429, 529, 5xx and timeouts, honoring Retry-After
-    requests_per_minute: Optional[float] = None    # 1,000 for the named backends, unlimited for base_url, 0 = off
-    input_price_per_million: Optional[float] = None  # 0.042 for the named backends, 0 for base_url
+    requests_per_minute: Optional[float] = None    # backend default (below), unlimited for base_url, 0 = off
+    input_price_per_million: Optional[float] = None  # backend list price (below), 0 for base_url
 
     async def decide(self, state, questions) -> DecisionResult: ...
     async def aclose(self) -> None: ...
 ```
+
+| `backend` | Endpoint | Default model | Key variable | Price per million input tokens | Pacing |
+| --- | --- | --- | --- | --- | --- |
+| `typesafe` (default) | `https://api.typesafe.ai/v1/systemone` | `jev-latest` | `TYPESAFE_API_KEY` | $0.042 | 1,000/min |
+| `openrouter` | `https://openrouter.ai/api/v1/systemone` | `~typesafe/jev-latest` (also `perplexity/pplx-decider-v1.1-27b`) | `OPENROUTER_API_KEY` | reported by OpenRouter | 1,000/min |
+| `perplexity` | `https://api.perplexity.ai/v1/decisions` | `pplx-decider-v1.1-27b` | `PERPLEXITY_API_KEY` (or `PERPLEXITYAI_API_KEY`) | $0.02 | 500/min |
+| `openai` | `https://api.openai.com/v1/decisions` | `gpt-6-luna` | `OPENAI_API_KEY` | $0.10 | none |
+
+A custom `base_url` may end with `/v1/systemone` or `/v1/decisions`; otherwise `/v1/systemone` is added (or
+`/v1/decisions` with `protocol="openai"`, for gateways that serve OpenAI's Decisions format).
 
 ### Questions and answers
 
@@ -445,6 +483,10 @@ class SystemOneProvider(pydantic.BaseModel):
 | `level` | None | None | most likely level (0-based) |
 | `probabilities` | None | option → probability | level label → probability, in level order |
 | `confidence` | None (the probability itself shows certainty) | as reported, else None | as reported, else None |
+| `refused` | True if the backend declined to answer | same | same |
+
+When `refused` is True (OpenAI may decline single questions), every field except `type` is None. The other answers in
+the request are unaffected.
 
 ### Usage Example
 
@@ -453,6 +495,8 @@ from lattereview.providers import SystemOneProvider, Noul, Choice, Score
 
 provider = SystemOneProvider()                                   # TypeSafe; needs TYPESAFE_API_KEY
 provider = SystemOneProvider(backend="openrouter")               # needs OPENROUTER_API_KEY
+provider = SystemOneProvider(backend="perplexity")               # Perplexity's pplx-decider; needs PERPLEXITY_API_KEY
+provider = SystemOneProvider(backend="openai")                   # OpenAI's gpt-6-luna; needs OPENAI_API_KEY
 provider = SystemOneProvider(base_url="http://localhost:3000")   # e.g., a local OpenJev server
 
 result = await provider.decide(
@@ -468,7 +512,9 @@ result.answers["validation"].label      # "external"
 result.cost, result.input_tokens
 ```
 
-Ask all questions about an item in one request: the state is billed once, and each extra question adds only a few tokens.
+Ask all questions about an item in one request. Jev and OpenAI bill the state once per request, and each extra
+question adds a few tokens (about 18 on Jev, about 150 on OpenAI). Perplexity's pplx-decider bills the state once per
+question, so each extra question costs as much as the first.
 
 Errors raise `SystemOneResponseError` (a `ResponseError`) with the server's message, the HTTP `status_code`, and `retryable` (False for errors a retry cannot fix, such as 401 or 422). A missing API key raises `ClientCreationError`.
 

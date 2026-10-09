@@ -13,21 +13,22 @@
 
 ---
 
-🚨 **NEW in v1.3.0**: Screen with **decision models** such as TypeSafe's **Jev**: probabilities instead of generated text, in about 0.2 seconds per article, next to your LLM reviewers in the same workflow. See [What's New](#-whats-new-in-v130) and [Jev vs LLM reviewers](#-decision-models-jev).
+🚨 **NEW in v1.4.0**: Decision reviewers now also run on **Perplexity's pplx-decider** and **OpenAI's gpt-6-luna** through their new Decisions APIs, next to TypeSafe's **Jev**. In our evaluation on 11,793 articles, pplx-decider ranked articles best, for about $0.05 per 1,000 abstracts. Perplexity's Sonar LLMs work as LLM reviewers too. See [What's New](#-whats-new-in-v140) and [Decision models vs LLM reviewers](#-decision-models).
 
 ---
 
 LatteReview is a powerful Python package designed to automate academic literature review processes through AI-powered agents. Just like enjoying a cup of latte ☕, reviewing numerous research articles should be a pleasant, efficient experience that doesn't consume your entire day!
 
-## 🆕 What's New in v1.3.0
+## 🆕 What's New in v1.4.0
 
-- **Decision reviewers with Jev**: LatteReview can now review with System One decision models such as TypeSafe's [Jev](https://pouriarouzrokh.github.io/LatteReview/decision_models/), which answer typed questions with probabilities instead of generating text. `DecisionTitleAbstractReviewer`, `DecisionScoringReviewer` and the generic `DecisionReviewer` work in any `ReviewWorkflow`, next to LLM reviewers.
-- **One provider, any backend**: `SystemOneProvider` works with TypeSafe and OpenRouter, and with any other `/v1/systemone` server via `base_url`, including a self-hosted OpenJev model on your own machine.
-- **Evaluated at full scale**: on all 11,793 articles of LatteReview's evaluation datasets, Jev ranked articles better than the v1 LLM reviewers on every dataset (mean AUC 0.88 vs 0.83), for about $0.06 per 1,000 articles. See the [evaluation](https://pouriarouzrokh.github.io/LatteReview/decision_models/#evaluation), including where Jev falls short.
-- **Thresholds for a target recall**: `suggest_threshold` fits a probability cutoff on labeled data.
-- **Hybrid workflows**: let Jev screen everything and send only uncertain articles to an LLM ([tutorial](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb)).
+- **Perplexity's Decisions API**: decision reviewers run on Perplexity's **pplx-decider** with `SystemOneProvider(backend="perplexity")` (`PERPLEXITY_API_KEY`), or through OpenRouter with `SystemOneProvider(backend="openrouter", model="perplexity/pplx-decider-v1.1-27b")`.
+- **OpenAI's Decisions API**: `SystemOneProvider(backend="openai")` runs **gpt-6-luna** through OpenAI's new Decisions API. The provider translates OpenAI's request format, so every decision reviewer works unchanged. Questions that OpenAI declines to answer come back as None instead of stopping the run.
+- **Three decision models compared on 11,793 articles**: pplx-decider ranked best (mean AUC 0.895, best on 7 of 9 datasets, about $0.05 per 1,000 abstracts), then Jev (0.878, $0.06) and the v1 LLM reviewers (0.828). gpt-6-luna's Decisions API scored 0.779 ($0.16): on long, multi-part criteria it returned 0.00 for almost every article. See the [comparison](https://pouriarouzrokh.github.io/LatteReview/decision_models/#comparing-jev-pplx-decider-and-gpt-6-luna).
+- **Perplexity's Sonar models as LLM reviewers**: `LiteLLMProvider(model="perplexity/sonar")`. Sonar searches the web on every request, which costs about $5 per 1,000 abstracts.
+- **Correct costs for per-request fees**: `LiteLLMProvider` now uses the cost the API reports (OpenRouter and Perplexity), so fees such as Sonar's search fee are counted. Before, a Sonar request through OpenRouter was recorded at about 1/18 of its price.
+- **Same input, same answer**: decision reviewers leave the workflow's `Review Task ID` line out of the model's input. With it, a borderline article's answer could depend on its row number.
 
-A Jev + LLM pipeline in a few lines: Jev screens every article, and only the articles it is unsure about go to an LLM (set `TYPESAFE_API_KEY` and `OPENAI_API_KEY`):
+A decision-model + LLM pipeline in a few lines: the decision model screens every article, and only the articles it is unsure about go to an LLM (set `TYPESAFE_API_KEY` and `OPENAI_API_KEY`):
 
 ```python
 import asyncio
@@ -40,7 +41,7 @@ inclusion = {1: "The study must involve CT scans.", 2: "The study must use deep 
 exclusion = {1: "The study must not include PET scans."}
 
 jev = DecisionTitleAbstractReviewer(
-    provider=SystemOneProvider(),  # TypeSafe's jev-latest; or SystemOneProvider(backend="openrouter")
+    provider=SystemOneProvider(),  # TypeSafe's Jev; or backend="perplexity", "openai" or "openrouter"
     name="Jev", inclusion_criteria=inclusion, exclusion_criteria=exclusion,
 )
 llm = TitleAbstractReviewer(
@@ -51,17 +52,25 @@ llm = TitleAbstractReviewer(
 workflow = ReviewWorkflow(workflow_schema=[
     {"round": "A", "reviewers": [jev], "text_inputs": ["title", "abstract"]},
     {"round": "B", "reviewers": [llm], "text_inputs": ["title", "abstract"],
-     "filter": lambda row: 0.1 <= row["round-A_Jev_include_probability"] < 0.9},  # only uncertain articles
+     "filter": lambda row: pd.isna(p := row["round-A_Jev_include_probability"]) or 0.1 <= p < 0.9},  # uncertain or unanswered
 ])
 results = asyncio.run(workflow(pd.read_csv("articles.csv")))  # columns: title, abstract
 ```
 
 Try it in the notebooks:
-[Screening, scoring and extraction with Jev](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) ·
+[Screening with Jev, pplx-decider and gpt-6-luna](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) ·
 [Hybrid Jev + LLM review with measurements](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb) ·
 [Decision Models docs](https://pouriarouzrokh.github.io/LatteReview/decision_models/).
 
-Nothing changes for existing LLM reviewers. See the [CHANGELOG](./CHANGELOG.md) for the full list.
+Existing reviewers and defaults work as before. See the [CHANGELOG](./CHANGELOG.md) for the full list.
+
+## What Was New in v1.3.0
+
+- **Decision reviewers with Jev**: LatteReview can now review with System One decision models such as TypeSafe's [Jev](https://pouriarouzrokh.github.io/LatteReview/decision_models/), which answer typed questions with probabilities instead of generating text. `DecisionTitleAbstractReviewer`, `DecisionScoringReviewer` and the generic `DecisionReviewer` work in any `ReviewWorkflow`, next to LLM reviewers.
+- **One provider, any backend**: `SystemOneProvider` works with TypeSafe and OpenRouter, and with any other `/v1/systemone` server via `base_url`, including a self-hosted OpenJev model on your own machine.
+- **Evaluated at full scale**: on all 11,793 articles of LatteReview's evaluation datasets, Jev ranked articles better than the v1 LLM reviewers on every dataset (mean AUC 0.88 vs 0.83), for about $0.06 per 1,000 articles. See the [evaluation](https://pouriarouzrokh.github.io/LatteReview/decision_models/#evaluation), including where Jev falls short.
+- **Thresholds for a target recall**: `suggest_threshold` fits a probability cutoff on labeled data.
+- **Hybrid workflows**: let Jev screen everything and send only uncertain articles to an LLM ([tutorial](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb)).
 
 ## What Was New in v1.2.0
 
@@ -82,8 +91,8 @@ Nothing changes for existing LLM reviewers. See the [CHANGELOG](./CHANGELOG.md) 
 - Enable reviewer agents to analyze peer feedback, cast votes, and propose corrections to other reviewers' assessments
 - Enhance reviews with item-specific context integration, supporting use cases like **Retrieval Augmented Generation (RAG)**
 - Broad compatibility with LLM providers through LiteLLM, including OpenAI and Ollama
-- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, DeepSeek, OpenRouter, and local models via Ollama
-- **NEW**: Decision-model reviewers (TypeSafe's Jev, or a self-hosted OpenJev) that return probabilities for fast, cheap screening
+- Model-agnostic integration supporting OpenAI, Gemini, Claude, Groq, DeepSeek, Perplexity, OpenRouter, and local models via Ollama
+- **NEW**: Decision-model reviewers (Perplexity's pplx-decider, TypeSafe's Jev, OpenAI's gpt-6-luna, or a self-hosted OpenJev) that return probabilities for fast, cheap screening
 - High-performance asynchronous processing for efficient batch reviews
 - Standardized output format featuring detailed scoring metrics and reasoning transparency
 - Robust cost tracking and memory management systems
@@ -186,9 +195,9 @@ results = asyncio.run(workflow(data))  # Returns a pandas DataFrame with all ori
 results.to_csv("review_results.csv", index=False)
 ```
 
-### 🎯 Decision Models (Jev)
+### 🎯 Decision Models
 
-Decision reviewers use a System One decision model instead of an LLM. Set `TYPESAFE_API_KEY` (or use `SystemOneProvider(backend="openrouter")` with `OPENROUTER_API_KEY`):
+Decision reviewers use a decision model instead of an LLM. Set `TYPESAFE_API_KEY` for Jev, or choose another backend: `SystemOneProvider(backend="perplexity")` (`PERPLEXITY_API_KEY`), `backend="openai"` (`OPENAI_API_KEY`) or `backend="openrouter"` (`OPENROUTER_API_KEY`):
 
 ```python
 from lattereview.providers import SystemOneProvider
@@ -204,19 +213,19 @@ jev = DecisionTitleAbstractReviewer(
 # confidence, criteria (per-criterion probabilities) and reasoning (generated from the probabilities).
 ```
 
-**Jev vs LLM reviewers.** An LLM reviewer writes its answer and a reasoning; Jev writes nothing and returns a probability for every allowed answer, so its answers are always on-schema and can be thresholded for a target recall. It is fast (about 0.2 s per article) and cheap (about $0.06 per 1,000 abstracts), and in our evaluation it ranked articles better than the v1 LLM reviewers. But it reads text only, has no written reasoning, does not do multi-step reasoning, and its default 0.5 cutoff is too strict for long, multi-part criteria: rank by `include_probability` or fit a cutoff with `suggest_threshold`. A good pattern is to let Jev screen everything and send only uncertain articles to an LLM. Read [Decision Models](https://pouriarouzrokh.github.io/LatteReview/decision_models/) for how it works, backends, self-hosting and the full evaluation.
+**Decision models vs LLM reviewers.** An LLM reviewer writes its answer and a reasoning; a decision model writes nothing and returns a probability for every allowed answer, so its answers are always on-schema and can be thresholded for a target recall. Decision models are fast (under a second per article) and cheap (about $0.05-0.16 per 1,000 abstracts), and in our evaluation pplx-decider and Jev ranked articles better than the v1 LLM reviewers. But they read text only, write no reasoning, do not do multi-step reasoning, and a 0.5 cutoff is often too strict for long, multi-part criteria: rank by `include_probability` or fit a cutoff per model with `suggest_threshold`. A good pattern is to let a decision model screen everything and send only uncertain articles to an LLM. Read [Decision Models](https://pouriarouzrokh.github.io/LatteReview/decision_models/) for how they work, backends, costs, self-hosting and the full evaluation.
 
 ## 🔌 Model Support
 
 LatteReview offers flexible model integration through multiple providers:
 
-- **LiteLLMProvider** (Recommended): Supports OpenAI, Anthropic (Claude), Gemini, Groq, DeepSeek, OpenRouter, and more
+- **LiteLLMProvider** (Recommended): Supports OpenAI, Anthropic (Claude), Gemini, Groq, DeepSeek, Perplexity (Sonar), OpenRouter, and more
 - **OpenAIProvider**: Direct integration with OpenAI and Gemini APIs
 - **GoogleProvider**: Direct integration with Gemini through Google's `google-genai` SDK
 - **OllamaProvider**: Optimized for local models via Ollama
-- **SystemOneProvider** (new): System One decision models such as Jev, via TypeSafe, OpenRouter, or any `/v1/systemone` server (e.g., a self-hosted OpenJev)
+- **SystemOneProvider**: decision models: TypeSafe's Jev, Perplexity's pplx-decider and OpenAI's gpt-6-luna (Decisions APIs), via TypeSafe, Perplexity, OpenAI, OpenRouter, or any `/v1/systemone` server (e.g., a self-hosted OpenJev)
 
-If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `qwen3.8:27b` (run `ollama pull qwen3.8:27b` first). For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option.
+If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `qwen3.8:27b` (run `ollama pull qwen3.8:27b` first). For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option. For Perplexity, pass `LiteLLMProvider(model="perplexity/sonar")` (`PERPLEXITY_API_KEY`); Sonar searches the web on every request, which adds a fee of $5-14 per 1,000 requests.
 
 Note: Models should support async operations and structured JSON outputs for optimal performance.
 
@@ -244,8 +253,8 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
     🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/custom_reviewer/abstraction_review_literature_analysis.ipynb) How to Customize the AbstractReviewer Agent for Your Needs
     🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/base_functionalities/base_functionalities.ipynb) Chat with the agents and other base functionalities
     🔸[3.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/abstraction_review_literature_analysis/abstraction_review_literature_analysis.ipynb): Combination of differnet agents for a comprehensive literature review
-✅ Decision Reviewers (Jev):
-    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) Screening, scoring and categorical extraction with Jev
+✅ Decision Reviewers (Jev, pplx-decider, gpt-6-luna):
+    🔸[1.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/decision_review_jev/decision_review_jev.ipynb) Screening, scoring and categorical extraction with Jev, and the same screening with pplx-decider and gpt-6-luna
     🔸[2.](https://github.com/PouriaRouzrokh/LatteReview/blob/main/tutorials/hybrid_review_jev_llm/hybrid_review_jev_llm.ipynb) Hybrid review: Jev screens everything, an LLM handles the uncertain articles
 
 ## 🛣️ Roadmap for Future Features
@@ -266,6 +275,7 @@ Full documentation and API reference are available at: [https://pouriarouzrokh.g
 - [x] Adding support for models without structured-output (json_schema) capability via an automatic JSON-mode fallback (e.g., DeepSeek).
 - [x] Supporting the newest reasoning models (GPT-6, Claude 5, Gemini 3.x) with automatic handling of parameters they reject.
 - [x] Supporting System One decision models (Jev) for fast, probability-based screening, including hybrid Jev + LLM workflows.
+- [x] Supporting Perplexity's and OpenAI's Decisions APIs, and Perplexity's Sonar LLMs.
 - [ ] Development of a no-code web application
 - [ ] (for v>) Adding conformal prediction tool for calibrating agents on their certainty scores
 - [ ] (for v>2.0.0) Adding a dialogue tool for enabling agents to seek external help (from helper agents or parallel reviewer agents) during review.

@@ -1,0 +1,74 @@
+{
+ "search1": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 978,
+  "seconds": 59.03152894973755,
+  "cost": 0.04631932199999989,
+  "input_tokens": null
+ },
+ "search2": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 978,
+  "seconds": 59.1254301071167,
+  "cost": 0.05482205399999993,
+  "input_tokens": null
+ },
+ "search3": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 978,
+  "seconds": 60.231292963027954,
+  "cost": 0.06369447000000002,
+  "input_tokens": null
+ },
+ "Appenzeller-Herzog_2019": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 2873,
+  "seconds": 172.7487850189209,
+  "cost": 0.1545536580000001,
+  "input_tokens": null
+ },
+ "Donners_2021": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 258,
+  "seconds": 15.767930269241333,
+  "cost": 0.013976801999999998,
+  "input_tokens": null
+ },
+ "Jeyaraman_2020": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 1175,
+  "seconds": 71.42077279090881,
+  "cost": 0.075240942,
+  "input_tokens": null
+ },
+ "Meijboom_2021": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 882,
+  "seconds": 53.12783098220825,
+  "cost": 0.06085644599999999,
+  "input_tokens": null
+ },
+ "Muthu_2021": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 2719,
+  "seconds": 164.1651520729065,
+  "cost": 0.16704109800000044,
+  "input_tokens": null
+ },
+ "Oud_2018": {
+  "backend": "openrouter",
+  "model": "~typesafe/jev-latest",
+  "items": 952,
+  "seconds": 57.31310176849365,
+  "cost": 0.06009414599999999,
+  "input_tokens": null
+ }
+}

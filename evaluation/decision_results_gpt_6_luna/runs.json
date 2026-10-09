@@ -1,0 +1,74 @@
+{
+ "search1": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 978,
+  "seconds": 15.030472993850708,
+  "cost": 0.12399120000000001,
+  "input_tokens": 1239912
+ },
+ "search2": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 978,
+  "seconds": 17.13445496559143,
+  "cost": 0.16917479999999993,
+  "input_tokens": 1691748
+ },
+ "search3": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 978,
+  "seconds": 16.298954010009766,
+  "cost": 0.21553200000000022,
+  "input_tokens": 2155320
+ },
+ "Appenzeller-Herzog_2019": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 2873,
+  "seconds": 43.89382076263428,
+  "cost": 0.4149467999999998,
+  "input_tokens": 4149468
+ },
+ "Donners_2021": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 258,
+  "seconds": 4.089759826660156,
+  "cost": 0.033613400000000015,
+  "input_tokens": 336134
+ },
+ "Jeyaraman_2020": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 1175,
+  "seconds": 19.781115770339966,
+  "cost": 0.18945349999999997,
+  "input_tokens": 1894535
+ },
+ "Meijboom_2021": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 882,
+  "seconds": 13.18409276008606,
+  "cost": 0.1419485999999999,
+  "input_tokens": 1419486
+ },
+ "Muthu_2021": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 2719,
+  "seconds": 44.234456062316895,
+  "cost": 0.43292780000000036,
+  "input_tokens": 4329278
+ },
+ "Oud_2018": {
+  "backend": "openai",
+  "model": "gpt-6-luna",
+  "items": 952,
+  "seconds": 14.292856216430664,
+  "cost": 0.15223930000000016,
+  "input_tokens": 1522393
+ }
+}
