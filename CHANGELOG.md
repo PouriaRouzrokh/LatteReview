@@ -28,6 +28,7 @@ This release adds Perplexity's and OpenAI's Decisions APIs as decision-model bac
 
 - Decision reviewers leave the `Review Task ID` line that `ReviewWorkflow` adds to every item out of the model's input. It shifted answers on borderline articles (gpt-6-luna gave 0.05, 0.50 or 0.65 for the same abstract depending on the line), so an article's decision could depend on its row. A callable `additional_context` still receives the full text.
 - `.env_sample` lists `PERPLEXITY_API_KEY`.
+- `litellm>=1.102.1` (was 1.94.0), the first version tested with Perplexity's Agent API.
 
 ### Fixed
 

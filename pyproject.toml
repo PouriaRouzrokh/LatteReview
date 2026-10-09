@@ -26,7 +26,7 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "litellm>=1.94.0",
+    "litellm>=1.102.1",  # Perplexity's Agent API through the Responses bridge
     "nest-asyncio>=1.6.0",
     "ollama>=0.5.3",
     "openai>=1.57.4",

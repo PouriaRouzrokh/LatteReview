@@ -2280,7 +2280,7 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.27.0" },
     { name = "ipykernel", marker = "extra == 'dev'", specifier = ">=6.29.5" },
     { name = "lattereview", extras = ["dev", "docs"], marker = "extra == 'all'" },
-    { name = "litellm", specifier = ">=1.94.0" },
+    { name = "litellm", specifier = ">=1.102.1" },
     { name = "matplotlib", marker = "extra == 'dev'", specifier = ">=3.9.4" },
     { name = "mkdocs", marker = "extra == 'docs'", specifier = ">=1.6.1" },
     { name = "mkdocs-gen-files", marker = "extra == 'docs'", specifier = ">=0.5.0" },

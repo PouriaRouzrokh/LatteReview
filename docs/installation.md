@@ -67,7 +67,7 @@ print(lattereview.__version__)
 
 - Python 3.10 or later (on Python 3.9, `pip` installs LatteReview 1.1.1, the last release that supports it)
 - Core dependencies (automatically installed):
-  - litellm (>=1.94.0)
+  - litellm (>=1.102.1)
   - openai (>=1.57.4)
   - google-genai (>=1.51.0)
   - ollama (>=0.5.3)
