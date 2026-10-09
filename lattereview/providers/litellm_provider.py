@@ -13,6 +13,9 @@ from .base_provider import BaseProvider, ProviderError, ResponseError, InvalidRe
 litellm.drop_params = True  # Drop unsupported parameters from the API
 litellm.enable_json_schema_validation = True  # Enable client-side JSON schema validation
 
+PERPLEXITY_PREFIX = "perplexity/"
+PERPLEXITY_NUM_RETRIES = 5  # LiteLLM's retries back off between attempts, unlike the reviewer's own retries
+
 
 class LiteLLMProvider(BaseProvider):
     provider: str = "LiteLLM"
@@ -71,6 +74,21 @@ class LiteLLMProvider(BaseProvider):
                 f"could not calculate cost for model <{self.model}>: {str(e).splitlines()[0]}. Reporting cost as 0.",
             )
             return 0.0
+
+    def _route(self, kwargs: Optional[Dict[str, Any]]) -> Tuple[str, Dict[str, Any]]:
+        """Return the LiteLLM model name and call arguments for this provider's model.
+
+        Perplexity no longer serves chat completions: its models (e.g., "perplexity/sonar") and the other vendors' models
+        it hosts (e.g., "perplexity/openai/gpt-6-luna") are reached through its Agent API, via LiteLLM's Responses bridge.
+        New Perplexity accounts allow about one request per second, so rate-limited calls are retried with backoff.
+        """
+        kwargs = dict(kwargs or {})
+        prefix = PERPLEXITY_PREFIX
+        if not self.model.startswith(prefix) or self.model.startswith(prefix + "responses/"):
+            return self.model, kwargs
+        name = self.model[len(prefix) :]
+        kwargs.setdefault("num_retries", PERPLEXITY_NUM_RETRIES)
+        return f"{prefix}responses/{name if '/' in name else prefix + name}", kwargs
 
     @staticmethod
     def _reported_cost(response: Any) -> Optional[float]:
@@ -205,8 +223,9 @@ class LiteLLMProvider(BaseProvider):
     async def _fetch_response(self, message_list: List[Dict[str, str]], kwargs: Optional[Dict[str, Any]] = None) -> Any:
         """Fetch the raw response from LiteLLM."""
         try:
+            model, kwargs = self._route(kwargs)
             response = await acompletion(
-                model=self.model, messages=message_list, custom_llm_provider=self.custom_llm_provider, **(kwargs or {})
+                model=model, messages=message_list, custom_llm_provider=self.custom_llm_provider, **kwargs
             )
             return response
         except Exception as e:

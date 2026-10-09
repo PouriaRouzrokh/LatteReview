@@ -1,4 +1,4 @@
-"""Perplexity's Sonar LLMs as LLM reviewers through LiteLLMProvider: directly (PERPLEXITY_API_KEY) and via OpenRouter."""
+"""Perplexity's Sonar as an LLM reviewer through LiteLLMProvider: via Perplexity's Agent API (PERPLEXITY_API_KEY) and OpenRouter."""
 
 import os
 

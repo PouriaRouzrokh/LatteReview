@@ -176,7 +176,7 @@ The three services bill a request's questions differently. Input tokens for the 
 | --- | ---: | ---: | ---: | ---: | --- |
 | Jev | 1,134 | 1,150 | 1,182 | 1,246 | the state once per request; about 16 tokens per extra question |
 | gpt-6-luna | 902 | 1,055 | 1,361 | 1,973 | the state once per request; about 150 tokens per extra question |
-| pplx-decider (via OpenRouter) | 926 | 1,852 | 3,704 | 7,408 | **the state once per question** |
+| pplx-decider | 926 | 1,852 | 3,704 | 7,408 | **the state once per question** (the same directly and through OpenRouter) |
 
 So:
 

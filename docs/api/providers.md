@@ -47,7 +47,7 @@ Models tested with real API calls for v1.2.0:
 | `OllamaProvider` (local, Apple M5, 32 GB) | `qwen3.8:27b` |
 | `LiteLLMProvider` | `gpt-6-astra`, `gpt-6-luna`, `gpt-4o-mini`, `o4-mini`, `anthropic/claude-opus-5-5`, `anthropic/claude-opus-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-fable-5-1`, `gemini/gemini-3.8-flash`, `groq/openai/gpt-oss-120b`, `deepseek/deepseek-flash`, `openrouter/qwen/qwen3.8-27b`, `ollama_chat/qwen3.8:27b` |
 
-Added in v1.4.0: Perplexity's Sonar models through `LiteLLMProvider`, tested with `openrouter/perplexity/sonar` (see [Perplexity models](#perplexity-models)).
+Added in v1.4.0: Perplexity's models through `LiteLLMProvider`, tested with `perplexity/sonar`, `perplexity/openai/gpt-6-luna` (both through Perplexity's Agent API) and `openrouter/perplexity/sonar` (see [Perplexity models](#perplexity-models)).
 
 ## BaseProvider
 
@@ -398,7 +398,7 @@ from lattereview.providers import LiteLLMProvider
 provider = LiteLLMProvider(model="gpt-6-luna")
 provider = LiteLLMProvider(model="anthropic/claude-sonnet-5")  # Needs ANTHROPIC_API_KEY
 provider = LiteLLMProvider(model="gemini/gemini-3.8-flash")  # Needs GEMINI_API_KEY
-provider = LiteLLMProvider(model="perplexity/sonar")  # Needs PERPLEXITY_API_KEY
+provider = LiteLLMProvider(model="perplexity/sonar")  # Needs PERPLEXITY_API_KEY (Perplexity's Agent API)
 
 # Get response
 response, cost = await provider.get_response("What is the capital of the country shown in this map?", ["path/to/image1.png"])
@@ -413,22 +413,29 @@ instead of pricing the tokens, so per-request fees are counted.
 
 ### Perplexity models
 
-Perplexity's Sonar models (`sonar`, `sonar-pro`, `sonar-reasoning-pro`, `sonar-deep-research`) work as LLM reviewers
-through `LiteLLMProvider`, with structured output:
+Perplexity ended chat completions for its Sonar models on September 27, 2026. It now serves Sonar, and models from
+other vendors, through its **Agent API**. `LiteLLMProvider` sends every `perplexity/...` model there for you (through
+LiteLLM's Responses bridge), with structured output:
 
 ```python
-provider = LiteLLMProvider(model="perplexity/sonar")              # PERPLEXITY_API_KEY (or PERPLEXITYAI_API_KEY)
-provider = LiteLLMProvider(model="openrouter/perplexity/sonar")   # the same model through OpenRouter (OPENROUTER_API_KEY)
+provider = LiteLLMProvider(model="perplexity/sonar")              # Sonar; PERPLEXITY_API_KEY (or PERPLEXITYAI_API_KEY)
+provider = LiteLLMProvider(model="perplexity/openai/gpt-6-luna")  # another vendor's model, billed by Perplexity
+provider = LiteLLMProvider(model="openrouter/perplexity/sonar")   # Sonar through OpenRouter (OPENROUTER_API_KEY)
 ```
 
 Things to know before screening with them:
 
-- **Every Sonar request searches the web** and pays a request fee on top of the tokens: $5-14 per 1,000 requests,
-  depending on the model and search context size. Screening 1,000 abstracts with `sonar` costs about $5, about 40 times
-  more than `gpt-6-luna`; the fee is included in LatteReview's cost tracking. Web search rarely helps when the title and
-  abstract are already given, so Sonar is worth it mainly for reviewers that need outside information.
-- Perplexity is moving Sonar users to its Agent API. Sonar requests still work (Perplexity now serves them through the
-  Agent API), but check Perplexity's documentation for the current status.
+- **Through the Agent API, Sonar does not search the web** (LatteReview gives it no tools) and costs $0.25 / $2.50 per
+  million input / output tokens: about $0.20 per 1,000 abstracts with `TitleAbstractReviewer`.
+- **Through OpenRouter, every Sonar request searches the web** and pays a request fee of $5-14 per 1,000 requests: about
+  $5 per 1,000 abstracts. The fee is included in LatteReview's cost tracking. Web search rarely helps when the title and
+  abstract are given.
+- The Agent API accepts `perplexity/sonar` and other vendors' models (e.g., `openai/gpt-6-luna`), but not
+  `sonar-pro`, `sonar-reasoning-pro` or `sonar-deep-research`, which became Agent API presets. OpenRouter still lists
+  them (e.g., `openrouter/perplexity/sonar-pro`). Anthropic models on Perplexity require `max_output_tokens`.
+- **New Perplexity accounts allow about one Agent API request per second.** LatteReview retries rate-limited
+  Perplexity calls with backoff (LiteLLM's `num_retries`, 5 by default; set it in `model_args`), so a large run is slow
+  until Perplexity raises your limit.
 - Perplexity's decision model, **pplx-decider**, is not an LLM: use it with `SystemOneProvider(backend="perplexity")`
   and the decision reviewers.
 
