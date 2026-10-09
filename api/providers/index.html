@@ -1731,7 +1731,7 @@
 </tr>
 </tbody>
 </table>
-<p>Added in v1.4.0: Perplexity's Sonar models through <code>LiteLLMProvider</code>, tested with <code>openrouter/perplexity/sonar</code> (see <a href="#perplexity-models">Perplexity models</a>).</p>
+<p>Added in v1.4.0: Perplexity's models through <code>LiteLLMProvider</code>, tested with <code>perplexity/sonar</code>, <code>perplexity/openai/gpt-6-luna</code> (both through Perplexity's Agent API) and <code>openrouter/perplexity/sonar</code> (see <a href="#perplexity-models">Perplexity models</a>).</p>
 <h2 id="baseprovider">BaseProvider<a class="headerlink" href="#baseprovider" title="Permanent link">&para;</a></h2>
 <h3 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
 <p>The <code>BaseProvider</code> class serves as the foundation for all LLM provider implementations. It provides a consistent interface and error handling for interacting with language models.</p>
@@ -2006,7 +2006,7 @@
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">)</span>
 <a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"anthropic/claude-sonnet-5"</span><span class="p">)</span>  <span class="c1"># Needs ANTHROPIC_API_KEY</span>
 <a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gemini/gemini-3.8-flash"</span><span class="p">)</span>  <span class="c1"># Needs GEMINI_API_KEY</span>
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>  <span class="c1"># Needs PERPLEXITY_API_KEY</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>  <span class="c1"># Needs PERPLEXITY_API_KEY (Perplexity's Agent API)</span>
 <a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
 <a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="c1"># Get response</span>
 <a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="n">response</span><span class="p">,</span> <span class="n">cost</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">get_response</span><span class="p">(</span><span class="s2">"What is the capital of the country shown in this map?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"path/to/image1.png"</span><span class="p">])</span>
@@ -2018,19 +2018,26 @@
 <p>When the API reports the cost of a request itself (OpenRouter and Perplexity do), <code>LiteLLMProvider</code> uses that cost
 instead of pricing the tokens, so per-request fees are counted.</p>
 <h3 id="perplexity-models">Perplexity models<a class="headerlink" href="#perplexity-models" title="Permanent link">&para;</a></h3>
-<p>Perplexity's Sonar models (<code>sonar</code>, <code>sonar-pro</code>, <code>sonar-reasoning-pro</code>, <code>sonar-deep-research</code>) work as LLM reviewers
-through <code>LiteLLMProvider</code>, with structured output:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>              <span class="c1"># PERPLEXITY_API_KEY (or PERPLEXITYAI_API_KEY)</span>
-<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"openrouter/perplexity/sonar"</span><span class="p">)</span>   <span class="c1"># the same model through OpenRouter (OPENROUTER_API_KEY)</span>
+<p>Perplexity ended chat completions for its Sonar models on September 27, 2026. It now serves Sonar, and models from
+other vendors, through its <strong>Agent API</strong>. <code>LiteLLMProvider</code> sends every <code>perplexity/...</code> model there for you (through
+LiteLLM's Responses bridge), with structured output:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>              <span class="c1"># Sonar; PERPLEXITY_API_KEY (or PERPLEXITYAI_API_KEY)</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/openai/gpt-6-luna"</span><span class="p">)</span>  <span class="c1"># another vendor's model, billed by Perplexity</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"openrouter/perplexity/sonar"</span><span class="p">)</span>   <span class="c1"># Sonar through OpenRouter (OPENROUTER_API_KEY)</span>
 </code></pre></div>
 <p>Things to know before screening with them:</p>
 <ul>
-<li><strong>Every Sonar request searches the web</strong> and pays a request fee on top of the tokens: $5-14 per 1,000 requests,
-  depending on the model and search context size. Screening 1,000 abstracts with <code>sonar</code> costs about $5, about 40 times
-  more than <code>gpt-6-luna</code>; the fee is included in LatteReview's cost tracking. Web search rarely helps when the title and
-  abstract are already given, so Sonar is worth it mainly for reviewers that need outside information.</li>
-<li>Perplexity is moving Sonar users to its Agent API. Sonar requests still work (Perplexity now serves them through the
-  Agent API), but check Perplexity's documentation for the current status.</li>
+<li><strong>Through the Agent API, Sonar does not search the web</strong> (LatteReview gives it no tools) and costs $0.25 / $2.50 per
+  million input / output tokens: about $0.20 per 1,000 abstracts with <code>TitleAbstractReviewer</code>.</li>
+<li><strong>Through OpenRouter, every Sonar request searches the web</strong> and pays a request fee of $5-14 per 1,000 requests: about
+  $5 per 1,000 abstracts. The fee is included in LatteReview's cost tracking. Web search rarely helps when the title and
+  abstract are given.</li>
+<li>The Agent API accepts <code>perplexity/sonar</code> and other vendors' models (e.g., <code>openai/gpt-6-luna</code>), but not
+  <code>sonar-pro</code>, <code>sonar-reasoning-pro</code> or <code>sonar-deep-research</code>, which became Agent API presets. OpenRouter still lists
+  them (e.g., <code>openrouter/perplexity/sonar-pro</code>). Anthropic models on Perplexity require <code>max_output_tokens</code>.</li>
+<li><strong>New Perplexity accounts allow about one Agent API request per second.</strong> LatteReview retries rate-limited
+  Perplexity calls with backoff (LiteLLM's <code>num_retries</code>, 5 by default; set it in <code>model_args</code>), so a large run is slow
+  until Perplexity raises your limit.</li>
 <li>Perplexity's decision model, <strong>pplx-decider</strong>, is not an LLM: use it with <code>SystemOneProvider(backend="perplexity")</code>
   and the decision reviewers.</li>
 </ul>
