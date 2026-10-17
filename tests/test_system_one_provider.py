@@ -158,6 +158,7 @@ async def test_typesafe_response_normalized(make_provider):
     request = recorder.requests[0]
     assert str(request.url) == "https://api.typesafe.ai/v1/systemone"
     assert request.headers["authorization"] == "Bearer test-typesafe-key"
+    assert "x-pplx-integration" not in request.headers
     body = recorder.bodies[0]
     assert body["model"] == "jev-latest" and body["state"] == "Title: a study"
     assert body["questions"]["mod"]["criteria"]["XR"] == "radiography"
@@ -178,6 +179,7 @@ async def test_openrouter_response_normalized(make_provider):
     provider, recorder = make_provider(ok(RESPONSES["openrouter"]), backend="openrouter")
     result = await provider.decide("Title: a study", REQUEST_QUESTIONS)
     assert str(recorder.requests[0].url) == "https://openrouter.ai/api/v1/systemone"
+    assert "x-pplx-integration" not in recorder.requests[0].headers
     assert recorder.bodies[0]["model"] == "~typesafe/jev-latest"
     q = result.answers["q"]
     assert isinstance(q.value, float) and q.value == 2.0  # whole-number score normalized to float
@@ -193,6 +195,7 @@ async def test_perplexity_response_normalized(make_provider):
     result = await provider.decide("Title: a study", REQUEST_QUESTIONS)
     assert str(recorder.requests[0].url) == "https://api.perplexity.ai/v1/decisions"
     assert recorder.requests[0].headers["authorization"] == "Bearer test-perplexity-key"
+    assert recorder.requests[0].headers.get_list("x-pplx-integration") == ["lattereview"]
     body = recorder.bodies[0]
     assert set(body) == {"model", "state", "questions"}  # Perplexity rejects unknown top-level fields
     assert body["model"] == "pplx-decider-v1.1-27b" and body["questions"]["q"]["criteria"][0] == "none"
@@ -200,6 +203,16 @@ async def test_perplexity_response_normalized(make_provider):
     assert mod.value == "XR" and list(mod.probabilities) == ["CT", "MRI", "XR", "US"]
     assert (q.label, q.level) == ("external", 2) and 0.99 < q.confidence < 1
     assert result.cost == pytest.approx(591 * 0.02 / 1e6)
+
+
+@pytest.mark.parametrize(
+    "base_url, expected",
+    [("https://api.perplexity.ai", ["lattereview"]), ("https://api.perplexity.ai.example.com", [])],
+)
+async def test_integration_header_only_for_perplexity_host(make_provider, base_url, expected):
+    provider, recorder = make_provider(ok(RESPONSES["perplexity_openrouter"]), base_url=base_url, api_key="key")
+    await provider.decide("Title: a study", REQUEST_QUESTIONS)
+    assert recorder.requests[0].headers.get_list("x-pplx-integration") == expected
 
 
 async def test_perplexity_decider_on_openrouter(make_provider):
@@ -216,6 +229,7 @@ async def test_openai_request_translated(make_provider):
     provider, recorder = make_provider(ok(RESPONSES["openai"]), backend="openai")
     await provider.decide("Title: a study", REQUEST_QUESTIONS)
     assert str(recorder.requests[0].url) == "https://api.openai.com/v1/decisions"
+    assert "x-pplx-integration" not in recorder.requests[0].headers
     assert recorder.requests[0].headers["authorization"] == "Bearer test-openai-key"
     body = recorder.bodies[0]
     assert set(body) == {"model", "input", "questions"} and body["model"] == "gpt-6-luna"

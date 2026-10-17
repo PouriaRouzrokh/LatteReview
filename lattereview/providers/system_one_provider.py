@@ -12,6 +12,7 @@ import os
 import random
 import time
 from typing import Any, ClassVar, Dict, List, Literal, Optional, Tuple, Union
+from urllib.parse import urlsplit
 
 import httpx
 import pydantic
@@ -20,6 +21,10 @@ from .base_provider import ProviderError, ClientCreationError, ResponseError
 
 SYSTEMONE_PATH = "/v1/systemone"
 DECISIONS_PATH = "/v1/decisions"  # Perplexity serves the System One protocol here; OpenAI serves its own format.
+
+# Identifies LatteReview traffic to Perplexity's API; sent only to api.perplexity.ai.
+PERPLEXITY_HOST = "api.perplexity.ai"
+PERPLEXITY_INTEGRATION = "lattereview"
 
 # List prices in USD per million input tokens. Output tokens are free on every backend.
 JEV_INPUT_PRICE_PER_MILLION = 0.042
@@ -321,6 +326,8 @@ class SystemOneProvider(pydantic.BaseModel):
         headers = {"Content-Type": "application/json"}
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
+        if urlsplit(self.endpoint or "").hostname == PERPLEXITY_HOST:
+            headers["X-Pplx-Integration"] = PERPLEXITY_INTEGRATION
         return headers
 
     async def decide(
