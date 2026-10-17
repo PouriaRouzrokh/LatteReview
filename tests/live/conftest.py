@@ -21,6 +21,10 @@ BACKENDS = {
         "OPENROUTER_API_KEY",
         lambda: SystemOneProvider(backend="openrouter", model="perplexity/pplx-decider-v1.1-27b"),
     ),
+    "openrouter-microsoft": (
+        "OPENROUTER_API_KEY",
+        lambda: SystemOneProvider(backend="openrouter", model="microsoft/microsoft-decision-1"),
+    ),
     "perplexity": ("PERPLEXITY_API_KEY", lambda: SystemOneProvider(backend="perplexity")),
     "openai": ("OPENAI_API_KEY", lambda: SystemOneProvider(backend="openai")),
     "local": ("SYSTEMONE_LOCAL_URL", lambda: SystemOneProvider(base_url=os.environ["SYSTEMONE_LOCAL_URL"])),

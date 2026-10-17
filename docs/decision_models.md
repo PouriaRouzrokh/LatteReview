@@ -93,6 +93,25 @@ off.
 On OpenRouter, the cost comes from the response; elsewhere it is computed from the reported input tokens and the list
 price.
 
+### Other decision models
+
+Newer hosted decision models that speak `/v1/systemone` work without a named backend:
+
+```python
+# Microsoft-Decision-1 through OpenRouter (tested with the live conformance suite in 1.4.1)
+provider = SystemOneProvider(backend="openrouter", model="microsoft/microsoft-decision-1")
+
+# Celeris-1 Decision and Liquid AI's d1-ultra through their own APIs (not yet tested with LatteReview)
+provider = SystemOneProvider(base_url="https://inference.celeris.ai/celeris-1-decision", model="celeris-1-decision",
+                             api_key="...", input_price_per_million=0.04)
+provider = SystemOneProvider(base_url="https://api.liquid.ai/decisions", model="d1-ultra",
+                             api_key="...", input_price_per_million=0.042)
+```
+
+Pass `input_price_per_million` with a custom `base_url` so the cost is tracked; otherwise it is reported as 0.
+Azure AI Foundry takes its API keys for Microsoft-Decision-1 in an `api-key` header, which `SystemOneProvider` does not
+send, so use the model through OpenRouter.
+
 ## Screening titles and abstracts
 
 ```python
