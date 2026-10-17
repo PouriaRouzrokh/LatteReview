@@ -431,6 +431,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Backends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#other-decision-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other decision models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -773,6 +790,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Backends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#other-decision-models" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other decision models
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1114,15 +1148,29 @@ OpenAI allows 30,000 per minute, so OpenAI and custom URLs are not paced. Pass <
 off.</p>
 <p>On OpenRouter, the cost comes from the response; elsewhere it is computed from the reported input tokens and the list
 price.</p>
+<h3 id="other-decision-models">Other decision models<a class="headerlink" href="#other-decision-models" title="Permanent link">&para;</a></h3>
+<p>Newer hosted decision models that speak <code>/v1/systemone</code> work without a named backend:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Microsoft-Decision-1 through OpenRouter (tested with the live conformance suite in 1.4.1)</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">"openrouter"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"microsoft/microsoft-decision-1"</span><span class="p">)</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Celeris-1 Decision and Liquid AI's d1-ultra through their own APIs (not yet tested with LatteReview)</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"https://inference.celeris.ai/celeris-1-decision"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"celeris-1-decision"</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>                             <span class="n">api_key</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span> <span class="n">input_price_per_million</span><span class="o">=</span><span class="mf">0.04</span><span class="p">)</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"https://api.liquid.ai/decisions"</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s2">"d1-ultra"</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>                             <span class="n">api_key</span><span class="o">=</span><span class="s2">"..."</span><span class="p">,</span> <span class="n">input_price_per_million</span><span class="o">=</span><span class="mf">0.042</span><span class="p">)</span>
+</code></pre></div>
+<p>Pass <code>input_price_per_million</code> with a custom <code>base_url</code> so the cost is tracked; otherwise it is reported as 0.
+Azure AI Foundry takes its API keys for Microsoft-Decision-1 in an <code>api-key</code> header, which <code>SystemOneProvider</code> does not
+send, so use the model through OpenRouter.</p>
 <h2 id="screening-titles-and-abstracts">Screening titles and abstracts<a class="headerlink" href="#screening-titles-and-abstracts" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span>
-<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
-<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
-<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must involve CT scans."</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"The study must use deep learning."</span><span class="p">},</span>
-<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="n">exclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must not include PET scans."</span><span class="p">},</span>
-<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must involve CT scans."</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"The study must use deep learning."</span><span class="p">},</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">exclusion_criteria</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"The study must not include PET scans."</span><span class="p">},</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="p">)</span>
 </code></pre></div>
 <p>Criteria can be a string (one criterion), a list, or a numbered dict. For each article, the reviewer sends <strong>one
 request</strong> with a 5-level <code>evaluation</code> score (mirroring the 1-5 rubric of <code>TitleAbstractReviewer</code>), an overall
@@ -1161,38 +1209,38 @@ request</strong> with a 5-level <code>evaluation</code> score (mirroring the 1-5
 <h2 id="scoring-and-extraction">Scoring and extraction<a class="headerlink" href="#scoring-and-extraction" title="Permanent link">&para;</a></h2>
 <p><code>DecisionScoringReviewer</code> is the counterpart of <code>ScoringReviewer</code>. <code>score_descriptions</code> become the answer levels,
 and <code>certainty</code> is the confidence x 100, on the same 0-100 scale:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionScoringReviewer</span>
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionScoringReviewer</span><span class="p">(</span>
-<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
-<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Validation"</span><span class="p">,</span>
-<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>    <span class="n">scoring_task</span><span class="o">=</span><span class="s2">"How strong is the validation of the model in this study?"</span><span class="p">,</span>
-<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">scoring_set</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">score_descriptions</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"no validation"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"internal validation only"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"external validation"</span><span class="p">},</span>
-<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="p">)</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="c1"># Columns: score (a value from scoring_set), certainty (0-100), probabilities ({score: p})</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionScoringReviewer</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionScoringReviewer</span><span class="p">(</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Validation"</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">scoring_task</span><span class="o">=</span><span class="s2">"How strong is the validation of the model in this study?"</span><span class="p">,</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">scoring_set</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>    <span class="n">score_descriptions</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"no validation"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"internal validation only"</span><span class="p">,</span> <span class="mi">3</span><span class="p">:</span> <span class="s2">"external validation"</span><span class="p">},</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">)</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="c1"># Columns: score (a value from scoring_set), certainty (0-100), probabilities ({score: p})</span>
 </code></pre></div>
 <p>For your own questions, use <code>DecisionReviewer</code>. Each question becomes a column: the chosen option for <code>Choice</code>, the
 probability of "yes" for <code>Noul</code>, and the expected 0-based level for <code>Score</code>:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionReviewer</span>
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Noul</span><span class="p">,</span> <span class="n">Choice</span><span class="p">,</span> <span class="n">Score</span>
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionReviewer</span><span class="p">(</span>
-<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
-<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Extractor"</span><span class="p">,</span>
-<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>    <span class="n">questions</span><span class="o">=</span><span class="p">{</span>
-<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>        <span class="s2">"modality"</span><span class="p">:</span> <span class="n">Choice</span><span class="p">(</span><span class="s2">"What is the main imaging modality?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"MRI"</span><span class="p">,</span> <span class="s2">"X-ray"</span><span class="p">,</span> <span class="s2">"ultrasound"</span><span class="p">]),</span>
-<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>        <span class="s2">"deep_learning"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Does the study use deep learning?"</span><span class="p">),</span>
-<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>        <span class="s2">"quality"</span><span class="p">:</span> <span class="n">Score</span><span class="p">(</span><span class="s2">"How rigorous is the evaluation?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"weak"</span><span class="p">,</span> <span class="s2">"moderate"</span><span class="p">,</span> <span class="s2">"strong"</span><span class="p">]),</span>
-<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>    <span class="p">},</span>
-<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionReviewer</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">Noul</span><span class="p">,</span> <span class="n">Choice</span><span class="p">,</span> <span class="n">Score</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">reviewer</span> <span class="o">=</span> <span class="n">DecisionReviewer</span><span class="p">(</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>    <span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>    <span class="n">name</span><span class="o">=</span><span class="s2">"Extractor"</span><span class="p">,</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a>    <span class="n">questions</span><span class="o">=</span><span class="p">{</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>        <span class="s2">"modality"</span><span class="p">:</span> <span class="n">Choice</span><span class="p">(</span><span class="s2">"What is the main imaging modality?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"CT"</span><span class="p">,</span> <span class="s2">"MRI"</span><span class="p">,</span> <span class="s2">"X-ray"</span><span class="p">,</span> <span class="s2">"ultrasound"</span><span class="p">]),</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>        <span class="s2">"deep_learning"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Does the study use deep learning?"</span><span class="p">),</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>        <span class="s2">"quality"</span><span class="p">:</span> <span class="n">Score</span><span class="p">(</span><span class="s2">"How rigorous is the evaluation?"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"weak"</span><span class="p">,</span> <span class="s2">"moderate"</span><span class="p">,</span> <span class="s2">"strong"</span><span class="p">]),</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>    <span class="p">},</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">)</span>
 </code></pre></div>
 <p>This covers categorical extraction. Free-text extraction (e.g., "list the reported complications") still needs an LLM
 <code>AbstractionReviewer</code>.</p>
 <p>You can also call the provider directly:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">decide</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">"Title: ...</span><span class="se">\n</span><span class="s2">Abstract: ..."</span><span class="p">,</span> <span class="n">questions</span><span class="o">=</span><span class="p">{</span><span class="s2">"rct"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Is this an RCT?"</span><span class="p">)})</span>
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"rct"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>   <span class="c1"># probability of yes</span>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">result</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">result</span> <span class="o">=</span> <span class="k">await</span> <span class="n">provider</span><span class="o">.</span><span class="n">decide</span><span class="p">(</span><span class="n">state</span><span class="o">=</span><span class="s2">"Title: ...</span><span class="se">\n</span><span class="s2">Abstract: ..."</span><span class="p">,</span> <span class="n">questions</span><span class="o">=</span><span class="p">{</span><span class="s2">"rct"</span><span class="p">:</span> <span class="n">Noul</span><span class="p">(</span><span class="s2">"Is this an RCT?"</span><span class="p">)})</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">result</span><span class="o">.</span><span class="n">answers</span><span class="p">[</span><span class="s2">"rct"</span><span class="p">]</span><span class="o">.</span><span class="n">value</span>   <span class="c1"># probability of yes</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="n">result</span><span class="o">.</span><span class="n">cost</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">input_tokens</span>
 </code></pre></div>
 <h2 id="cost-model">Cost model<a class="headerlink" href="#cost-model" title="Permanent link">&para;</a></h2>
 <p>The three services bill a request's questions differently. Input tokens for the same abstract (about 750 tokens) with
@@ -1257,21 +1305,21 @@ explicitly in workflow filters, as in the hybrid example below.</p>
 <h2 id="confidence-gated-hybrid-workflows">Confidence-gated hybrid workflows<a class="headerlink" href="#confidence-gated-hybrid-workflows" title="Permanent link">&para;</a></h2>
 <p>Jev is cheap enough to screen everything, and an LLM can then review only the articles Jev is unsure about. Filters
 are plain row functions, so no special workflow is needed:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">OpenAIProvider</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">,</span> <span class="n">TitleAbstractReviewer</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.workflows</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewWorkflow</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="n">jev</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>                                    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion</span><span class="p">)</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">TitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">OpenAIProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"LLM"</span><span class="p">,</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>                            <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion_text</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion_text</span><span class="p">)</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="p">[</span>
-<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">jev</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">]},</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">llm</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">],</span>
-<a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>     <span class="s2">"filter"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">p</span> <span class="o">:=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"round-A_Jev_include_probability"</span><span class="p">])</span> <span class="ow">or</span> <span class="mf">0.1</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">},</span>
-<a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="p">])</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.providers</span><span class="w"> </span><span class="kn">import</span> <span class="n">SystemOneProvider</span><span class="p">,</span> <span class="n">OpenAIProvider</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.agents</span><span class="w"> </span><span class="kn">import</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">,</span> <span class="n">TitleAbstractReviewer</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.workflows</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReviewWorkflow</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">jev</span> <span class="o">=</span> <span class="n">DecisionTitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">SystemOneProvider</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Jev"</span><span class="p">,</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>                                    <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion</span><span class="p">)</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="n">llm</span> <span class="o">=</span> <span class="n">TitleAbstractReviewer</span><span class="p">(</span><span class="n">provider</span><span class="o">=</span><span class="n">OpenAIProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"LLM"</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a>                            <span class="n">inclusion_criteria</span><span class="o">=</span><span class="n">inclusion_text</span><span class="p">,</span> <span class="n">exclusion_criteria</span><span class="o">=</span><span class="n">exclusion_text</span><span class="p">)</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="n">workflow</span> <span class="o">=</span> <span class="n">ReviewWorkflow</span><span class="p">(</span><span class="n">workflow_schema</span><span class="o">=</span><span class="p">[</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"A"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">jev</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">]},</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a>    <span class="p">{</span><span class="s2">"round"</span><span class="p">:</span> <span class="s2">"B"</span><span class="p">,</span> <span class="s2">"reviewers"</span><span class="p">:</span> <span class="p">[</span><span class="n">llm</span><span class="p">],</span> <span class="s2">"text_inputs"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"title"</span><span class="p">,</span> <span class="s2">"abstract"</span><span class="p">],</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a>     <span class="s2">"filter"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">row</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">isna</span><span class="p">(</span><span class="n">p</span> <span class="o">:=</span> <span class="n">row</span><span class="p">[</span><span class="s2">"round-A_Jev_include_probability"</span><span class="p">])</span> <span class="ow">or</span> <span class="mf">0.1</span> <span class="o">&lt;=</span> <span class="n">p</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">},</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="p">])</span>
 </code></pre></div>
 <p>The <code>pd.isna</code> check also routes articles whose include question was refused (see <a href="#refusals">Refusals</a>).</p>
 <p>Jev's probabilities are mostly close to 0 or 1, so a band of [0.1, 0.9) routed about 20% of articles to the LLM in
@@ -1284,10 +1332,10 @@ for a complete pipeline with measurements.</p>
 <h2 id="choosing-a-threshold">Choosing a threshold<a class="headerlink" href="#choosing-a-threshold" title="Permanent link">&para;</a></h2>
 <p>A probability cutoff fitted on one dataset (or one backend) does not carry over to another. With a labeled sample of
 your own data, <code>suggest_threshold</code> finds the highest cutoff that still reaches a target recall:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">suggest_threshold</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">suggest_threshold</span><span class="p">(</span><span class="n">labeled_df</span><span class="p">,</span> <span class="s2">"round-A_Jev_include_probability"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">,</span> <span class="n">target_recall</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
-<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># {'threshold': 0.08, 'recall': 0.96, 'precision': 0.41, 'n_included': 212, 'wss': 0.52}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">lattereview.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">suggest_threshold</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="n">suggest_threshold</span><span class="p">(</span><span class="n">labeled_df</span><span class="p">,</span> <span class="s2">"round-A_Jev_include_probability"</span><span class="p">,</span> <span class="s2">"label"</span><span class="p">,</span> <span class="n">target_recall</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># {'threshold': 0.08, 'recall': 0.96, 'precision': 0.41, 'n_included': 212, 'wss': 0.52}</span>
 </code></pre></div>
 <p>Articles close to the cutoff can land on either side of it when re-run, because uncertain answers vary slightly
 between identical requests.</p>
@@ -1631,11 +1679,11 @@ input and because Jev's uncertain answers vary between runs.</p>
   CC BY-NC 4.0: research and non-commercial use only.</strong> The Apache-2.0 server
   <a href="https://github.com/abhishekgahlot2/openjev-server"><code>openjev-server</code></a> runs it with vLLM or, on Apple silicon, MLX.
   On a 32 GB Mac, use the 4-bit MLX build (about 15 GB):</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"openjev-server[mlx] @ git+https://github.com/abhishekgahlot2/openjev-server"</span>
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>hf<span class="w"> </span>download<span class="w"> </span>openjev/openjev-MLX-4bit<span class="w"> </span>--local-dir<span class="w"> </span>openjev-MLX-4bit
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>openjev<span class="w"> </span>serve<span class="w"> </span>--backend<span class="w"> </span>mlx<span class="w"> </span>--model<span class="w"> </span>openjev-MLX-4bit<span class="w"> </span>--profile<span class="w"> </span>openjev<span class="w"> </span>--port<span class="w"> </span><span class="m">3000</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"openjev-server[mlx] @ git+https://github.com/abhishekgahlot2/openjev-server"</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>hf<span class="w"> </span>download<span class="w"> </span>openjev/openjev-MLX-4bit<span class="w"> </span>--local-dir<span class="w"> </span>openjev-MLX-4bit
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>openjev<span class="w"> </span>serve<span class="w"> </span>--backend<span class="w"> </span>mlx<span class="w"> </span>--model<span class="w"> </span>openjev-MLX-4bit<span class="w"> </span>--profile<span class="w"> </span>openjev<span class="w"> </span>--port<span class="w"> </span><span class="m">3000</span>
 </code></pre></div>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">SystemOneProvider</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">"http://localhost:3000"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
