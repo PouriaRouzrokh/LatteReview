@@ -23,6 +23,7 @@ class ReviewWorkflow(pydantic.BaseModel):
     reviewer_costs: Dict = dict()
     total_cost: float = 0.0
     verbose: bool = True
+    include_task_id: bool = True
 ```
 
 ### Key Attributes
@@ -32,6 +33,7 @@ class ReviewWorkflow(pydantic.BaseModel):
 - `reviewer_costs`: Dictionary tracking costs per reviewer and round
 - `total_cost`: Total accumulated cost of all reviews
 - `verbose`: Flag to enable/disable logging output
+- `include_task_id`: Start each item's text with `Review Task ID: {round}-{row index}` (default `True`). Set it to `False` to send a record the same prompt whatever its row and the other rows in its round, so results do not depend on row order and repeated runs can reuse cached responses. Decision reviewers always leave the line out.
 
 ### Methods
 

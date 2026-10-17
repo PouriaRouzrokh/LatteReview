@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+## [1.4.1] - 2026-10-16
+
+### Changed
+
+- **License:** LatteReview is now licensed under the PolyForm Noncommercial License 1.0.0. Noncommercial use, changes and sharing are allowed, including by universities, hospitals, public research organizations, charities and government institutions; commercial use needs a separate license from the author. Releases up to and including 1.4.0 remain under CC BY-NC-ND 4.0. `pyproject.toml` declares the license (`PolyForm-Noncommercial-1.0.0`) and the build requires `setuptools>=77`.
+- Requests to Perplexity's API (`api.perplexity.ai`) carry an `X-Pplx-Integration: lattereview` header so Perplexity can attribute the traffic. Other backends are unchanged (#12, thanks to @qirh).
+
+### Added
+
+- `ReviewWorkflow(include_task_id=False)` leaves the `Review Task ID: {round}-{row index}` line out of every item's text. With the line, the same record's prompt changes with its row and with the other rows in its round, so results can depend on row order and cached responses cannot be reused. The default (`True`) keeps the old behavior; decision reviewers already leave the line out.
+- Docs: how to use Microsoft-Decision-1 (through OpenRouter, tested with the live conformance suite), Celeris-1 Decision and Liquid AI's d1-ultra (through `base_url`) with `SystemOneProvider`.
+- Unit tests for reviewer retries (a failing item stops after `max_retries` attempts, #9) and for Ollama structured outputs (the schema goes in Ollama's `format` argument and the system prompt is not rewritten, #5).
+
+### Removed
+
+- Commented-out code in `OllamaProvider.get_json_response` that repeated the JSON schema in the system prompt (#5).
+
 ## [1.4.0] - 2026-10-9
 
 This release adds Perplexity's and OpenAI's Decisions APIs as decision-model backends, supports Perplexity's Sonar LLMs, and compares the three decision models on the full evaluation data.

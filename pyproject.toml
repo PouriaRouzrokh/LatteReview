@@ -1,8 +1,10 @@
 [project]
 name = "lattereview"
-version = "1.4.0"
+version = "1.4.1"
 description = "A framework for multi-agent literature review workflows using large language models"
 readme = "README.md"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 authors = [{ name = "Pouria Rouzrokh", email = "po.rouzrokh@gmail.com" }]
 keywords = [
     "review",
@@ -68,7 +70,7 @@ docs = [
 all = ["lattereview[dev,docs]"]
 
 [build-system]
-requires = ["setuptools>=45", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]

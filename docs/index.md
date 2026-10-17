@@ -1,7 +1,7 @@
 # LatteReview 🤖☕
 
 [![PyPI version](https://badge.fury.io/py/lattereview.svg)](https://badge.fury.io/py/lattereview)
-[![License: CC BY-NC-ND 4.0](https://img.shields.io/badge/License-CC%20BY--NC--ND%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-nd/4.0/)
+[![License: PolyForm Noncommercial 1.0.0](https://img.shields.io/badge/License-PolyForm%20Noncommercial%201.0.0-lightgrey.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Maintained: yes](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/prouzrokh/lattereview)
@@ -79,7 +79,7 @@ LatteReview is a powerful Python package designed to automate academic literatur
 
 ## License
 
-This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License - see the [LICENSE](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) file for details.
+LatteReview is licensed under the [PolyForm Noncommercial License 1.0.0](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) from version 1.4.1 on. You may use, change and share it for any noncommercial purpose, including personal research and use by universities, hospitals, public research organizations, charities and government institutions. Commercial use needs a separate license: please [contact the author](https://github.com/PouriaRouzrokh) to ask for one. Releases up to and including 1.4.0 remain under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
 
 ## 👨‍💻 Authors
 

@@ -24,7 +24,7 @@ If you find LatteReview helpful in your research or work, consider supporting it
 
 ## 📜 License
 
-This work is licensed under a Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License - see the [LICENSE](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) file for details.
+LatteReview is licensed under the [PolyForm Noncommercial License 1.0.0](https://github.com/PouriaRouzrokh/LatteReview/blob/main/LICENSE) from version 1.4.1 on. You may use, change and share it for any noncommercial purpose, including personal research and use by universities, hospitals, public research organizations, charities and government institutions. Commercial use needs a separate license: please [contact the author](https://github.com/PouriaRouzrokh) to ask for one. Releases up to and including 1.4.0 remain under the Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International License.
 
 ## 🤝 Contributing
 
