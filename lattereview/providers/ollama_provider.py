@@ -2,7 +2,6 @@
 
 import inspect
 from typing import Optional, List, Dict, Any, Union, Tuple, AsyncGenerator
-import json
 from ollama import AsyncClient
 from pydantic import BaseModel, create_model
 from .base_provider import BaseProvider, ProviderError, ClientCreationError, ResponseError, InvalidResponseFormatError
@@ -114,15 +113,6 @@ class OllamaProvider(BaseProvider):
                 raise ValueError("Response format is not set")
 
             message_list = self._prepare_message_list(input_prompt, image_path_list, message_list)
-
-            # Attempting fix for ollama not supporting response_format - To be removed if the fix is confirmed
-            # Update system message to request JSON output
-            # if message_list and message_list[0]["role"] == "system":
-            #     schema_str = json.dumps(self.response_format_class.model_json_schema(), indent=2)
-            #     message_list[0]["content"] = (
-            #         f"{message_list[0]['content']}\n\n"
-            #         f"Please provide your response as a JSON object following this schema:\n{schema_str}"
-            #     )
 
             # Constrain the output to the response format's JSON schema
             cleaned_kwargs = self._clean_kwargs(kwargs)

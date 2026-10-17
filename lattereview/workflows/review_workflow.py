@@ -20,6 +20,9 @@ class ReviewWorkflow(pydantic.BaseModel):
     reviewer_costs: Dict = dict()
     total_cost: float = 0.0
     verbose: bool = True
+    # Start each item's text with "Review Task ID: {round}-{row index}". Turn it off to give a record the same
+    # prompt whatever its row and the other rows in its round, so results and response caches do not depend on order.
+    include_task_id: bool = True
 
     def model_post_init(self, __context) -> None:
         """Validate the workflow schema after Pydantic model initialization."""
@@ -192,7 +195,8 @@ class ReviewWorkflow(pydantic.BaseModel):
 
                     # text_input_string is a single string that is made by combining all text_input columns
                     text_input_string = self._format_text_input(row, text_inputs)
-                    text_input_string = f"Review Task ID: {round_id}-{idx}\n" f"{text_input_string}"
+                    if self.include_task_id:
+                        text_input_string = f"Review Task ID: {round_id}-{idx}\n{text_input_string}"
                     text_input_strings.append(text_input_string)
 
                     # image_path_list is a list of valid paths to the images provided in the row item
