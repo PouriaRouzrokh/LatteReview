@@ -112,6 +112,33 @@ Pass `input_price_per_million` with a custom `base_url` so the cost is tracked; 
 Azure AI Foundry takes its API keys for Microsoft-Decision-1 in an `api-key` header, which `SystemOneProvider` does not
 send, so use the model through OpenRouter.
 
+### Decision Models endpoint
+
+[Decision Models](https://api.decisionmodels.io/llms.txt) provides a Jev-compatible endpoint that can be used with
+`SystemOneProvider`'s existing custom URL support. Set `DECISION_MODELS_API_KEY` in your environment:
+
+```python
+import os
+from lattereview.providers import SystemOneProvider, Noul
+
+provider = SystemOneProvider(
+    base_url="https://api.decisionmodels.io/v1/systemone",
+    api_key=os.environ["DECISION_MODELS_API_KEY"],
+    model="s1-pro",
+)
+result = await provider.decide(
+    state="A randomized trial of CT screening in adults.",
+    questions={"is_trial": Noul("Does this describe a randomized trial?")},
+)
+```
+
+`s1-pro` accepts up to three questions per request; `s1-fast` accepts one. Keep each `decide()` call within that
+limit. `DecisionTitleAbstractReviewer` sends an evaluation, an include question and one question per criterion,
+so its requests can exceed these limits. Use direct `decide()` calls within the limit; larger reviewer requests
+need separate batching support.
+For custom URLs, set `input_price_per_million` to your current account rate if you need fallback cost tracking;
+otherwise LatteReview reports zero cost when the response does not include a cost.
+
 ## Screening titles and abstracts
 
 ```python

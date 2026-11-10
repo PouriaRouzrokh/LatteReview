@@ -473,6 +473,25 @@ class SystemOneProvider(pydantic.BaseModel):
 A custom `base_url` may end with `/v1/systemone` or `/v1/decisions`; otherwise `/v1/systemone` is added (or
 `/v1/decisions` with `protocol="openai"`, for gateways that serve OpenAI's Decisions format).
 
+### Decision Models
+
+The Jev-compatible Decision Models endpoint uses the existing custom URL configuration:
+
+```python
+import os
+from lattereview.providers import SystemOneProvider
+
+provider = SystemOneProvider(
+    base_url="https://api.decisionmodels.io/v1/systemone",
+    api_key=os.environ["DECISION_MODELS_API_KEY"],
+    model="s1-pro",  # or "s1-fast"
+)
+```
+
+`s1-pro` supports up to three questions per request; `s1-fast` supports one. See the
+[Decision Models example](../decision_models.md#decision-models-endpoint) for a single-question call, reviewer request limits
+and custom-URL cost tracking.
+
 ### Questions and answers
 
 - `Noul(instructions, true=None, false=None)`: a yes/no question.
