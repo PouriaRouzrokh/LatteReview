@@ -5,7 +5,7 @@ import re
 from typing import Optional, Any, List, Dict, Union, Callable, Awaitable, ClassVar, Set, Tuple
 import pydantic
 import litellm
-from tokencost import calculate_prompt_cost, calculate_completion_cost
+from llm_prices.compat.tokencost import calculate_prompt_cost, calculate_completion_cost
 
 # Request parameters that cap the response length. Reasoning models count hidden reasoning tokens against these caps.
 TOKEN_LIMIT_PARAMS = ("max_tokens", "max_completion_tokens", "max_output_tokens")
@@ -134,7 +134,7 @@ class BaseProvider(pydantic.BaseModel):
         """Calculate the cost of a prompt completion.
 
         Uses the token counts reported by the API (which include hidden reasoning tokens) when available, priced
-        with LiteLLM's model map, and falls back to estimating from the text with tokencost. A model missing from
+        with LiteLLM's model map, and falls back to estimating from the text with llm-prices. A model missing from
         both pricing maps (e.g., a newly released one) costs 0 with a warning instead of failing the review.
         """
         input_cost, output_cost = 0.0, 0.0

@@ -46,3 +46,12 @@ def test_perplexity_models_go_through_the_agent_api(model, routed):
     assert name == routed
     assert kwargs.get("num_retries") == (5 if model.startswith("perplexity/") and "responses" not in model else None)
     assert LiteLLMProvider(model="perplexity/sonar")._route({"num_retries": 1})[1]["num_retries"] == 1
+
+
+@pytest.mark.parametrize("model", ["gpt-6-luna", "gemini/gemini-3.8-flash", "gpt-5.5"])
+def test_text_fallback_prices_current_models(model):
+    # Without API token counts, cost falls back to estimating from the text; the default models must price.
+    cost = LiteLLMProvider(model=model)._get_cost(
+        [{"role": "user", "content": "Is this abstract relevant to the review?"}], "Yes, it is relevant."
+    )
+    assert cost["input_cost"] > 0 and cost["output_cost"] > 0
