@@ -233,7 +233,7 @@ LatteReview offers flexible model integration through multiple providers:
 - **OllamaProvider**: Optimized for local models via Ollama
 - **SystemOneProvider**: decision models: TypeSafe's Jev, Perplexity's pplx-decider and OpenAI's gpt-6-luna (Decisions APIs), via TypeSafe, Perplexity, OpenAI, OpenRouter, or any `/v1/systemone` server (e.g., a self-hosted OpenJev)
 
-If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `qwen3.8:27b` (run `ollama pull qwen3.8:27b` first). For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5")` or `"anthropic/claude-haiku-4-5"` for a cheaper option. For Perplexity, pass `LiteLLMProvider(model="perplexity/sonar")` (`PERPLEXITY_API_KEY`); LatteReview sends it through Perplexity's Agent API.
+If you don't pass a `model`, `OpenAIProvider` and `LiteLLMProvider` use `gpt-6-luna`, `GoogleProvider` uses `gemini-3.8-flash`, and `OllamaProvider` uses `qwen3.8:27b` (run `ollama pull qwen3.8:27b` first). For Claude, pass e.g. `LiteLLMProvider(model="anthropic/claude-sonnet-5-5")` or `"anthropic/claude-haiku-5-5"` for a cheaper option. The newest OpenAI (`gpt-6.1-sol`, `gpt-6.1-terra`), Claude (`claude-fable-5-2`) and Gemini (`gemini-4-argon`, `gemini-4-carbon`, `gemini-4-hydrogen`) models work too. For Perplexity, pass `LiteLLMProvider(model="perplexity/sonar")` (`PERPLEXITY_API_KEY`); LatteReview sends it through Perplexity's Agent API.
 
 Note: Models should support async operations and structured JSON outputs for optimal performance.
 

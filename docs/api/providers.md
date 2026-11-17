@@ -21,9 +21,9 @@ Newer models, especially reasoning models, reject some request parameters that o
 
 | Models | Parameters they reject |
 | --- | --- |
-| OpenAI GPT-5 and GPT-6 families and o-series (e.g., `gpt-6-sol`, `gpt-5.5`, `o4-mini`) | `max_tokens` (renamed to `max_completion_tokens`); most also reject `temperature` other than 1 and `top_p` |
-| Anthropic Claude Opus 4.7+, Claude 5 and Fable (e.g., `claude-opus-5-5`, `claude-sonnet-5`, `claude-fable-5-1`) | `temperature`, `top_p`, `top_k` |
-| Google Gemini 3.x (e.g., `gemini-3.8-flash`) | None yet, but Google has deprecated `temperature`, `top_p` and `top_k` and recommends leaving them at their defaults |
+| OpenAI GPT-5 and GPT-6 families and o-series (e.g., `gpt-6.1-sol`, `gpt-6-sol`, `gpt-5.5`, `o4-mini`) | `max_tokens` (renamed to `max_completion_tokens`); most also reject `temperature` other than 1 and `top_p` |
+| Anthropic Claude Opus 4.7+, Claude 5 and Fable (e.g., `claude-opus-5-5`, `claude-sonnet-5-5`, `claude-haiku-5-5`, `claude-fable-5-2`) | `temperature`, `top_p`, `top_k` |
+| Google Gemini 3.x and 4 (e.g., `gemini-3.8-flash`, `gemini-4-argon`) | None yet, but Google has deprecated `temperature`, `top_p` and `top_k` and recommends leaving them at their defaults |
 
 Since v1.2.0, LatteReview handles these differences for you:
 
@@ -48,6 +48,15 @@ Models tested with real API calls for v1.2.0:
 | `LiteLLMProvider` | `gpt-6-astra`, `gpt-6-luna`, `gpt-4o-mini`, `o4-mini`, `anthropic/claude-opus-5-5`, `anthropic/claude-opus-5`, `anthropic/claude-sonnet-5`, `anthropic/claude-haiku-4-5`, `anthropic/claude-fable-5-1`, `gemini/gemini-3.8-flash`, `groq/openai/gpt-oss-120b`, `deepseek/deepseek-flash`, `openrouter/qwen/qwen3.8-27b`, `ollama_chat/qwen3.8:27b` |
 
 Added in v1.4.0: Perplexity's models through `LiteLLMProvider`, tested with `perplexity/sonar`, `perplexity/openai/gpt-6-luna` (both through Perplexity's Agent API) and `openrouter/perplexity/sonar` (see [Perplexity models](#perplexity-models)).
+
+Added after v1.4.1: the newest OpenAI, Anthropic and Google models, tested with a title/abstract review and no code changes:
+
+| Provider path | Models |
+| --- | --- |
+| `OpenAIProvider` | `gpt-6.1-sol`, `gpt-6.1-terra` |
+| `OpenAIProvider` (Gemini endpoint) | `gemini-4-hydrogen` |
+| `GoogleProvider` | `gemini-4-argon`, `gemini-4-carbon`, `gemini-4-hydrogen` |
+| `LiteLLMProvider` | `gpt-6.1-sol`, `gpt-6.1-terra`, `anthropic/claude-sonnet-5-5`, `anthropic/claude-haiku-5-5`, `anthropic/claude-fable-5-2`, `gemini/gemini-4-argon`, `gemini/gemini-4-carbon`, `gemini/gemini-4-hydrogen` |
 
 ## BaseProvider
 
@@ -126,7 +135,7 @@ async def get_json_response(
 
 ### Cost Calculation
 
-All providers include built-in cost calculation for both input and output tokens. Costs are computed from the token usage the API reports, which includes hidden reasoning and thinking tokens, priced with LiteLLM's model price map. When the usage or the price is not available, the cost is estimated from the text with the `tokencost` package. A model missing from both price maps (e.g., one released after your LiteLLM version) is reported as costing 0, with a warning, instead of failing the review. This can be controlled using the `calculate_cost` parameter:
+All providers include built-in cost calculation for both input and output tokens. Costs are computed from the token usage the API reports, which includes hidden reasoning and thinking tokens, priced with LiteLLM's model price map. When the API reports no usage, the tokens are counted from the text with LiteLLM's tokenizers and priced the same way. A model missing from LiteLLM's price map (e.g., one released after your LiteLLM version) is reported as costing 0, with a warning, instead of failing the review. This can be controlled using the `calculate_cost` parameter:
 
 ```python
 # Initialize provider with cost calculation disabled
@@ -396,7 +405,7 @@ from lattereview.providers import LiteLLMProvider
 
 # Initialize with different models
 provider = LiteLLMProvider(model="gpt-6-luna")
-provider = LiteLLMProvider(model="anthropic/claude-sonnet-5")  # Needs ANTHROPIC_API_KEY
+provider = LiteLLMProvider(model="anthropic/claude-sonnet-5-5")  # Needs ANTHROPIC_API_KEY
 provider = LiteLLMProvider(model="gemini/gemini-3.8-flash")  # Needs GEMINI_API_KEY
 provider = LiteLLMProvider(model="perplexity/sonar")  # Needs PERPLEXITY_API_KEY (Perplexity's Agent API)
 
