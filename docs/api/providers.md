@@ -49,7 +49,7 @@ Models tested with real API calls for v1.2.0:
 
 Added in v1.4.0: Perplexity's models through `LiteLLMProvider`, tested with `perplexity/sonar`, `perplexity/openai/gpt-6-luna` (both through Perplexity's Agent API) and `openrouter/perplexity/sonar` (see [Perplexity models](#perplexity-models)).
 
-Added after v1.4.1: the newest OpenAI, Anthropic and Google models, tested with a title/abstract review and no code changes:
+Added in v1.4.2: the newest OpenAI, Anthropic and Google models, tested with a title/abstract review and no code changes:
 
 | Provider path | Models |
 | --- | --- |

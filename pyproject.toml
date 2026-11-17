@@ -1,6 +1,6 @@
 [project]
 name = "lattereview"
-version = "1.4.1"
+version = "1.4.2"
 description = "A framework for multi-agent literature review workflows using large language models"
 readme = "README.md"
 license = "PolyForm-Noncommercial-1.0.0"

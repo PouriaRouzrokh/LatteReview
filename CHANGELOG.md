@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+## [1.4.2] - 2026-11-17
+
 ### Added
 
 - Tested with the newest models, which work without code changes: OpenAI `gpt-6.1-sol` and `gpt-6.1-terra`, Anthropic `claude-sonnet-5-5`, `claude-haiku-5-5` and `claude-fable-5-2`, and Google `gemini-4-argon`, `gemini-4-carbon` and `gemini-4-hydrogen`, through every provider path that serves them. Claude 5.5 and GPT-6.1 reject `temperature`, which LatteReview drops with a warning as before.
