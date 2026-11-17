@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adding MCP support.
 
+### Added
+
+- Tested with the newest models, which work without code changes: OpenAI `gpt-6.1-sol` and `gpt-6.1-terra`, Anthropic `claude-sonnet-5-5`, `claude-haiku-5-5` and `claude-fable-5-2`, and Google `gemini-4-argon`, `gemini-4-carbon` and `gemini-4-hydrogen`, through every provider path that serves them. Claude 5.5 and GPT-6.1 reject `temperature`, which LatteReview drops with a warning as before.
+
+### Fixed
+
+- When a response has no token counts, the cost is now estimated from the text with LiteLLM's tokenizers and price map instead of `tokencost`, whose last release (August 2025) does not know GPT-6, Gemini 3.8+ or Claude 5 models, so those requests were reported as costing 0 (#14, thanks to @Mattbusel for the report).
+
+### Removed
+
+- The `tokencost` dependency, and with it the `anthropic` SDK and five other packages it installed.
+
 ## [1.4.1] - 2026-10-16
 
 ### Changed

@@ -5,7 +5,6 @@ import re
 from typing import Optional, Any, List, Dict, Union, Callable, Awaitable, ClassVar, Set, Tuple
 import pydantic
 import litellm
-from tokencost import calculate_prompt_cost, calculate_completion_cost
 
 # Request parameters that cap the response length. Reasoning models count hidden reasoning tokens against these caps.
 TOKEN_LIMIT_PARAMS = ("max_tokens", "max_completion_tokens", "max_output_tokens")
@@ -125,7 +124,7 @@ class BaseProvider(pydantic.BaseModel):
 
     def _get_cost(
         self,
-        input_messages: List[str],
+        input_messages: Union[str, List[Dict[str, Any]]],
         completion_text: str,
         prompt_tokens: Optional[int] = None,
         completion_tokens: Optional[int] = None,
@@ -134,26 +133,27 @@ class BaseProvider(pydantic.BaseModel):
         """Calculate the cost of a prompt completion.
 
         Uses the token counts reported by the API (which include hidden reasoning tokens) when available, priced
-        with LiteLLM's model map, and falls back to estimating from the text with tokencost. A model missing from
-        both pricing maps (e.g., a newly released one) costs 0 with a warning instead of failing the review.
+        with LiteLLM's model map. Without them, the tokens are counted from the text with LiteLLM's tokenizers and
+        priced the same way. A model missing from LiteLLM's map (e.g., a newly released one) costs 0 with a warning
+        instead of failing the review.
         """
         input_cost, output_cost = 0.0, 0.0
         if self.calculate_cost:
             try:
-                if prompt_tokens is not None and completion_tokens is not None:
-                    try:
-                        input_cost, output_cost = litellm.cost_per_token(
-                            model=self.model,
-                            prompt_tokens=prompt_tokens,
-                            completion_tokens=completion_tokens,
-                            custom_llm_provider=custom_llm_provider,
-                        )
-                    except Exception:
-                        input_cost = calculate_prompt_cost(input_messages, self.model)
-                        output_cost = calculate_completion_cost(completion_text, self.model)
-                else:
-                    input_cost = calculate_prompt_cost(input_messages, self.model)
-                    output_cost = calculate_completion_cost(completion_text, self.model)
+                if prompt_tokens is None or completion_tokens is None:
+                    if isinstance(input_messages, str):
+                        prompt_tokens = litellm.token_counter(model=self.model, text=input_messages)
+                    else:
+                        prompt_tokens = litellm.token_counter(model=self.model, messages=input_messages)
+                    completion_tokens = litellm.token_counter(
+                        model=self.model, text=completion_text or "", count_response_tokens=True
+                    )
+                input_cost, output_cost = litellm.cost_per_token(
+                    model=self.model,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    custom_llm_provider=custom_llm_provider,
+                )
             except Exception as e:
                 self._warn_once(
                     f"cost:{self.model}",
