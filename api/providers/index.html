@@ -1675,15 +1675,15 @@
 </thead>
 <tbody>
 <tr>
-<td>OpenAI GPT-5 and GPT-6 families and o-series (e.g., <code>gpt-6-sol</code>, <code>gpt-5.5</code>, <code>o4-mini</code>)</td>
+<td>OpenAI GPT-5 and GPT-6 families and o-series (e.g., <code>gpt-6.1-sol</code>, <code>gpt-6-sol</code>, <code>gpt-5.5</code>, <code>o4-mini</code>)</td>
 <td><code>max_tokens</code> (renamed to <code>max_completion_tokens</code>); most also reject <code>temperature</code> other than 1 and <code>top_p</code></td>
 </tr>
 <tr>
-<td>Anthropic Claude Opus 4.7+, Claude 5 and Fable (e.g., <code>claude-opus-5-5</code>, <code>claude-sonnet-5</code>, <code>claude-fable-5-1</code>)</td>
+<td>Anthropic Claude Opus 4.7+, Claude 5 and Fable (e.g., <code>claude-opus-5-5</code>, <code>claude-sonnet-5-5</code>, <code>claude-haiku-5-5</code>, <code>claude-fable-5-2</code>)</td>
 <td><code>temperature</code>, <code>top_p</code>, <code>top_k</code></td>
 </tr>
 <tr>
-<td>Google Gemini 3.x (e.g., <code>gemini-3.8-flash</code>)</td>
+<td>Google Gemini 3.x and 4 (e.g., <code>gemini-3.8-flash</code>, <code>gemini-4-argon</code>)</td>
 <td>None yet, but Google has deprecated <code>temperature</code>, <code>top_p</code> and <code>top_k</code> and recommends leaving them at their defaults</td>
 </tr>
 </tbody>
@@ -1732,6 +1732,33 @@
 </tbody>
 </table>
 <p>Added in v1.4.0: Perplexity's models through <code>LiteLLMProvider</code>, tested with <code>perplexity/sonar</code>, <code>perplexity/openai/gpt-6-luna</code> (both through Perplexity's Agent API) and <code>openrouter/perplexity/sonar</code> (see <a href="#perplexity-models">Perplexity models</a>).</p>
+<p>Added in v1.4.2: the newest OpenAI, Anthropic and Google models, tested with a title/abstract review and no code changes:</p>
+<table>
+<thead>
+<tr>
+<th>Provider path</th>
+<th>Models</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>OpenAIProvider</code></td>
+<td><code>gpt-6.1-sol</code>, <code>gpt-6.1-terra</code></td>
+</tr>
+<tr>
+<td><code>OpenAIProvider</code> (Gemini endpoint)</td>
+<td><code>gemini-4-hydrogen</code></td>
+</tr>
+<tr>
+<td><code>GoogleProvider</code></td>
+<td><code>gemini-4-argon</code>, <code>gemini-4-carbon</code>, <code>gemini-4-hydrogen</code></td>
+</tr>
+<tr>
+<td><code>LiteLLMProvider</code></td>
+<td><code>gpt-6.1-sol</code>, <code>gpt-6.1-terra</code>, <code>anthropic/claude-sonnet-5-5</code>, <code>anthropic/claude-haiku-5-5</code>, <code>anthropic/claude-fable-5-2</code>, <code>gemini/gemini-4-argon</code>, <code>gemini/gemini-4-carbon</code>, <code>gemini/gemini-4-hydrogen</code></td>
+</tr>
+</tbody>
+</table>
 <h2 id="baseprovider">BaseProvider<a class="headerlink" href="#baseprovider" title="Permanent link">&para;</a></h2>
 <h3 id="description">Description<a class="headerlink" href="#description" title="Permanent link">&para;</a></h3>
 <p>The <code>BaseProvider</code> class serves as the foundation for all LLM provider implementations. It provides a consistent interface and error handling for interacting with language models.</p>
@@ -1786,7 +1813,7 @@
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div>
 <h3 id="cost-calculation">Cost Calculation<a class="headerlink" href="#cost-calculation" title="Permanent link">&para;</a></h3>
-<p>All providers include built-in cost calculation for both input and output tokens. Costs are computed from the token usage the API reports, which includes hidden reasoning and thinking tokens, priced with LiteLLM's model price map. When the usage or the price is not available, the cost is estimated from the text with the <code>tokencost</code> package. A model missing from both price maps (e.g., one released after your LiteLLM version) is reported as costing 0, with a warning, instead of failing the review. This can be controlled using the <code>calculate_cost</code> parameter:</p>
+<p>All providers include built-in cost calculation for both input and output tokens. Costs are computed from the token usage the API reports, which includes hidden reasoning and thinking tokens, priced with LiteLLM's model price map. When the API reports no usage, the tokens are counted from the text with LiteLLM's tokenizers and priced the same way. A model missing from LiteLLM's price map (e.g., one released after your LiteLLM version) is reported as costing 0, with a warning, instead of failing the review. This can be controlled using the <code>calculate_cost</code> parameter:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># Initialize provider with cost calculation disabled</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">BaseProvider</span><span class="p">(</span><span class="n">calculate_cost</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>  <span class="c1"># All costs will be 0</span>
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>
@@ -2004,7 +2031,7 @@
 <a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>
 <a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="c1"># Initialize with different models</span>
 <a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gpt-6-luna"</span><span class="p">)</span>
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"anthropic/claude-sonnet-5"</span><span class="p">)</span>  <span class="c1"># Needs ANTHROPIC_API_KEY</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"anthropic/claude-sonnet-5-5"</span><span class="p">)</span>  <span class="c1"># Needs ANTHROPIC_API_KEY</span>
 <a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"gemini/gemini-3.8-flash"</span><span class="p">)</span>  <span class="c1"># Needs GEMINI_API_KEY</span>
 <a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a><span class="n">provider</span> <span class="o">=</span> <span class="n">LiteLLMProvider</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">"perplexity/sonar"</span><span class="p">)</span>  <span class="c1"># Needs PERPLEXITY_API_KEY (Perplexity's Agent API)</span>
 <a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>
